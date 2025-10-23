@@ -352,20 +352,28 @@ Set connSunny = Nothing
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tocca Onze - Relatório de Vendas (VGV)</title>
+    <title>SGVendas - Relatório Top 10 de Vendas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             background-color: #A5A2A2;
-            padding: 20px;
+            padding: 0;
+            margin: 0;
             color: white;
+            padding-top: 80px; /* Espaço para o header fixo */
         }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
         .container-fluid {
             max-width: 1400px;
             margin: 0 auto;
         }
+
         .kpi-card {
             text-align: center;
             color: #fff;
@@ -476,362 +484,310 @@ Set connSunny = Nothing
         .top-10-list-item .top-3 {
             color: #CD7F32; /* Bronze */
         }
+
+        /* Estilo para garantir que o header não sobreponha o conteúdo */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: #fff; /* ou a cor do seu header */
+        }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <h2 class="mt-4 mb-4 text-center" style="color: #800000;"><i class="fas fa-handshake"></i> Tocca Onze - Relatório de Vendas (VGV)</h2>
-        
-        <div class="filter-container">
-            <form id="filterForm" method="get">
-                <div class="row filter-row">
-                    <div class="col-md-2">
-                        <div class="filter-label">Ano</div>
-                        <select class="form-select filter-select" name="ano" id="anoFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueAnos) Then
-                                For Each ano In uniqueAnos
-                                    Response.Write "<option value=""" & ano & """"
-                                    If CStr(filtroAno) = CStr(ano) Then Response.Write " selected"
-                                    Response.Write ">" & ano & "</option>"
-                                Next
-                            End If
-                            %>
-                        </select>
-                    </div>
+    <!--#include file="gestao_header.inc"-->
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <h2 class="mt-4 mb-4 text-center">
+                <i class="fas fa-handshake"></i> Relatório Top 10 de Vendas (VGV)
+            </h2>
+            
+            <div class="filter-container">
+                <form id="filterForm" method="get">
+                    <div class="row filter-row">
+                        <div class="col-md-2">
+                            <div class="filter-label">Ano</div>
+                            <select class="form-select filter-select" name="ano" id="anoFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueAnos) Then
+                                    For Each ano In uniqueAnos
+                                        Response.Write "<option value=""" & ano & """"
+                                        If CStr(filtroAno) = CStr(ano) Then Response.Write " selected"
+                                        Response.Write ">" & ano & "</option>"
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
 
-                    <div class="col-md-2">
-                        <div class="filter-label">Semestre</div>
-                        <select class="form-select filter-select" name="semestre" id="semestreFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueSemestres) Then
-                                For Each semestre In uniqueSemestres
-                                    Response.Write "<option value=""" & semestre & """"
-                                    If CStr(filtroSemestre) = CStr(semestre) Then Response.Write " selected"
-                                    Response.Write ">" & semestre & "º Semestre</option>"
-                                Next
-                            End If
-                            %>
-                        </select>
-                    </div>
+                        <div class="col-md-2">
+                            <div class="filter-label">Semestre</div>
+                            <select class="form-select filter-select" name="semestre" id="semestreFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueSemestres) Then
+                                    For Each semestre In uniqueSemestres
+                                        Response.Write "<option value=""" & semestre & """"
+                                        If CStr(filtroSemestre) = CStr(semestre) Then Response.Write " selected"
+                                        Response.Write ">" & semestre & "º Semestre</option>"
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
 
+                        <div class="col-md-2">
+                            <div class="filter-label">Trimestre</div>
+                            <select class="form-select filter-select" name="trimestre" id="trimestreFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueTrimestres) Then
+                                    For Each trimestre In uniqueTrimestres
+                                        Response.Write "<option value=""" & trimestre & """"
+                                        If filtroTrimestre = trimestre Then Response.Write " selected"
+                                        Response.Write ">" & trimestre & "</option>"
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
 
-
-                    <div class="col-md-2">
-                        <div class="filter-label">Trimestre</div>
-                        <select class="form-select filter-select" name="trimestre" id="trimestreFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueTrimestres) Then
-                                For Each trimestre In uniqueTrimestres
-                                    Response.Write "<option value=""" & trimestre & """"
-                                    If filtroTrimestre = trimestre Then Response.Write " selected"
-                                    Response.Write ">" & trimestre & "</option>"
-                                Next
-                            End If
-                            %>
-                        </select>
+                        <div class="col-md-2">
+                            <div class="filter-label">Mês</div>
+                            <select class="form-select filter-select" name="mes" id="mesFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueMeses) Then
+                                    For Each mes In uniqueMeses
+                                        If Not IsEmpty(mes) Then
+                                            Dim mesNum
+                                            mesNum = CInt(mes)
+                                            Response.Write "<option value=""" & mes & """"
+                                            If CStr(filtroMes) = CStr(mes) Then Response.Write " selected"
+                                            Response.Write ">" & arrMesesNome(mesNum) & "</option>"
+                                        End If
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="filter-label">Diretoria</div>
+                            <select class="form-select filter-select" name="diretoria" id="diretoriaFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueDiretorias) Then
+                                    For Each diretoria In uniqueDiretorias
+                                        Response.Write "<option value=""" & diretoria & """"
+                                        If filtroDiretoria = diretoria Then Response.Write " selected"
+                                        Response.Write ">" & diretoria & "</option>"
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="filter-label">Gerência</div>
+                            <select class="form-select filter-select" name="gerencia" id="gerenciaFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueGerencias) Then
+                                    For Each gerencia In uniqueGerencias
+                                        Response.Write "<option value=""" & gerencia & """"
+                                        If filtroGerencia = gerencia Then Response.Write " selected"
+                                        Response.Write ">" & gerencia & "</option>"
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
                     </div>
-
-
-                    <div class="col-md-2">
-                        <div class="filter-label">Mês</div>
-                        <select class="form-select filter-select" name="mes" id="mesFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueMeses) Then
-                                For Each mes In uniqueMeses
-                                    If Not IsEmpty(mes) Then
-                                        Dim mesNum
-                                        mesNum = CInt(mes)
-                                        Response.Write "<option value=""" & mes & """"
-                                        If CStr(filtroMes) = CStr(mes) Then Response.Write " selected"
-                                        Response.Write ">" & arrMesesNome(mesNum) & "</option>"
-                                    End If
-                                Next
-                            End If
-                            %>
-                        </select>
+                    <div class="row filter-row mt-3">
+                        <div class="col-md-2">
+                            <div class="filter-label">Corretor</div>
+                            <select class="form-select filter-select" name="corretor" id="corretorFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueCorretores) Then
+                                    For Each corretor In uniqueCorretores
+                                        Response.Write "<option value=""" & corretor & """"
+                                        If filtroCorretor = corretor Then Response.Write " selected"
+                                        Response.Write ">" & corretor & "</option>"
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="filter-label">Empreendimento</div>
+                            <select class="form-select filter-select" name="empreendimento" id="empreendimentoFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueEmpreendimentos) Then
+                                    For Each empreendimento In uniqueEmpreendimentos
+                                        Response.Write "<option value=""" & empreendimento & """"
+                                        If filtroEmpreendimento = empreendimento Then Response.Write " selected"
+                                        Response.Write ">" & empreendimento & "</option>"
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="filter-label">Empresa</div>
+                            <select class="form-select filter-select" name="empresa" id="empresaFilter" onchange="this.form.submit()">
+                                <option value="">Todos</option>
+                                <%
+                                If IsArray(uniqueEmpresas) Then
+                                    For Each empresa In uniqueEmpresas
+                                        Response.Write "<option value=""" & empresa & """"
+                                        If filtroEmpresa = empresa Then Response.Write " selected"
+                                        Response.Write ">" & empresa & "</option>"
+                                    Next
+                                End If
+                                %>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 text-end">
+                            <button type="button" class="btn btn-secondary filter-btn" onclick="limparFiltros()">
+                                <i class="fas fa-times"></i> Limpar Filtros
+                            </button>
+                        </div>
                     </div>
-
-                    
-                    <div class="col-md-2">
-                        <div class="filter-label">Diretoria</div>
-                        <select class="form-select filter-select" name="diretoria" id="diretoriaFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueDiretorias) Then
-                                For Each diretoria In uniqueDiretorias
-                                    Response.Write "<option value=""" & diretoria & """"
-                                    If filtroDiretoria = diretoria Then Response.Write " selected"
-                                    Response.Write ">" & diretoria & "</option>"
-                                Next
-                            End If
-                            %>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <div class="filter-label">Gerência</div>
-                        <select class="form-select filter-select" name="gerencia" id="gerenciaFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueGerencias) Then
-                                For Each gerencia In uniqueGerencias
-                                    Response.Write "<option value=""" & gerencia & """"
-                                    If filtroGerencia = gerencia Then Response.Write " selected"
-                                    Response.Write ">" & gerencia & "</option>"
-                                Next
-                            End If
-                            %>
-                        </select>
-                    </div>
-                </div>
-                <div class="row filter-row mt-3">
-                    <div class="col-md-2">
-                        <div class="filter-label">Corretor</div>
-                        <select class="form-select filter-select" name="corretor" id="corretorFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueCorretores) Then
-                                For Each corretor In uniqueCorretores
-                                    Response.Write "<option value=""" & corretor & """"
-                                    If filtroCorretor = corretor Then Response.Write " selected"
-                                    Response.Write ">" & corretor & "</option>"
-                                Next
-                            End If
-                            %>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <div class="filter-label">Empreendimento</div>
-                        <select class="form-select filter-select" name="empreendimento" id="empreendimentoFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueEmpreendimentos) Then
-                                For Each empreendimento In uniqueEmpreendimentos
-                                    Response.Write "<option value=""" & empreendimento & """"
-                                    If filtroEmpreendimento = empreendimento Then Response.Write " selected"
-                                    Response.Write ">" & empreendimento & "</option>"
-                                Next
-                            End If
-                            %>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <div class="filter-label">Empresa</div>
-                        <select class="form-select filter-select" name="empresa" id="empresaFilter" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            <%
-                            If IsArray(uniqueEmpresas) Then
-                                For Each empresa In uniqueEmpresas
-                                    Response.Write "<option value=""" & empresa & """"
-                                    If filtroEmpresa = empresa Then Response.Write " selected"
-                                    Response.Write ">" & empresa & "</option>"
-                                Next
-                            End If
-                            %>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-6 text-end">
-                        <button type="button" class="btn btn-secondary filter-btn" onclick="limparFiltros()">
-                            <i class="fas fa-times"></i> Limpar Filtros
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        
-        <div class="row mt-4">
-            <div class="col-md-4">
-                <div class="kpi-card bg-success-kpi">
-                    <i class="fas fa-dollar-sign"></i>
-                    <h5>Total de Vendas (VGV)</h5>
-                    <p><%= FormatCurrencyValue(totalVGV, 2) %></p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="kpi-card bg-info-kpi">
-                    <i class="fas fa-cubes"></i>
-                    <h5>Unidades Vendidas</h5>
-                    <p><%= totalUnidades %></p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="kpi-card bg-warning-kpi">
-                    <i class="fas fa-receipt"></i>
-                    <h5>Ticket Médio</h5>
-                    <p><%= FormatCurrencyValue(ticketMedio, 2) %></p>
-                </div>
-            </div>
-        </div>
-        
-
-        
-        <!-- Nova seção de Top 10 -->
-        <div class="row mt-4">
-            <div class="col-md-4 mb-4">
-                <div class="top-10-container">
-                    <h5 class="text-center mb-3">Top 10 Diretorias por VGV</h5>
-                    <ul class="top-10-list">
-                        <%
-                        If IsArray(sortedTopDiretorias) Then
-                            For i = 0 To UBound(sortedTopDiretorias)
-                                If i > 9 Then Exit For ' Exibe apenas os 10 primeiros
-                                Dim diretoriaKey, diretoriaValue, rankIcon
-                                diretoriaKey = sortedTopDiretorias(i)
-                                diretoriaValue = kpiData("TopDiretoriasVGV")(diretoriaKey)
-                                Select Case i
-                                    Case 0
-                                        rankIcon = "<span class='rank-icon top-1'>🥇</span>"
-                                    Case 1
-                                        rankIcon = "<span class='rank-icon top-2'>🥈</span>"
-                                    Case 2
-                                        rankIcon = "<span class='rank-icon top-3'>🥉</span>"
-                                    Case Else
-                                        rankIcon = "<span class='rank-icon'>" & (i + 1) & ".</span>"
-                                End Select
-                                Response.Write "<li class='top-10-list-item'>" & rankIcon & "<span>" & diretoriaKey & "</span><span> " & FormatCurrencyValue(diretoriaValue, 2) & "</span></li>"
-                            Next
-                        End If
-                        %>
-                    </ul>
-                </div>
+                </form>
             </div>
             
-            <div class="col-md-4 mb-4">
-                <div class="top-10-container">
-                    <h5 class="text-center mb-3">Top 10 Gerências por VGV</h5>
-                    <ul class="top-10-list">
-                        <%
-                        If IsArray(sortedTopGerencias) Then
-                            For i = 0 To UBound(sortedTopGerencias)
-                                If i > 9 Then Exit For ' Exibe apenas os 10 primeiros
-                                Dim gerenciaKey, gerenciaValue
-                                gerenciaKey = sortedTopGerencias(i)
-                                gerenciaValue = kpiData("TopGerenciasVGV")(gerenciaKey)
-                                Select Case i
-                                    Case 0
-                                        rankIcon = "<span class='rank-icon top-1'>🥇</span>"
-                                    Case 1
-                                        rankIcon = "<span class='rank-icon top-2'>🥈</span>"
-                                    Case 2
-                                        rankIcon = "<span class='rank-icon top-3'>🥉</span>"
-                                    Case Else
-                                        rankIcon = "<span class='rank-icon'>" & (i + 1) & ".</span>"
-                                End Select
-                                Response.Write "<li class='top-10-list-item'>" & rankIcon & "<span>" & gerenciaKey & "</span><span> " & FormatCurrencyValue(gerenciaValue, 2) & "</span></li>"
-                            Next
-                        End If
-                        %>
-                    </ul>
+            <!-- Resto do seu conteúdo (KPIs, gráficos, etc.) -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="kpi-card bg-success-kpi">
+                        <i class="fas fa-dollar-sign"></i>
+                        <h5>Total de Vendas (VGV)</h5>
+                        <p><%= FormatCurrencyValue(totalVGV, 2) %></p>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="col-md-4 mb-4">
-                <div class="top-10-container">
-                    <h5 class="text-center mb-3">Top 10 Corretores por VGV</h5>
-                    <ul class="top-10-list">
-                        <%
-                        If IsArray(sortedTopCorretores) Then
-                            For i = 0 To UBound(sortedTopCorretores)
-                                If i > 9 Then Exit For ' Exibe apenas os 10 primeiros
-                                Dim corretorKey, corretorValue
-                                corretorKey = sortedTopCorretores(i)
-                                corretorValue = kpiData("TopCorretoresVGV")(corretorKey)
-                                Select Case i
-                                    Case 0
-                                        rankIcon = "<span class='rank-icon top-1'>🥇</span>"
-                                    Case 1
-                                        rankIcon = "<span class='rank-icon top-2'>🥈</span>"
-                                    Case 2
-                                        rankIcon = "<span class='rank-icon top-3'>🥉</span>"
-                                    Case Else
-                                        rankIcon = "<span class='rank-icon'>" & (i + 1) & ".</span>"
-                                End Select
-                                Response.Write "<li class='top-10-list-item'>" & rankIcon & "<span>" & corretorKey & "</span><span> " & FormatCurrencyValue(corretorValue, 2) & "</span></li>"
-                            Next
-                        End If
-                        %>
-                    </ul>
+                <div class="col-md-4">
+                    <div class="kpi-card bg-info-kpi">
+                        <i class="fas fa-cubes"></i>
+                        <h5>Unidades Vendidas</h5>
+                        <p><%= totalUnidades %></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="kpi-card bg-warning-kpi">
+                        <i class="fas fa-receipt"></i>
+                        <h5>Ticket Médio</h5>
+                        <p><%= FormatCurrencyValue(ticketMedio, 2) %></p>
+                    </div>
                 </div>
             </div>
 
-
+            <!-- Seção de Top 10 -->
+            <div class="row mt-4">
+                <div class="col-md-4 mb-4">
+                    <div class="top-10-container">
+                        <h5 class="text-center mb-3">Top 10 Diretorias por VGV</h5>
+                        <ul class="top-10-list">
+                            <%
+                            If IsArray(sortedTopDiretorias) Then
+                                For i = 0 To UBound(sortedTopDiretorias)
+                                    If i > 9 Then Exit For
+                                    Dim diretoriaKey, diretoriaValue, rankIcon
+                                    diretoriaKey = sortedTopDiretorias(i)
+                                    diretoriaValue = kpiData("TopDiretoriasVGV")(diretoriaKey)
+                                    Select Case i
+                                        Case 0
+                                            rankIcon = "<span class='rank-icon top-1'>🥇</span>"
+                                        Case 1
+                                            rankIcon = "<span class='rank-icon top-2'>🥈</span>"
+                                        Case 2
+                                            rankIcon = "<span class='rank-icon top-3'>🥉</span>"
+                                        Case Else
+                                            rankIcon = "<span class='rank-icon'>" & (i + 1) & ".</span>"
+                                    End Select
+                                    Response.Write "<li class='top-10-list-item'>" & rankIcon & "<span>" & diretoriaKey & "</span><span> " & FormatCurrencyValue(diretoriaValue, 2) & "</span></li>"
+                                Next
+                            End If
+                            %>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="top-10-container">
+                        <h5 class="text-center mb-3">Top 10 Gerências por VGV</h5>
+                        <ul class="top-10-list">
+                            <%
+                            If IsArray(sortedTopGerencias) Then
+                                For i = 0 To UBound(sortedTopGerencias)
+                                    If i > 9 Then Exit For
+                                    Dim gerenciaKey, gerenciaValue
+                                    gerenciaKey = sortedTopGerencias(i)
+                                    gerenciaValue = kpiData("TopGerenciasVGV")(gerenciaKey)
+                                    Select Case i
+                                        Case 0
+                                            rankIcon = "<span class='rank-icon top-1'>🥇</span>"
+                                        Case 1
+                                            rankIcon = "<span class='rank-icon top-2'>🥈</span>"
+                                        Case 2
+                                            rankIcon = "<span class='rank-icon top-3'>🥉</span>"
+                                        Case Else
+                                            rankIcon = "<span class='rank-icon'>" & (i + 1) & ".</span>"
+                                    End Select
+                                    Response.Write "<li class='top-10-list-item'>" & rankIcon & "<span>" & gerenciaKey & "</span><span> " & FormatCurrencyValue(gerenciaValue, 2) & "</span></li>"
+                                Next
+                            End If
+                            %>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="top-10-container">
+                        <h5 class="text-center mb-3">Top 10 Corretores por VGV</h5>
+                        <ul class="top-10-list">
+                            <%
+                            If IsArray(sortedTopCorretores) Then
+                                For i = 0 To UBound(sortedTopCorretores)
+                                    If i > 9 Then Exit For
+                                    Dim corretorKey, corretorValue
+                                    corretorKey = sortedTopCorretores(i)
+                                    corretorValue = kpiData("TopCorretoresVGV")(corretorKey)
+                                    Select Case i
+                                        Case 0
+                                            rankIcon = "<span class='rank-icon top-1'>🥇</span>"
+                                        Case 1
+                                            rankIcon = "<span class='rank-icon top-2'>🥈</span>"
+                                        Case 2
+                                            rankIcon = "<span class='rank-icon top-3'>🥉</span>"
+                                        Case Else
+                                            rankIcon = "<span class='rank-icon'>" & (i + 1) & ".</span>"
+                                    End Select
+                                    Response.Write "<li class='top-10-list-item'>" & rankIcon & "<span>" & corretorKey & "</span><span> " & FormatCurrencyValue(corretorValue, 2) & "</span></li>"
+                                Next
+                            End If
+                            %>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
-
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function limparFiltros() {
-        // Redireciona para a página sem parâmetros
-        window.location.href = window.location.pathname;
-    }
-
-    // Gráfico de vendas mensais - código corrigido
-    const ctx = document.getElementById('monthlySalesChart');
-    if (ctx) {
-        // Preparar os dados de forma segura
-        const chartLabels = [
-            <% 
-            For i = 0 To UBound(chartLabels)
-                Response.Write """" & chartLabels(i) & """"
-                If i < UBound(chartLabels) Then Response.Write ","
-            Next 
-            %>
-        ];
-        
-        const chartData = [
-            <% 
-            For i = 0 To UBound(chartData)
-                Response.Write chartData(i)
-                If i < UBound(chartData) Then Response.Write ","
-            Next 
-            %>
-        ];
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: chartLabels,
-                datasets: [{
-                    label: 'Valor de Vendas (VGV)',
-                    data: chartData,
-                    backgroundColor: 'rgba(128, 0, 0, 0.7)',
-                    borderColor: 'rgb(128, 0, 0)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return 'R$ ' + value.toLocaleString('pt-BR');
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'VGV: R$ ' + context.parsed.y.toLocaleString('pt-BR');
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function limparFiltros() {
+            window.location.href = window.location.pathname;
+        }
+    </script>
 </body>
 </html>

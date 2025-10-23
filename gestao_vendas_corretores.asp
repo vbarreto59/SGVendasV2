@@ -236,7 +236,7 @@ End If
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tocca Onze - Relatório do Corretor</title>
+    <title>SGVendas - Relatório do Corretor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -334,7 +334,7 @@ End If
 <body>
     <div class="container-fluid">
         <h2 class="mt-4 mb-4 text-center" style="color: #800000;">
-            <i class="fas fa-user-tie"></i> Tocca Onze - Relatório do Corretor
+            <i class="fas fa-user-tie"></i> SGVendas - Relatório do Corretor
         </h2>
         
         <div class="filter-container">

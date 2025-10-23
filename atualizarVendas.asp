@@ -58,6 +58,6 @@ Set conn = Nothing
 
 connSales.Close
 Set connSales = Nothing
-Response.Write " Atulizado!"
+'Response.Write " Atulizado!"
 %>
 

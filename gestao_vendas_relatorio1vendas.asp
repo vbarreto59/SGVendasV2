@@ -402,7 +402,7 @@ Set conn = Nothing
     <div class="report-container">
         <div class="header">
             <img src="img/logoTocaa2.png?text=LOGO" alt="Logo" class="logo">
-            <h1>Tocca Onze - Relatório de Vendas</h1>
+            <h1>SGVendas - Relatório de Vendas</h1>
         </div>
 
         <div class="filter-bar no-print mb-4 p-3 bg-light rounded">

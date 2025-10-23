@@ -1,7 +1,13 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
-
+<!--#include file="gestao_header.inc"-->
+<%
+Response.Buffer = True
+Response.Expires = -1
+Response.CodePage = 65001
+Response.Charset = "utf-8"  
+%>
 <%
 ' ===============================================
 ' CONFIGURAÇÕES INICIAIS
@@ -330,7 +336,8 @@ Next
     <style>
         body {
             background-color: #f8f9fa;
-            padding: 20px;
+            margin-top: 20px;
+   
         }
         .card-kpi {
             background-color: white;
@@ -362,8 +369,9 @@ Next
 </head>
 <body>
     <div class="container-fluid">
-        <h2 class="mt-4 mb-4 text-center">Relatório de Vendas</h2>
-        
+        <h3 class="card-title mt-4 mb-1" style="margin-top: 1.5rem !important; color: black;">
+            <i class="fas fa-handshake"></i> Filtro de Vendas
+        </h3>
         <div class="filter-container">
             <form id="filterForm" method="get">
                 <div class="row filter-row">

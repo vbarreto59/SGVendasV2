@@ -77,7 +77,7 @@ On Error GoTo 0
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Relatório de Vendas por Corretor e Mês</title>
+    <title>Relatório de Unidades Vendidas por Corretor</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
@@ -168,7 +168,7 @@ On Error GoTo 0
 <body>
 
 <div class="container mt-5">
-    <h1>📊 Relatório de Vendas por Corretor e Mês</h1>
+    <h1>📊 Relatório de Unidades Vendidas</h1>
 
     <div class="card mb-4">
         <div class="card-header">Filtros do Relatório</div>

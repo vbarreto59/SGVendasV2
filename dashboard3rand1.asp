@@ -231,7 +231,7 @@ If autoTime = "" Then autoTime = 5
 </div>
 
 <div class="container-fluid">
-    <h1 class="mb-1 text-center">SGV-Tocca Onze - Dashboard de Vendas</h1>
+    <h1 class="mb-1 text-center">SGVendas - Dashboard de Vendas</h1>
     <div class="main-container">
         <div class="sidebar">
             <div class="text-center mt-4">

@@ -137,7 +137,7 @@ End if
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-sun me-2"></i>SGVendas.
+                <i class="fas fa-sun me-2"></i>SGVendas - <%=Session("Usuario")%>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -145,7 +145,7 @@ End if
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="dashboard3rand1.asp"><i class="fas fa-home me-1"></i> Início</a>
+                        <a class="nav-link active" href="gestao_painel2.asp"><i class="fas fa-home me-1"></i> Início</a>
                     </li>
 
                     <li class="nav-item">
@@ -158,26 +158,14 @@ End if
 
     <section class="welcome-section text-center">
         <div class="container">
-            <h1 class="display-4 mb-2">Tocca Onze</h1>
-            <p class="lead">Gerencie as operações de gestão e vendas</p>
+            <h1 class="display-4 mb-2">SGVendas</h1>
+            <p class="lead">Gerencie as vendas e comissões</p>
         </div>
     </section>
 
     <div class="container mb-5">
         <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Dashboard</h5>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Dashboard.</p>
-                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
-                            <i class="fas fa-arrow-right me-1"></i> Acessar
-                        </a>
-                    </div>
-                </div>
-            </div>
+
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -208,6 +196,36 @@ End if
                 </div>
             </div>
 
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
+                    <div class="card h-100">
+                        <div class="card-header text-center">
+                            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Geo-Mapa de Vendas</h5>
+                        </div>
+                        <div class="card-body text-center d-flex flex-column">
+                            <p class="card-text">Visualização das regiões com vendas.</p>
+                            <span class="btn btn-primary btn-sm mt-auto">
+                                <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa de Vendas
+                        </div>
+                    </div>
+                </a>
+            </div>              
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Dashboard</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as vendas.</p>
+                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>            
+
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
@@ -225,7 +243,7 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Gerentes</h5>
+                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Gerências</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Cadastro e acompanhamento dos gerentes de departamento.</p>

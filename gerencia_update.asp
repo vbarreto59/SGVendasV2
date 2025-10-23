@@ -115,7 +115,7 @@ If Not rs.EOF Then
     
     <section class="welcome-section text-center">
         <div class="container">
-            <h1 class="display-4 mb-2">Tocca Onze</h1>
+            <h1 class="display-4 mb-2">SGVendas</h1>
             <p class="lead">Gerencie as operações de gestão e vendas</p>
         </div>
     </section>

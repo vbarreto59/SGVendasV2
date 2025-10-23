@@ -10,7 +10,6 @@
 
 <!--#include file="AtualizarVendas.asp"-->
 <!--#include file="gestao_atu_localizacao.asp"-->
-<!--#include file="gestao_header.inc"-->
 <%
     'Response.Write strConnSales
     'Response.end
@@ -143,15 +142,10 @@ Response.Write "</script>"
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #E4F0F6; 
-               color: #fff; 
-            }
+        body { background-color: #E4F0F6; color: #fff; padding: 20px; }
         .table { background-color: #fff; color: #000; }
         th { background-color: #800000; color: #fff; }
-        .card-body { background-color: #D37676; 
-           margin-top: 45px;
-
-        }
+        .card-body { background-color: #D37676; }
         .btn-maroon { background-color: #800000; color: white; }
         .btn-maroon:hover { background-color: #a00; color: white; }
         .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter,
@@ -178,7 +172,7 @@ Response.Write "</script>"
             #tabelaVendas, .dataTables_wrapper { display: none !important; }
             #mobileCardsContainer { display: block !important; margin-top: 15px; }
             .sale-card { background-color: #F7F3F3; color: #333; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-            .card-title { font-size: 1.1em; font-weight: bold; color: #800000; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+            .card-title { font-size: 1.1em; font-weight: bold; color: #800000; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
             .card-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dotted #f0f0f0; }
             .card-item:last-child { border-bottom: none; }
             .card-label { font-weight: bold; color: #555; flex-basis: 40%; }
@@ -197,10 +191,14 @@ Response.Write "</script>"
 
 <body>
     <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mt-4 mb-4">
+                    <i class="fas fa-handshake"></i> Gestão de Vendas
+                </h2>
+            </div>
+        </div>
         <br>
-        <h3 class="card-title mt-4 mb-1" style="margin-top: 1.5rem !important; color: black;">
-            <i class="fas fa-handshake"></i> Gestão de Vendas
-        </h3>
         <% If mensagem <> "" Then %>
             <div class="alert alert-success alert-dismissible fade show">
                 <%= mensagem %>
@@ -333,11 +331,7 @@ Response.Write "</script>"
                                     Set rsComissaoCheck = Nothing
                             %>
                             <tr>
-                                <td><%= rs("ID") %>
-                                    <% If pagoDiretoria And pagoGerencia And pagoCorretor Then %>
-                                        <b><span class="badge bg-success" title="<%= Server.HTMLEncode(tooltipDiretoria) %>">PAGO</span></b>
-                                    <% End If %>
-                                </td>
+                                <td><%= rs("ID") %></td>
                                 <td><%= rs("AnoVenda") & "-" & Right("0"&rs("MesVenda"),2) %><br><%= vAno & "T" & rs("Trimestre") %></td>
                                 <td><%= FormatDateTime(rs("DataVenda"), 2) %></td>
                                 <td><b><%= rs("Empreend_ID") %>-<%= RemoverNumeros(rs("NomeEmpreendimento")) %><br><%= RemoverNumeros(rs("Localidade")) %></b></td>

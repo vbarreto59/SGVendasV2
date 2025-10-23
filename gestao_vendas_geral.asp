@@ -70,7 +70,7 @@ conn.Open StrConnSales
 </head>
 <body>
     <div class="container mt-4">
-        <h1 class="mb-4">Tocca Onze - Relatório de Vendas</h1>
+        <h1 class="mb-4">Relatório Geral de Vendas</h1>
         
         <div class="card">
             <div class="card-body">

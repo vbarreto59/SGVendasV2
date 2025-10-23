@@ -188,7 +188,7 @@ End If
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tocca Onze - Relatório de Comissões</title>
+    <title>SGVendas - Relatório de Comissões</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -300,7 +300,7 @@ End If
 </head>
 <body>
     <div class="container-fluid">
-        <h2>Tocca Onze - Relatório de Comissões</h2>
+        <h2>SGVendas - Relatório de Comissões</h2>
         
         <div class="filter-container">
             <form id="filterForm" method="get">
