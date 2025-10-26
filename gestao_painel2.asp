@@ -47,7 +47,7 @@ If IsMobile() Then
     vendasFile = "gestao_vendas_list_mob1.asp"
 Else
     ' O arquivo padrão para visualização em desktop
-    vendasFile = "gestao_vendas_list2r.asp"
+    vendasFile = "gestao_vendas_list2x.asp"
 End If
 
 '============================= LOG ============================================'
@@ -181,6 +181,21 @@ End if
                     </div>
                 </div>
             </div>
+
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Corretores/Vendas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Listagem de Corretores com Vendas.</p>
+                        <a href="gestao_corretores_estat1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>            
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">

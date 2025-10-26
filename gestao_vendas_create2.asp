@@ -163,7 +163,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     connSales.Execute(sqlComissoes)
     
     ' Redireciona para a página de sucesso após a inserção.
-    Response.Redirect "gestao_vendas_list2r.asp?mensagem=Venda cadastrada com sucesso!"
+    Response.Redirect "gestao_vendas_list2x.asp?mensagem=Venda cadastrada com sucesso!"
 End If
 
 ' -----------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ End Function
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="600">
-    <title>Nova Venda</title>
+    <title>Nova Venda | Sistema</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -231,255 +231,479 @@ End Function
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
     <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
         body {
-            background-color: #807777;
-            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
             padding: 20px;
         }
+        
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .app-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 0;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .app-title {
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+        }
+        
         .card {
-            background-color: #fff;
-            color: #000;
-            margin-bottom: 20px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+        
         .card-header {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-        .btn-maroon {
-            background-color: #800000;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
+            border-bottom: none;
+            padding: 1.2rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
         }
-        .btn-maroon:hover {
-            background-color: #a00;
+        
+        .card-body {
+            padding: 2rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .input-group-text {
+            background-color: var(--primary);
             color: white;
+            border: 2px solid var(--primary);
+            font-weight: 600;
         }
+        
         .comissao-result {
-            font-weight: bold;
-            color: #17a2b8;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
         }
+        
         .comissao-dist {
             font-size: 0.9rem;
             color: #6c757d;
-        }
-        .error-message {
-            color: #dc3545;
-            font-size: 0.875em;
+            font-weight: 500;
         }
         
-        /* CORREÇÃO PARA OS SELECTS */
+        .error-message {
+            color: var(--danger);
+            font-size: 0.875em;
+            font-weight: 500;
+        }
+        
+        .btn {
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #2ecc71);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #868e96);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: var(--danger);
+        }
+        
+        .comissao-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .comissao-value {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        /* Select2 Custom Styles */
         .select2-container--default .select2-selection--single,
         .select2-container--default .select2-selection--multiple {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.5rem;
             background-color: #fff;
-            color: #000;
-            border: 1px solid #ced4da;
+            color: var(--dark-text);
+            transition: all 0.3s ease;
         }
+        
+        .select2-container--default .select2-selection--single:focus,
+        .select2-container--default .select2-selection--multiple:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
         .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #000;
+            color: var(--dark-text);
+            font-size: 0.95rem;
         }
+        
         .select2-container--default .select2-selection--single .select2-selection__placeholder {
             color: #6c757d;
         }
+        
         .select2-dropdown {
-            background-color: #fff;
-            color: #000;
+            border: 2px solid var(--secondary);
+            border-radius: 8px;
+            box-shadow: var(--hover-shadow);
         }
+        
         .select2-container--default .select2-results__option[aria-selected=true] {
-            background-color: #f8f9fa;
-            color: #000;
+            background-color: #e3f2fd;
+            color: var(--primary);
         }
+        
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #007bff;
-            color: #fff;
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 1.5rem;
+            }
+            
+            .app-title {
+                font-size: 1.4rem;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+        .floating-action {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+        
+        .info-badge {
+            background: linear-gradient(135deg, var(--secondary), #2980b9);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <div class="container" style="padding-top: 70px;">
-        <h2 class="mt-4 mb-4"><i class="fas fa-plus-circle"></i> Nova Venda</h2>
-        
-        <button type="button" onclick="window.close();" class="btn btn-success">
-            <i class="fas fa-times me-2"></i>Fechar
-        </button><br>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="app-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="app-title">
+                    <i class="fas fa-plus-circle"></i> Nova Venda
+                </h1>
+                <div class="info-badge">
+                    <i class="fas fa-user me-1"></i><%= Session("Usuario") %>
+                </div>
+            </div>
+        </div>
 
-        <form method="post" id="formVenda">
-            <!-- Campos hidden para dia, mês e ano -->
-            <input type="hidden" id="diaVenda" name="diaVenda">
-            <input type="hidden" id="mesVenda" name="mesVenda">
-            <input type="hidden" id="anoVenda" name="anoVenda">
-            
-            <!-- Card Empreendimento -->
-            <div class="card">
-                <div class="card-header">Empreendimento</div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="empreend_id" class="form-label">Empreendimento *</label>
-                            <select class="form-select select2" id="empreend_id" name="empreend_id" required>
-                                <option value="">Selecione...</option>
-                                <% 
-                                If Not rsEmpreend.EOF Then
-                                    rsEmpreend.MoveFirst
-                                    Do While Not rsEmpreend.EOF 
-                                %>
-                                    <option value="<%= rsEmpreend("Empreend_ID") %>" data-comissao="<%= rsEmpreend("ComissaoVenda") %>">
-                                        <%= RemoverNumeros(rsEmpreend("NomeEmpreendimento")) %>
-                                    </option>
-                                <%
-                                        rsEmpreend.MoveNext
-                                    Loop
-                                End If
-                                %>
-                            </select>
+        <!-- Conteúdo Principal -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <button type="button" onclick="window.close();" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </button>
+                    <div class="d-flex gap-2">
+                        <a href="gestao_vendas_list2x.asp" class="btn btn-secondary">
+                            <i class="fas fa-list me-2"></i>Lista de Vendas
+                        </a>
+                    </div>
+                </div>
+
+                <form method="post" id="formVenda">
+                    <!-- Campos hidden para dia, mês e ano -->
+                    <input type="hidden" id="diaVenda" name="diaVenda">
+                    <input type="hidden" id="mesVenda" name="mesVenda">
+                    <input type="hidden" id="anoVenda" name="anoVenda">
+                    
+                    <!-- Seção Empreendimento -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-building me-2"></i>Informações do Empreendimento
+                        </h3>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="empreend_id" class="form-label required-field">Empreendimento</label>
+                                <select class="form-select select2" id="empreend_id" name="empreend_id" required>
+                                    <option value="">Selecione o empreendimento...</option>
+                                    <% 
+                                    If Not rsEmpreend.EOF Then
+                                        rsEmpreend.MoveFirst
+                                        Do While Not rsEmpreend.EOF 
+                                    %>
+                                        <option value="<%= rsEmpreend("Empreend_ID") %>" data-comissao="<%= rsEmpreend("ComissaoVenda") %>">
+                                            <%= RemoverNumeros(rsEmpreend("NomeEmpreendimento")) %>
+                                        </option>
+                                    <%
+                                            rsEmpreend.MoveNext
+                                        Loop
+                                    End If
+                                    %>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="unidade" class="form-label required-field">Unidade</label>
+                                <input type="text" class="form-control" id="unidade" name="unidade" placeholder="Ex: 101A" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="m2" class="form-label required-field">Metragem (m²)</label>
+                                <input type="text" class="form-control" id="m2" name="m2" placeholder="Ex: 75,00" required>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label for="unidade" class="form-label">Unidade *</label>
-                            <input type="text" class="form-control" id="unidade" name="unidade" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="m2" class="form-label">M² *</label>
-                            <input type="text" class="form-control" id="m2" name="m2" required>
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="valorUnidade" class="form-label required-field">Valor da Unidade</label>
+                                <input type="text" class="form-control" id="valorUnidade" name="valorUnidade" placeholder="R$ 0,00" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="comissaoPercentual" class="form-label required-field">Percentual de Comissão</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="comissaoPercentual" name="comissaoPercentual" placeholder="0,00" required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Valor da Comissão</label>
+                                <div class="comissao-result" id="valorComissaoText">R$ 0,00</div>
+                                <input type="hidden" id="valorComissaoHidden" name="valorComissao">
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="valorUnidade" class="form-label">Valor da Unidade (R$) *</label>
-                            <input type="text" class="form-control" id="valorUnidade" name="valorUnidade" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="comissaoPercentual" class="form-label">% Comissão *</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="comissaoPercentual" name="comissaoPercentual" required>
-                                <span class="input-group-text">%</span>
+                    <!-- Seção Equipe de Vendas -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-users me-2"></i>Equipe de Vendas
+                        </h3>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="diretoriaId" class="form-label required-field">Diretoria</label>
+                                <select class="form-select" id="diretoriaId" name="diretoriaId" required>
+                                    <option value="">Selecione a diretoria...</option>
+                                    <% 
+                                    If Not rsDiretorias.EOF Then
+                                        rsDiretorias.MoveFirst
+                                        Do While Not rsDiretorias.EOF 
+                                    %>
+                                        <option value="<%= rsDiretorias("DiretoriaID") %>"><%= rsDiretorias("NomeDiretoria") %></option>
+                                    <%
+                                            rsDiretorias.MoveNext
+                                        Loop
+                                    End If
+                                    %>
+                                </select>
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Valor Comissão</label>
-                            <div class="form-control comissao-result" id="valorComissaoText">R$ 0,00</div>
-                            <input type="hidden" id="valorComissaoHidden" name="valorComissao">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Card Vendido Por -->
-            <div class="card">
-                <div class="card-header">Vendido Por</div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="diretoriaId" class="form-label">Diretoria *</label>
-                            <select class="form-select" id="diretoriaId" name="diretoriaId" required>
-                                <option value="">Selecione...</option>
-                                <% 
-                                If Not rsDiretorias.EOF Then
-                                    rsDiretorias.MoveFirst
-                                    Do While Not rsDiretorias.EOF 
-                                %>
-                                    <option value="<%= rsDiretorias("DiretoriaID") %>"><%= rsDiretorias("NomeDiretoria") %></option>
-                                <%
-                                        rsDiretorias.MoveNext
-                                    Loop
-                                End If
-                                %>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="gerenciaId" class="form-label">Gerência *</label>
-                            <select class="form-select" id="gerenciaId" name="gerenciaId" required disabled>
-                                <option value="">Selecione uma diretoria primeiro</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="corretorId" class="form-label">Corretor *</label>
-                            <select class="form-select select2" id="corretorId" name="corretorId" required>
-                                <option value="">Selecione...</option>
-                                <% 
-                                If Not rsCorretores.EOF Then
-                                    rsCorretores.MoveFirst
-                                    Do While Not rsCorretores.EOF 
-                                %>
-                                    <option value="<%= rsCorretores("UserId") %>"><%= rsCorretores("Nome") %></option>
-                                <%
-                                        rsCorretores.MoveNext
-                                    Loop
-                                End If
-                                %>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Card Comissão -->
-            <div class="card">
-                <div class="card-header">Distribuição da Comissão</div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label for="comissaoDiretoria" class="form-label">% Diretoria</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="comissaoDiretoria" name="comissaoDiretoria" value="5,00">
-                                <span class="input-group-text">%</span>
+                            <div class="col-md-4">
+                                <label for="gerenciaId" class="form-label required-field">Gerência</label>
+                                <select class="form-select" id="gerenciaId" name="gerenciaId" required disabled>
+                                    <option value="">Selecione uma diretoria primeiro</option>
+                                </select>
                             </div>
-                            <input type="text" class="form-control mt-2" id="valorComissaoDiretoria" name="valorComissaoDiretoria" readonly>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="comissaoGerencia" class="form-label">% Gerência</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="comissaoGerencia" name="comissaoGerencia" value="10,00">
-                                <span class="input-group-text">%</span>
+                            <div class="col-md-4">
+                                <label for="corretorId" class="form-label required-field">Corretor</label>
+                                <select class="form-select select2" id="corretorId" name="corretorId" required>
+                                    <option value="">Selecione o corretor...</option>
+                                    <% 
+                                    If Not rsCorretores.EOF Then
+                                        rsCorretores.MoveFirst
+                                        Do While Not rsCorretores.EOF 
+                                    %>
+                                        <option value="<%= rsCorretores("UserId") %>"><%= rsCorretores("Nome") %></option>
+                                    <%
+                                            rsCorretores.MoveNext
+                                        Loop
+                                    End If
+                                    %>
+                                </select>
                             </div>
-                            <input type="text" class="form-control mt-2" id="valorComissaoGerencia" name="valorComissaoGerencia" readonly>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="comissaoCorretor" class="form-label">% Corretor</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="comissaoCorretor" name="comissaoCorretor" value="35,00">
-                                <span class="input-group-text">%</span>
-                            </div>
-                            <input type="text" class="form-control mt-2" id="valorComissaoCorretor" name="valorComissaoCorretor" readonly>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Total Comissão</label>
-                            <input type="text" class="form-control" id="valorComissaoSoma" name="valorComissaoSoma" readonly>
-                            <div id="comissaoError" class="error-message mt-2"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">Outras Informações</div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label for="dataVenda" class="form-label">Data da Venda *</label>
-                            <input type="date" class="form-control" id="dataVenda" name="dataVenda" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="trimestre" class="form-label">Trimestre</label>
-                            <select class="form-select" id="trimestre" name="trimestre">
-                                <option value="">Selecione...</option>
-                                <option value="1">1º Trimestre</option>
-                                <option value="2">2º Trimestre</option>
-                                <option value="3">3º Trimestre</option>
-                                <option value="4">4º Trimestre</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="obs" class="form-label">Observações</label>
-                            <textarea class="form-control" id="obs" name="obs" rows="3"></textarea>
                         </div>
                     </div>
                     
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="gestao_vendas_list2r.asp" class="btn btn-secondary me-md-2"><i class="fas fa-times"></i> Cancelar</a>
-                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Salvar Venda</button>
+                    <!-- Seção Distribuição de Comissões -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-chart-pie me-2"></i>Distribuição de Comissões
+                        </h3>
+                        <div class="card comissao-card">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="comissaoDiretoria" class="form-label">Diretoria</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="comissaoDiretoria" name="comissaoDiretoria" value="5,00">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <div class="comissao-value mt-2" id="valorComissaoDiretoriaText">R$ 0,00</div>
+                                        <input type="hidden" id="valorComissaoDiretoria" name="valorComissaoDiretoria">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="comissaoGerencia" class="form-label">Gerência</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="comissaoGerencia" name="comissaoGerencia" value="10,00">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <div class="comissao-value mt-2" id="valorComissaoGerenciaText">R$ 0,00</div>
+                                        <input type="hidden" id="valorComissaoGerencia" name="valorComissaoGerencia">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="comissaoCorretor" class="form-label">Corretor</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="comissaoCorretor" name="comissaoCorretor" value="35,00">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <div class="comissao-value mt-2" id="valorComissaoCorretorText">R$ 0,00</div>
+                                        <input type="hidden" id="valorComissaoCorretor" name="valorComissaoCorretor">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Total Distribuído</label>
+                                        <div class="comissao-result" id="valorComissaoSomaText">R$ 0,00</div>
+                                        <input type="hidden" id="valorComissaoSoma" name="valorComissaoSoma">
+                                        <div id="comissaoError" class="error-message mt-2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                    
+                    <!-- Seção Informações Adicionais -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-info-circle me-2"></i>Informações Adicionais
+                        </h3>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="dataVenda" class="form-label required-field">Data da Venda</label>
+                                <input type="date" class="form-control" id="dataVenda" name="dataVenda" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="trimestre" class="form-label">Trimestre</label>
+                                <select class="form-select" id="trimestre" name="trimestre">
+                                    <option value="">Selecione o trimestre...</option>
+                                    <option value="1">1º Trimestre</option>
+                                    <option value="2">2º Trimestre</option>
+                                    <option value="3">3º Trimestre</option>
+                                    <option value="4">4º Trimestre</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="obs" class="form-label">Observações</label>
+                                <textarea class="form-control" id="obs" name="obs" rows="3" placeholder="Observações adicionais sobre a venda..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botões de Ação -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="gestao_vendas_list2x.asp" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Salvar Venda
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -499,7 +723,8 @@ End Function
             $('.select2').select2({
                 language: "pt-BR",
                 placeholder: "Selecione...",
-                allowClear: true
+                allowClear: true,
+                width: '100%'
             });
             
             // Máscaras para os campos
@@ -507,20 +732,19 @@ End Function
             $('#comissaoPercentual, #comissaoDiretoria, #comissaoGerencia, #comissaoCorretor').mask('##0,00', {reverse: true});
             $('#m2').mask('#0,00', {reverse: true});
             
-            // Formata campos monetários como somente leitura
-            $('#valorComissaoDiretoria, #valorComissaoGerencia, #valorComissaoCorretor').mask('#.##0,00', {reverse: true, readonly: true});
-            
             // Carrega gerencias quando seleciona diretoria
             $('#diretoriaId').change(function() {
                 var diretoriaId = $(this).val();
                 if (diretoriaId) {
                     $('#gerenciaId').prop('disabled', false);
                     $.getJSON('get_gerencias.asp', {diretoriaId: diretoriaId}, function(data) {
-                        var options = '<option value="">Selecione...</option>';
+                        var options = '<option value="">Selecione a gerência...</option>';
                         $.each(data, function(key, val) {
                             options += '<option value="' + val.GerenciaID + '">' + val.NomeGerencia + '</option>';
                         });
                         $('#gerenciaId').html(options);
+                    }).fail(function() {
+                        $('#gerenciaId').html('<option value="">Erro ao carregar gerencias</option>');
                     });
                 } else {
                     $('#gerenciaId').prop('disabled', true).html('<option value="">Selecione uma diretoria primeiro</option>');
@@ -587,7 +811,7 @@ End Function
                     // Validação do total distribuído
                     var diferenca = Math.abs(comissaoTotal - totalDistribuido);
                     if (diferenca > 0.01) {
-                        $('#comissaoError').text('');
+                        $('#comissaoError').text('Atenção: A soma das comissões não corresponde ao total');
                     } else {
                         $('#comissaoError').text('');
                     }
@@ -596,21 +820,17 @@ End Function
                     $('#valorComissaoText').text('R$ ' + comissaoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                     $('#valorComissaoHidden').val(comissaoTotal.toFixed(2));
                     
-                    $('#valorComissaoDiretoria').val(
-                        'R$ ' + comissaoDiretoria.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
-                    );
+                    $('#valorComissaoDiretoriaText').text('R$ ' + comissaoDiretoria.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#valorComissaoDiretoria').val(comissaoDiretoria.toFixed(2));
                     
-                    $('#valorComissaoGerencia').val(
-                        'R$ ' + comissaoGerencia.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
-                    );
+                    $('#valorComissaoGerenciaText').text('R$ ' + comissaoGerencia.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#valorComissaoGerencia').val(comissaoGerencia.toFixed(2));
                     
-                    $('#valorComissaoCorretor').val(
-                        'R$ ' + comissaoCorretor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
-                    );
+                    $('#valorComissaoCorretorText').text('R$ ' + comissaoCorretor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#valorComissaoCorretor').val(comissaoCorretor.toFixed(2));
                     
-                    $('#valorComissaoSoma').val(
-                        'R$ ' + totalDistribuido.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})
-                    );
+                    $('#valorComissaoSomaText').text('R$ ' + totalDistribuido.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#valorComissaoSoma').val(totalDistribuido.toFixed(2));
 
                 } catch(e) {
                     console.error("Erro no cálculo:", e);
@@ -623,6 +843,10 @@ End Function
             
             // Calcula a comissão inicial
             calcularComissoes();
+
+            // Define a data atual como padrão
+            var today = new Date().toISOString().split('T')[0];
+            $('#dataVenda').val(today).trigger('change');
         });
     </script>
 </body>

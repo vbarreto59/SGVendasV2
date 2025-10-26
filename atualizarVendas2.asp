@@ -4,7 +4,7 @@
 ' ROTINA PARA ATUALIZAR Empresa_ID e NomeEmpresa NA TABELA Vendas
 ' ===============================================
 
-' Configuração dos caminhos dos bancos de dados
+' Configuração dos caminhos dos bancos de dadosDim connSales, connSunnyc
 dbSunnyPath = Split(StrConn, "Data Source=")(1)
 dbSunSalesPath = Split(StrConnSales, "Data Source=")(1)
 
@@ -14,7 +14,7 @@ If dbSunnyPath = "" Or dbSunSalesPath = "" Then
 End If
 
 ' Inicializar conexões
-Dim connSales, connSunny
+'Dim connSales, connSunny
 Set connSales = Server.CreateObject("ADODB.Connection")
 Set connSunny = Server.CreateObject("ADODB.Connection")
 
@@ -29,7 +29,7 @@ End If
 On Error GoTo 0
 
 ' Selecionar todos os registros de Vendas
-Dim rsVendas
+'Dim rsVendas
 Set rsVendas = Server.CreateObject("ADODB.Recordset")
 rsVendas.Open "SELECT ID, Empreend_ID FROM Vendas", connSales, 3, 3 ' adOpenStatic, adLockOptimistic
 
@@ -44,7 +44,7 @@ Set rsEmpreendimento = Server.CreateObject("ADODB.Recordset")
 
 If Not rsVendas.EOF Then
     Do While Not rsVendas.EOF
-        Dim vendaID, empreendID, empresaID, nomeEmpresa, sqlUpdate
+        'Dim vendaID, empreendID, empresaID, nomeEmpresa, sqlUpdate
         vendaID = rsVendas("ID")
         empreendID = rsVendas("Empreend_ID")
         

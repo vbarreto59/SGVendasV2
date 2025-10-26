@@ -30,7 +30,7 @@ End Function
 Dim vendaId
 vendaId = Request.QueryString("id")
 If Not IsNumeric(vendaId) Or vendaId = "" Then
-    Response.Write "<script>alert('Erro: ID da venda inválido.');window.location.href='gestao_vendas_list2r.asp';</script>"
+    Response.Write "<script>alert('Erro: ID da venda inválido.');window.location.href='gestao_vendas_list2x.asp';</script>"
     Response.End
 End If
 
@@ -47,7 +47,7 @@ Set rsVenda = Server.CreateObject("ADODB.Recordset")
 rsVenda.Open "SELECT * FROM Vendas WHERE ID = " & CInt(vendaId), connSales
 
 If rsVenda.EOF Then
-    Response.Write "<script>alert('Erro: Venda não encontrada.');window.location.href='gestao_vendas_list2r.asp';</script>"
+    Response.Write "<script>alert('Erro: Venda não encontrada.');window.location.href='gestao_vendas_list2x.asp';</script>"
     rsVenda.Close
     Set rsVenda = Nothing
     Response.End
@@ -94,7 +94,7 @@ rsCheck.Open "SELECT ID_Venda FROM COMISSOES_A_PAGAR WHERE ID_Venda = " & CInt(v
 
 If Not rsCheck.EOF Then
     ' Se a comissão já existe, exibe uma mensagem e não insere
-    Response.Write "<script>alert('A comissão para esta venda já foi gerada e não pode ser criada novamente.');window.location.href='gestao_vendas_list2r.asp';</script>"
+    Response.Write "<script>alert('A comissão para esta venda já foi gerada e não pode ser criada novamente.');window.location.href='gestao_vendas_list2x.asp';</script>"
     rsCheck.Close
     Set rsCheck = Nothing
     Response.End
@@ -105,7 +105,7 @@ Else
 
     ' Validações
     If IsEmpty(vendaId) Or IsNull(vendaId) Or vendaId = "" Then
-        Response.Write "<script>alert('Erro: ID da venda inválido.');window.location.href='gestao_vendas_list2r.asp';</script>"
+        Response.Write "<script>alert('Erro: ID da venda inválido.');window.location.href='gestao_vendas_list2x.asp';</script>"
         Response.End
     End If
     If IsEmpty(diretoriaId) Or IsNull(diretoriaId) Or diretoriaId = "" Then
@@ -115,15 +115,15 @@ Else
         gerenciaId = 0
     End If
     If IsEmpty(corretorId) Or IsNull(corretorId) Or corretorId = "" Then
-        Response.Write "<script>alert('Erro: ID do corretor inválido.');window.location.href='gestao_vendas_list2r.asp';</script>"
+        Response.Write "<script>alert('Erro: ID do corretor inválido.');window.location.href='gestao_vendas_list2x.asp';</script>"
         Response.End
     End If
     If IsEmpty(dataVenda) Or IsNull(dataVenda) Or dataVenda = "" Then
-        Response.Write "<script>alert('Erro: Data de venda inválida.');window.location.href='gestao_vendas_list2r.asp';</script>"
+        Response.Write "<script>alert('Erro: Data de venda inválida.');window.location.href='gestao_vendas_list2x.asp';</script>"
         Response.End
     End If
     If IsEmpty(unidade) Or IsNull(unidade) Or unidade = "" Then
-        Response.Write "<script>alert('Erro: Unidade inválida.');window.location.href='gestao_vendas_list2r.asp';</script>"
+        Response.Write "<script>alert('Erro: Unidade inválida.');window.location.href='gestao_vendas_list2x.asp';</script>"
         Response.End
     End If
 
@@ -179,7 +179,7 @@ Else
         If IsNull(nomeEmpreendimento) Then nomeEmpreendimento = ""
     Else
         nomeEmpreendimento = ""
-        Response.Write "<script>alert('Erro: Empreendimento não encontrado.');window.location.href='gestao_vendas_list2r.asp';</script>"
+        Response.Write "<script>alert('Erro: Empreendimento não encontrado.');window.location.href='gestao_vendas_list2x.asp';</script>"
         rsEmp.Close
         Set rsEmp = Nothing
         Response.End
@@ -207,7 +207,7 @@ Else
     On Error Resume Next
     connSales.Execute(sql)
     If Err.Number <> 0 Then
-        Response.Write "<script>alert('Erro ao gerar comissão: " & Replace(Err.Description, "'", "\'") & "');window.location.href='gestao_vendas_list2r.asp';</script>"
+        Response.Write "<script>alert('Erro ao gerar comissão: " & Replace(Err.Description, "'", "\'") & "');window.location.href='gestao_vendas_list2x.asp';</script>"
         Response.End
     End If
     On Error GoTo 0
@@ -223,6 +223,6 @@ Else
     End If
 
     ' Redireciona com mensagem de sucesso
-    Response.Redirect "gestao_vendas_list2r.asp?mensagem=Comissão gerada com sucesso!"
+    Response.Redirect "gestao_vendas_list2x.asp?mensagem=Comissão gerada com sucesso!"
 End If
 %>

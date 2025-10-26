@@ -49,7 +49,7 @@ End Function
 Dim vendaId
 vendaId = Request.QueryString("id")
 If Not IsNumeric(vendaId) Or vendaId = "" Then
-    Response.Redirect "gestao_vendas_list2r.asp"
+    Response.Redirect "gestao_vendas_list2x.asp"
 End If
 
 ' Cria as conexões
@@ -65,7 +65,7 @@ Set rsVenda = Server.CreateObject("ADODB.Recordset")
 rsVenda.Open "SELECT * FROM Vendas WHERE ID = " & vendaId, connSales
 
 If rsVenda.EOF Then
-    Response.Redirect "gestao_vendas_list.asp"
+    Response.Redirect "gestao_vendas_list2x.asp"
 End If
 
 ' ====================================================================
@@ -230,7 +230,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
 
 
         
-        Response.Redirect "gestao_vendas_list2r.asp?mensagem=Venda atualizada com sucesso!"
+        Response.Redirect "gestao_vendas_list2x.asp?mensagem=Venda atualizada com sucesso!"
 '################################################################################################################'
     ElseIf action = "gerarComissoes" Then
         ' Lógica para INSERIR na tabela COMISSOES_A_PAGAR, com VERIFICAÇÃO de duplicidade
@@ -362,7 +362,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
                 End If
                 On Error GoTo 0
 
-                Response.Redirect "gestao_vendas_list2r.asp?mensagem=Comissão gerada com sucesso!"
+                Response.Redirect "gestao_vendas_list2x.asp?mensagem=Comissão gerada com sucesso!"
             On Error GoTo 0
 
             ' Limpar objetos
