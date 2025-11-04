@@ -7,14 +7,14 @@ Response.Buffer = True
 Response.ContentType = "text/html"
 Response.Charset = "UTF-8"
 
-' Função auxiliar para formatar valores (mantida)
+' Função auxiliar para formatar valores
 Function FormatarValor(valor)
     valor = Replace(valor, ".", ",")
     valor = Replace(valor, ",", ".")
     FormatarValor = valor
 End Function
 
-' Função para converter valores monetários corretamente (mantida)
+' Função para converter valores monetários corretamente
 Function ParseCurrency(value)
     On Error Resume Next
     If IsNumeric(value) Then
@@ -53,15 +53,12 @@ If rsVenda.EOF Then
     Response.End
 End If
 
-' Obtém os dados da tabela Vendas (Adicionando os campos de Prêmio)
+' Obtém os dados da tabela Vendas
 Dim empreend_id, unidade, corretorId, valorUnidade, comissaoPercentual
 Dim dataVenda, obs, m2, diretoriaId, gerenciaId, trimestre
 Dim comissaoDiretoria, comissaoGerencia, comissaoCorretor
 Dim valorComissaoGeral, valorComissaoDiretoria, valorComissaoGerencia, valorComissaoCorretor
 Dim nomeDiretor, nomeGerente, nomeCorretor, nomeEmpreendimento
-
-' 🆕 NOVAS VARIÁVEIS PARA PRÊMIOS
-Dim premioDiretoria, premioGerencia, premioCorretor
 
 empreend_id = rsVenda("Empreend_ID")
 unidade = Server.HTMLEncode(rsVenda("Unidade"))
@@ -73,22 +70,16 @@ dataVenda = rsVenda("DataVenda")
 obs = Server.HTMLEncode(rsVenda("Obs"))
 valorUnidade = ParseCurrency(rsVenda("ValorUnidade"))
 m2 = ParseCurrency(rsVenda("UnidadeM2"))
-
 comissaoPercentual = ParseCurrency(rsVenda("ComissaoPercentual"))
 comissaoDiretoria = ParseCurrency(rsVenda("ComissaoDiretoria"))
 comissaoGerencia = ParseCurrency(rsVenda("ComissaoGerencia"))
 comissaoCorretor = ParseCurrency(rsVenda("ComissaoCorretor"))
 
-' 🆕 Obtém os valores de premiação
-premioDiretoria = ParseCurrency(rsVenda("PremioDiretoria")) ' Ajuste o nome do campo se for diferente
-premioGerencia = ParseCurrency(rsVenda("PremioGerencia"))   ' Ajuste o nome do campo se for diferente
-premioCorretor = ParseCurrency(rsVenda("PremioCorretor"))   ' Ajuste o nome do campo se for diferente
-
 ' Fecha o recordset da venda
 rsVenda.Close
 Set rsVenda = Nothing
 
-' Cálculo das comissões (mantido)
+' Cálculo das comissões
 valorComissaoGeral = valorUnidade * (comissaoPercentual / 100)
 valorComissaoDiretoria = valorComissaoGeral * (comissaoDiretoria / 100)
 valorComissaoGerencia = valorComissaoGeral * (comissaoGerencia / 100)
@@ -112,7 +103,7 @@ Else
     rsCheck.Close
     Set rsCheck = Nothing
 
-    ' Validações (mantidas)
+    ' Validações
     If IsEmpty(vendaId) Or IsNull(vendaId) Or vendaId = "" Then
         Response.Write "<script>alert('Erro: ID da venda inválido.');window.location.href='gestao_vendas_list2x.asp';</script>"
         Response.End
@@ -136,7 +127,7 @@ Else
         Response.End
     End If
 
-    ' Arredondar valores decimais (usando FormatarValor que troca vírgula por ponto para o SQL)
+    ' Arredondar valores decimais
     comissaoDiretoria = FormatarValor(comissaoDiretoria)
     comissaoGerencia = FormatarValor(comissaoGerencia)
     comissaoCorretor = FormatarValor(comissaoCorretor)
@@ -145,12 +136,7 @@ Else
     valorComissaoCorretor = FormatarValor(valorComissaoCorretor)
     valorComissaoGeral = FormatarValor(valorComissaoGeral)
 
-    ' 🆕 Formatar valores de premiação
-    premioDiretoria = FormatarValor(premioDiretoria)
-    premioGerencia = FormatarValor(premioGerencia)
-    premioCorretor = FormatarValor(premioCorretor)
-
-    ' Busca os nomes do diretor, gerente, corretor e empreendimento (mantido)
+    ' Busca os nomes do diretor, gerente, corretor e empreendimento
     Dim rsNomes
     Set rsNomes = Server.CreateObject("ADODB.Recordset")
     
@@ -204,13 +190,10 @@ Else
 
     ' Insere na tabela COMISSOES_A_PAGAR
     Dim sql
-    
-    ' 🆕 Adiciona as colunas de Prêmio na string SQL
     sql = "INSERT INTO COMISSOES_A_PAGAR (ID_Venda, Empreend_ID, Empreendimento, Unidade, DataVenda, " & _
           "UserIdDiretoria, UserIdGerencia, UserIdCorretor, PercDiretoria, ValorDiretoria, " & _
           "PercGerencia, ValorGerencia, PercCorretor, ValorCorretor, TotalComissao, " & _
-          "NomeDiretor, NomeGerente, NomeCorretor, " & _
-          "PremioDiretoria, PremioGerencia, PremioCorretor) " & _
+          "NomeDiretor, NomeGerente, NomeCorretor) " & _
           "VALUES (" & CInt(vendaId) & ", " & CInt(empreend_id) & ", '" & Replace(nomeEmpreendimento, "'", "''") & "', '" & Replace(unidade, "'", "''") & "', '" & Replace(dataVenda, "'", "''") & "', " & _
           CInt(diretoriaId) & ", " & CInt(gerenciaId) & ", " & CInt(corretorId) & ", " & _
           Replace(CStr(comissaoDiretoria), ",", ".") & ", " & Replace(CStr(valorComissaoDiretoria), ",", ".") & ", " & _
@@ -219,15 +202,12 @@ Else
           Replace(CStr(valorComissaoGeral), ",", ".") & ", " & _
           "'" & Replace(nomeDiretor, "'", "''") & "', " & _
           "'" & Replace(nomeGerente, "'", "''") & "', " & _
-          "'" & Replace(nomeCorretor, "'", "''") & "', " & _
-          Replace(CStr(premioDiretoria), ",", ".") & ", " & _
-          Replace(CStr(premioGerencia), ",", ".") & ", " & _
-          Replace(CStr(premioCorretor), ",", ".") & ")"
+          "'" & Replace(nomeCorretor, "'", "''") & "')"
 
     On Error Resume Next
     connSales.Execute(sql)
     If Err.Number <> 0 Then
-        Response.Write "<script>alert('Erro ao gerar comissão (SQL): " & Replace(Err.Description, "'", "\'") & "');window.location.href='gestao_vendas_list2x.asp';</script>"
+        Response.Write "<script>alert('Erro ao gerar comissão: " & Replace(Err.Description, "'", "\'") & "');window.location.href='gestao_vendas_list2x.asp';</script>"
         Response.End
     End If
     On Error GoTo 0
@@ -243,6 +223,6 @@ Else
     End If
 
     ' Redireciona com mensagem de sucesso
-    Response.Redirect "gestao_vendas_list2x.asp?mensagem=Comissão e Premiação geradas com sucesso!"
+    Response.Redirect "gestao_vendas_list2x.asp?mensagem=Comissão gerada com sucesso!"
 End If
 %>

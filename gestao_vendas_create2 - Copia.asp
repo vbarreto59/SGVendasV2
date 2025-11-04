@@ -2,7 +2,7 @@
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
 
-<% ' funcional'
+<%
     Function RemoverNumeros(texto)
         Dim regex
         Set regex = New RegExp
@@ -55,9 +55,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     Dim valorComissaoGeral, valorComissaoDiretoria, valorComissaoGerencia, valorComissaoCorretor
     Dim sqlVendas, sqlComissoes, vendaId
     
-    ' CAMPOS DE PREMIAÇÃO ADICIONADOS
-    Dim premioDiretoria, premioGerencia, premioCorretor
-    
     ' Coleta e formatação dos dados do formulário.
     ' A função `GetFormattedNumber` centraliza a lógica de formatação.
     empreend_id = Request.Form("empreend_id")
@@ -74,15 +71,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     comissaoDiretoria = GetFormattedNumber(Request.Form("comissaoDiretoria"))
     comissaoGerencia = GetFormattedNumber(Request.Form("comissaoGerencia"))
     comissaoCorretor = GetFormattedNumber(Request.Form("comissaoCorretor"))
-
-    ' Premiação em 04 11 2025 -----------------------------
-    ' Coleta dos valores monetários da premiação. A divisão por 100 foi removida,
-    ' assumindo que GetFormattedNumber já entrega o valor numérico (ex: 10000.00).
-    premioDiretoria = GetFormattedNumber(Request.Form("premioDiretoria"))    
-    premioGerencia  = GetFormattedNumber(Request.Form("premioGerencia"))    
-    premioCorretor  = GetFormattedNumber(Request.Form("premioCorretor"))    
-    '----------------------'
-
     usuario = Session("Usuario")
     
     ' Validação de dados numéricos essenciais.
@@ -143,8 +131,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     "DiretoriaId, Diretoria, GerenciaId, Gerencia, " & _
     "ComissaoDiretoria, ValorDiretoria, " & _
     "ComissaoGerencia, ValorGerencia, " & _
-    "ComissaoCorretor, ValorCorretor, " & _
-    "PremioDiretoria, PremioGerencia, PremioCorretor) " & _
+    "ComissaoCorretor, ValorCorretor) " & _
     "VALUES (" & empreend_id & ", '" & SanitizeSQL(nomeEmpreendimento) & "', " & _
     "'" & SanitizeSQL(unidade) & "', " & m2 & ", " & _
     "'" & SanitizeSQL(corretorNome) & "', " & corretorId & ", " & _
@@ -153,8 +140,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     "'" & SanitizeSQL(obs) & "', '" & SanitizeSQL(usuario) & "', " & _
     diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
     "'" & SanitizeSQL(gerenciaNome) & "', " & comissaoDiretoria & ", " & valorComissaoDiretoria & ", " & _
-    comissaoGerencia & ", " & valorComissaoGerencia & ", " & comissaoCorretor & ", " & valorComissaoCorretor & ", " & _
-    premioDiretoria & ", " & premioGerencia & ", " & premioCorretor & ")"
+    comissaoGerencia & ", " & valorComissaoGerencia & ", " & comissaoCorretor & ", " & valorComissaoCorretor & ")"
 
     connSales.Execute(sqlVendas)
 
@@ -163,7 +149,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     If Not rsLastID.EOF Then vendaId = rsLastID("NewID")
     rsLastID.Close
     
-    '-------- Inserção na tabela COMISSOES_A_PAGAR. (Sem alteração, pois é apenas para comissões)
+    '-------- Inserção na tabela COMISSOES_A_PAGAR.
     sqlComissoes = "INSERT INTO COMISSOES_A_PAGAR (" & _
     "ID_Venda, Empreendimento, Unidade, DataVenda, UserIdDiretoria, NomeDiretor, " & _
     "UserIdGerencia, NomeGerente, UserIdCorretor, NomeCorretor, PercDiretoria, ValorDiretoria, " & _
@@ -179,7 +165,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     ' Redireciona para a página de sucesso após a inserção.
     Response.Redirect "gestao_vendas_list2x.asp?mensagem=Venda cadastrada com sucesso!"
 End If
-
 
 ' -----------------------------------------------------------------------------------
 ' BUSCA DE DADOS PARA DROPDOWNS (MÉTODO GET)
@@ -679,41 +664,6 @@ End Function
                             </div>
                         </div>
                     </div>
-
-                    <!-- #### Distribuicao de Premios 04 11 2025 -->
-                    <div class="form-section">
-                        <h3 class="section-title">
-                            <i class="fas fa-trophy me-2"></i>Premiações
-                        </h3>
-                        <div class="card premio-card">
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label for="premioDiretoria" class="form-label">Prêmio Diretoria</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">R$</span>
-                                            <input type="text" class="form-control" id="premioDiretoria" name="premioDiretoria" value="0,00">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="premioGerencia" class="form-label">Prêmio Gerência</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">R$</span>
-                                            <input type="text" class="form-control" id="premioGerencia" name="premioGerencia" value="0,00">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="premioCorretor" class="form-label">Prêmio Corretor</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">R$</span>
-                                            <input type="text" class="form-control" id="premioCorretor" name="premioCorretor" value="0,00">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- ################## -->
                     
                     <!-- Seção Informações Adicionais -->
                     <div class="form-section">
@@ -762,32 +712,11 @@ End Function
     <!-- jQuery e jQuery Mask -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-maskmoney/3.0.2/jquery.maskMoney.min.js"></script>    
     
     <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/pt-BR.js"></script>
     
-
-
-<script>
-    // 3. Aplicação da máscara
-    $(document).ready(function() {
-        $('#premioDiretoria, #premioGerencia, #premioCorretor').maskMoney({
-            allowNegative: false,
-            thousands: '.',
-            decimal: ',',
-            affixesStay: true
-        });
-        
-        // Importante: para que a máscara funcione corretamente no primeiro carregamento, 
-        // é uma boa prática chamar o trigger no carregamento.
-        $('#premioDiretoria').trigger('mask.maskMoney');
-        $('#premioGerencia').trigger('mask.maskMoney');
-        $('#premioCorretor').trigger('mask.maskMoney');
-    });
-</script>
-
     <script>
         $(document).ready(function() {
             // Inicializa select2 nos selects

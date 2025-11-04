@@ -1,6 +1,5 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conexao.asp" -->
-
 <%
 ' Processar ativação/desativação do usuário
 If Request.Form("acao") = "toggle_status" Then

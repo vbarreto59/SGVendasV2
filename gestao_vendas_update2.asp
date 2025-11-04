@@ -2,8 +2,7 @@
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
 
-
-<%
+<% ' funcional em 04 11 2025'
 Response.Buffer = True
 Response.ContentType = "text/html"
 Response.Charset = "UTF-8"
@@ -79,7 +78,9 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     Dim comissaoDiretoria, comissaoGerencia, comissaoCorretor
     Dim valorComissaoGeral, valorComissaoDiretoria, valorComissaoGerencia, valorComissaoCorretor
     Dim nomeDiretor, nomeGerente, nomeCorretor, nomeEmpreendimento, nomeDiretoria, nomeGerencia
-   '' Dim vendaId
+    
+    ' CAMPOS DE PREMIAÇÃO ADICIONADOS - 04 11 2025
+    Dim premioDiretoria, premioGerencia, premioCorretor
 
     ' Obtenção segura dos valores do formulário
     vendaId = Request.Form("vendaId")
@@ -112,11 +113,17 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     comissaoDiretoria = ParseCurrency(Request.Form("comissaoDiretoria"))
     comissaoGerencia = ParseCurrency(Request.Form("comissaoGerencia"))
     comissaoCorretor = ParseCurrency(Request.Form("comissaoCorretor"))
-
+    
+    ' PREMIAÇÕES - Coleta e formatação
+    premioDiretoria = ParseCurrency(Request.Form("premioDiretoria"))
+    premioGerencia = ParseCurrency(Request.Form("premioGerencia"))
+    premioCorretor = ParseCurrency(Request.Form("premioCorretor"))
+    
     ' Validação dos valores obrigatórios
     If Not IsNumeric(valorUnidade) Or Not IsNumeric(comissaoPercentual) Or _
        Not IsNumeric(comissaoDiretoria) Or Not IsNumeric(comissaoGerencia) Or _
-       Not IsNumeric(comissaoCorretor) Then
+       Not IsNumeric(comissaoCorretor) Or Not IsNumeric(premioDiretoria) Or _
+       Not IsNumeric(premioGerencia) Or Not IsNumeric(premioCorretor) Then
         Response.Write "<script>alert('Valores numéricos inválidos!');history.back();</script>"
         Response.End
     End If
@@ -150,8 +157,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     action = Request.Form("action")
     
     If action = "updateVenda" Then
-            ' Busca os nomes atuais da diretoria e gerência (do banco principal)
-        'Dim nomeDiretoria, nomeGerencia
+        ' Busca os nomes atuais da diretoria e gerência (do banco principal)
         Set rsNomes = Server.CreateObject("ADODB.Recordset")
         
         ' Busca nome da diretoria
@@ -172,7 +178,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
         End If
         rsNomes.Close
         
-
         'Busca Empreendimento'
         rsNomes.Open "SELECT NomeEmpreendimento FROM Empreendimento WHERE Empreend_ID =" & empreend_id , conn
         If Not rsNomes.EOF Then
@@ -181,9 +186,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
             nomeEmpreend = ""
         End If
         rsNomes.Close
-       Set rsNomes = Nothing
-
-
+        Set rsNomes = Nothing
 
         empreend_id = Request.Form("empreend_id")
         valorComissaoGeral = FormatarValor(valorComissaoGeral)
@@ -191,9 +194,8 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
         valorComissaoGerencia = FormatarValor(valorComissaoGerencia)
         valorComissaoCorretor = FormatarValor(valorComissaoCorretor)
         valorUnidade = FormatarValor(valorUnidade)
-
         
-        ' Atualização segura da tabela Vendas incluindo os nomes (no banco de vendas)
+        ' Atualização segura da tabela Vendas incluindo os nomes E PREMIAÇÕES
         sql = "UPDATE Vendas SET " & _
               "Empreend_ID = " & empreend_id & ", " & _
               "NomeEmpreendimento = '" & Replace(nomeEmpreend, "'", "''") & "', " & _
@@ -219,19 +221,17 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
               "ValorGerencia = " & valorComissaoGerencia & ", " & _
               "ComissaoCorretor = " & comissaoCorretor & ", " & _
               "ValorCorretor = " & valorComissaoCorretor & ", " & _
+              "PremioDiretoria = " & premioDiretoria & ", " & _
+              "PremioGerencia = " & premioGerencia & ", " & _
+              "PremioCorretor = " & premioCorretor & ", " & _
               "Usuario = '" & Session("Usuario") & "' " & _
               "WHERE ID = " & CInt(vendaId)
 
-'Response.Write SQL
-'Response.End               
-        
         On Error Resume Next
         connSales.Execute(sql)
-
-
         
         Response.Redirect "gestao_vendas_list2x.asp?mensagem=Venda atualizada com sucesso!"
-'################################################################################################################'
+        
     ElseIf action = "gerarComissoes" Then
         ' Lógica para INSERIR na tabela COMISSOES_A_PAGAR, com VERIFICAÇÃO de duplicidade
         Dim rsCheck
@@ -275,7 +275,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
                 Response.End
             End If
 
-            ' Arredondar valores decimais para duas casas (assumindo que FormatarValor existe)
+            ' Arredondar valores decimais para duas casas
             comissaoDiretoria = FormatarValor(comissaoDiretoria)
             comissaoGerencia = FormatarValor(comissaoGerencia)
             comissaoCorretor = FormatarValor(comissaoCorretor)
@@ -285,7 +285,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
             valorComissaoGeral = FormatarValor(valorComissaoGeral)
 
             ' Busca os nomes do diretor, gerente, corretor e empreendimento
-            'Dim rsNomes
             Set rsNomes = Server.CreateObject("ADODB.Recordset")
             
             ' Busca nome do diretor
@@ -336,37 +335,33 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
             Set rsEmp = Nothing
             Set rsNomes = Nothing
 
-            ' Insere na tabela COMISSOES_A_PAGAR usando parâmetros
-            
-                sql = "INSERT INTO COMISSOES_A_PAGAR (ID_Venda, Empreendimento, Unidade, DataVenda, " & _
-                      "UserIdDiretoria, UserIdGerencia, UserIdCorretor, PercDiretoria, ValorDiretoria, " & _
-                      "PercGerencia, ValorGerencia, PercCorretor, ValorCorretor, TotalComissao, " & _
-                      "NomeDiretor, NomeGerente, NomeCorretor) " & _
-                      "VALUES (" & CInt(vendaId) & ", '" & Replace(nomeEmpreendimento, "'", "''") & "', '" & Replace(unidade, "'", "''") & "', '" & Replace(dataVenda, "'", "''") & "', " & _
-                      CInt(diretoriaId) & ", " & CInt(gerenciaId) & ", " & CInt(corretorId) & ", " & _
-                      Replace(CStr(comissaoDiretoria), ",", ".") & ", " & Replace(CStr(valorComissaoDiretoria), ",", ".") & ", " & _
-                      Replace(CStr(comissaoGerencia), ",", ".") & ", " & Replace(CStr(valorComissaoGerencia), ",", ".") & ", " & _
-                      Replace(CStr(comissaoCorretor), ",", ".") & ", " & Replace(CStr(valorComissaoCorretor), ",", ".") & ", " & _
-                      Replace(CStr(valorComissaoGeral), ",", ".") & ", " & _
-                      "'" & Replace(nomeDiretor, "'", "''") & "', " & _
-                      "'" & Replace(nomeGerente, "'", "''") & "', " & _
-                      "'" & Replace(nomeCorretor, "'", "''") & "')"
+            ' Insere na tabela COMISSOES_A_PAGAR incluindo PREMIAÇÕES
+            sql = "INSERT INTO COMISSOES_A_PAGAR (ID_Venda, Empreendimento, Unidade, DataVenda, " & _
+                  "UserIdDiretoria, UserIdGerencia, UserIdCorretor, PercDiretoria, ValorDiretoria, " & _
+                  "PercGerencia, ValorGerencia, PercCorretor, ValorCorretor, TotalComissao, " & _
+                  "NomeDiretor, NomeGerente, NomeCorretor, PremioDiretoria, PremioGerencia, PremioCorretor) " & _
+                  "VALUES (" & CInt(vendaId) & ", '" & Replace(nomeEmpreendimento, "'", "''") & "', '" & Replace(unidade, "'", "''") & "', '" & Replace(dataVenda, "'", "''") & "', " & _
+                  CInt(diretoriaId) & ", " & CInt(gerenciaId) & ", " & CInt(corretorId) & ", " & _
+                  Replace(CStr(comissaoDiretoria), ",", ".") & ", " & Replace(CStr(valorComissaoDiretoria), ",", ".") & ", " & _
+                  Replace(CStr(comissaoGerencia), ",", ".") & ", " & Replace(CStr(valorComissaoGerencia), ",", ".") & ", " & _
+                  Replace(CStr(comissaoCorretor), ",", ".") & ", " & Replace(CStr(valorComissaoCorretor), ",", ".") & ", " & _
+                  Replace(CStr(valorComissaoGeral), ",", ".") & ", " & _
+                  "'" & Replace(nomeDiretor, "'", "''") & "', " & _
+                  "'" & Replace(nomeGerente, "'", "''") & "', " & _
+                  "'" & Replace(nomeCorretor, "'", "''") & "', " & _
+                  Replace(CStr(premioDiretoria), ",", ".") & ", " & _
+                  Replace(CStr(premioGerencia), ",", ".") & ", " & _
+                  Replace(CStr(premioCorretor), ",", ".") & ")"
 
-
-           
-                On Error Resume Next
-                connSales.Execute(sql)
-                If Err.Number <> 0 Then
-                    Response.Write "<script>alert('Erro ao gerar comissão: " & Replace(Err.Description, "'", "\'") & "');history.back();</script>"
-                    Response.End
-                End If
-                On Error GoTo 0
-
-                Response.Redirect "gestao_vendas_list2x.asp?mensagem=Comissão gerada com sucesso!"
+            On Error Resume Next
+            connSales.Execute(sql)
+            If Err.Number <> 0 Then
+                Response.Write "<script>alert('Erro ao gerar comissão: " & Replace(Err.Description, "'", "\'") & "');history.back();</script>"
+                Response.End
+            End If
             On Error GoTo 0
 
-            ' Limpar objetos
-            Set cmdInsert = Nothing
+            Response.Redirect "gestao_vendas_list2x.asp?mensagem=Comissão gerada com sucesso!"
         End If
     End If
     
@@ -478,6 +473,18 @@ rsCorretores.Open "SELECT UserId, Nome FROM Usuarios WHERE Funcao = 'Corretor' A
             background-color: #007bff;
             color: #fff;
         }
+        
+        /* Estilo adicional para a seção de premiações */
+        .premio-card {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 4px solid #ffc107;
+        }
+        
+        .premio-card .card-header {
+            background: linear-gradient(to right, #ffc107, #ffb300);
+            color: #000;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -525,12 +532,12 @@ rsCorretores.Open "SELECT UserId, Nome FROM Usuarios WHERE Funcao = 'Corretor' A
                         <div class="col-md-3">
                             <label for="unidade" class="form-label">Unidade *</label>
                             <input type="text" class="form-control" id="unidade" name="unidade" 
-                                value="<%= rsVenda("Unidade") %>" required>
+                                value="<%= rsVenda("Unidade") %>">
                         </div>
                         <div class="col-md-3">
                             <label for="m2" class="form-label">M² *</label>
                             <input type="text" class="form-control" id="m2" name="m2" 
-                                value="<%= FormatNumber(rsVenda("UnidadeM2"), 2) %>" required>
+                                value="<%= FormatNumber(rsVenda("UnidadeM2"), 2) %>">
                         </div>
                     </div>
                     
@@ -677,6 +684,86 @@ rsCorretores.Open "SELECT UserId, Nome FROM Usuarios WHERE Funcao = 'Corretor' A
                 </div>
             </div>
             
+            <!-- Card Premiações - NOVA SEÇÃO -->
+            <div class="card premio-card">
+                <div class="card-header">Premiações</div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="premioDiretoria" class="form-label">Prêmio Diretoria (R$)</label>
+
+                            <%
+                                
+                                Dim dblPremioDiretoria
+                                
+                                If IsNull(rsVenda("PremioDiretoria")) Then
+                                    dblPremioDiretoria = 0
+                                Else
+                                    If IsNumeric(rsVenda("PremioDiretoria")) Then
+                                        dblPremioDiretoria = CDbl(rsVenda("PremioDiretoria"))
+                                    Else
+                                        dblPremioDiretoria = 0 ' Trata caso a string não seja numérica
+                                    End If
+                                End If
+                            %>                            
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="text" class="form-control" id="premioDiretoria" name="premioDiretoria" 
+                                    value="<%= FormatNumber(dblPremioDiretoria, 2) %>">
+                            </div>
+                        </div>
+                        <%
+                        
+
+                        ' 1. Prêmio Gerência
+                        Dim dblPremioGerencia
+                        If IsNull(rsVenda("PremioGerencia")) Then
+                            dblPremioGerencia = 0
+                        Else
+                            ' Garantia de que o valor é numérico (evita Type Mismatch)
+                            If IsNumeric(rsVenda("PremioGerencia")) Then
+                                dblPremioGerencia = CDbl(rsVenda("PremioGerencia"))
+                            Else
+                                dblPremioGerencia = 0
+                            End If
+                        End If
+
+                        ' 2. Prêmio Corretor
+                        Dim dblPremioCorretor
+                        If IsNull(rsVenda("PremioCorretor")) Then
+                            dblPremioCorretor = 0
+                        Else
+                            ' Garantia de que o valor é numérico (evita Type Mismatch)
+                            If IsNumeric(rsVenda("PremioCorretor")) Then
+                                dblPremioCorretor = CDbl(rsVenda("PremioCorretor"))
+                            Else
+                                dblPremioCorretor = 0
+                            End If
+                        End If
+
+                        %>
+
+                        <div class="col-md-4">
+                            <label for="premioGerencia" class="form-label">Prêmio Gerência (R$)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="text" class="form-control" id="premioGerencia" name="premioGerencia" 
+                                    value="<%= FormatNumber(dblPremioGerencia, 2) %>">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="premioCorretor" class="form-label">Prêmio Corretor (R$)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="text" class="form-control" id="premioCorretor" name="premioCorretor" 
+                                    value="<%= FormatNumber(dblPremioCorretor, 2) %>">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card Outras Informações -->
             <div class="card">
                 <div class="card-header">Outras Informações</div>
                 <div class="card-body">
@@ -703,7 +790,6 @@ rsCorretores.Open "SELECT UserId, Nome FROM Usuarios WHERE Funcao = 'Corretor' A
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-
                         <button type="submit" name="action" value="updateVenda" class="btn btn-success">
                             <i class="fas fa-save"></i> Atualizar Venda
                         </button>
@@ -733,10 +819,13 @@ rsCorretores.Open "SELECT UserId, Nome FROM Usuarios WHERE Funcao = 'Corretor' A
                 allowClear: true
             });
             
-            // Máscaras para os campos
+            // Máscaras para os campos - INCLUINDO PREMIAÇÕES
             $('#valorUnidade').mask('#.##0,00', {reverse: true});
             $('#comissaoPercentual, #comissaoDiretoria, #comissaoGerencia, #comissaoCorretor').mask('##0,00', {reverse: true});
             $('#m2').mask('#0,00', {reverse: true});
+            
+            // NOVAS MÁSCARAS PARA PREMIAÇÕES
+            $('#premioDiretoria, #premioGerencia, #premioCorretor').mask('#.##0,00', {reverse: true});
             
             // Formata campos monetários como somente leitura
             $('#valorComissaoDiretoria, #valorComissaoGerencia, #valorComissaoCorretor').mask('#.##0,00', {reverse: true, readonly: true});
