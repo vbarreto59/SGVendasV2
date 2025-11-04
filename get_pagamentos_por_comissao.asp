@@ -51,7 +51,7 @@ rs.CursorType = 0 ' adOpenForwardOnly
 rs.LockType = 1 ' adLockReadOnly
 
 ' Monta a query
-sql = "SELECT ID_Pagamento, DataPagamento, ValorPago, Status, UsuariosNome, TipoRecebedor, ID_Venda, Obs, UsuariosUserId " & _
+sql = "SELECT ID_Pagamento, DataPagamento, ValorPago, Status, UsuariosNome, TipoRecebedor, TipoPagamento, ID_Venda, Obs, UsuariosUserId " & _
       "FROM PAGAMENTOS_COMISSOES WHERE ID_Venda = " & CInt(idVenda) & " ORDER BY DataPagamento DESC"
 
 On Error Resume Next
@@ -80,6 +80,7 @@ If Not rs.EOF Then
         json = json & "{" & _
             """ID_Pagamento"": " & rs("ID_Pagamento") & "," & _
             """DataPagamento"": """ & EscapeJsonString(FormatDateTime(rs("DataPagamento"), 2)) & """," & _
+            """TipoPagamento"": """ & EscapeJsonString(rs("TipoPagamento")) & """," & _
             """ValorPago"": " & SafeFormatNumberForJson(rs("ValorPago")) & "," & _
             """Status"": """ & EscapeJsonString(rs("Status")) & """," & _
             """UsuariosNome"": """ & EscapeJsonString(rs("UsuariosNome")) & """," & _

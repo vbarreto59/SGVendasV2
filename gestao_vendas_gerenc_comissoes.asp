@@ -271,7 +271,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
             <th class="text-center">Ações</th>
         </tr>
     </thead>
-    <tbody>
+<tbody>
         <%
         If Not rsComissoes.EOF Then
             Do While Not rsComissoes.EOF
@@ -288,8 +288,6 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 
                 ' ====================================================================
                 ' 🟢 TRATAMENTO ROBUSTO DE VALORES DO RSCOMISSOES (COMISSÕES E PRÊMIOS)
-                ' Usamos If...Else para garantir que valores NULOS sejam tratados como 0.
-                ' Isso corrige os erros de 'Tipos Incompatíveis' e 'Uso inválido de Null'.
                 ' ====================================================================
                 Dim dblValorDiretoriaAPagar, dblValorGerenciaAPagar, dblValorCorretorAPagar
                 Dim dblPremioDiretoria, dblPremioGerencia, dblPremioCorretor
@@ -335,6 +333,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 
                 ' ====================================================================
                 ' Consulta para obter os pagamentos já realizados (COMISSÕES)
+                ' (MANTIDO INALTERADO)
                 ' ====================================================================
                 ' #### Pagamentos para Diretoria (Comissão)
                 sqlPagamentos = "SELECT Sum(ValorPago) AS ValorTotalPago, MAX(DataPagamento) as DataPagamento  " & _
@@ -384,6 +383,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 
                 ' ====================================================================
                 ' Consulta para obter os pagamentos já realizados (PRÊMIOS)
+                ' (MANTIDO INALTERADO)
                 ' ====================================================================
                 ' #### Pagamentos para Diretoria (Prêmio)
                 sqlPagamentos = "SELECT Sum(ValorPago) AS ValorTotalPago " & _
@@ -427,6 +427,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 
                 ' ====================================================================
                 ' Determina o status da comissão
+                ' (MANTIDO INALTERADO)
                 ' ====================================================================
                 Dim status, statusClass
                 status = rsComissoes("StatusPagamento")
@@ -439,17 +440,19 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 
                 ' ====================================================================
                 ' Verifica se comissões e prêmios estão totalmente pagos
+                ' 🛑 CÓDIGO CORRIGIDO COM ROUND() 🛑
                 ' ====================================================================
                 Dim comissaoDiretoriaPaga, comissaoGerenciaPaga, comissaoCorretorPaga
                 Dim premioDiretoriaPago, premioGerenciaPago, premioCorretorPago
 
-                comissaoDiretoriaPaga = (dblValorDiretoriaAPagar > 0 And totalPagoDiretoria >= dblValorDiretoriaAPagar)
-                comissaoGerenciaPaga = (dblValorGerenciaAPagar > 0 And totalPagoGerencia >= dblValorGerenciaAPagar)
-                comissaoCorretorPaga = (dblValorCorretorAPagar > 0 And totalPagoCorretor >= dblValorCorretorAPagar)
+                ' Usa Round() para evitar erros de precisão do ponto flutuante em comparações de valores monetários
+                comissaoDiretoriaPaga = (dblValorDiretoriaAPagar > 0 And Round(totalPagoDiretoria, 2) >= Round(dblValorDiretoriaAPagar, 2))
+                comissaoGerenciaPaga = (dblValorGerenciaAPagar > 0 And Round(totalPagoGerencia, 2) >= Round(dblValorGerenciaAPagar, 2))
+                comissaoCorretorPaga = (dblValorCorretorAPagar > 0 And Round(totalPagoCorretor, 2) >= Round(dblValorCorretorAPagar, 2))
 
-                premioDiretoriaPago = (dblPremioDiretoria > 0 And totalPremioPagoDiretoria >= dblPremioDiretoria)
-                premioGerenciaPago = (dblPremioGerencia > 0 And totalPremioPagoGerencia >= dblPremioGerencia)
-                premioCorretorPago = (dblPremioCorretor > 0 And totalPremioPagoCorretor >= dblPremioCorretor)
+                premioDiretoriaPago = (dblPremioDiretoria > 0 And Round(totalPremioPagoDiretoria, 2) >= Round(dblPremioDiretoria, 2))
+                premioGerenciaPago = (dblPremioGerencia > 0 And Round(totalPremioPagoGerencia, 2) >= Round(dblPremioGerencia, 2))
+                premioCorretorPago = (dblPremioCorretor > 0 And Round(totalPremioPagoCorretor, 2) >= Round(dblPremioCorretor, 2))
         %>
         <tr>
             <td class="text-center"><%="C"& rsComissoes("ID_Comissoes") %>-<%="V"&vendaID%></td>
@@ -470,36 +473,46 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 
                 <% ' COMISSÃO DIRETORIA %>
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-muted">Comissão: R$ <%= FormatNumber(dblValorDiretoriaAPagar, 2) %></small>
-                    <% If comissaoDiretoriaPaga Then %>
-                    <i class="fas fa-check-circle text-success ms-2" title="Comissão totalmente paga"></i>
-                    <% ElseIf totalPagoDiretoria > 0 Then %>
-                    <i class="fas fa-check-circle text-warning ms-2" title="Comissão parcialmente paga"></i>
-                    <% End If %>
+                    <small class="text-muted">
+                        <% If comissaoDiretoriaPaga Then %>
+                            <i class="fas fa-check-circle text-success me-1" title="Comissão totalmente paga"></i>
+                        <% ElseIf totalPagoDiretoria > 0 Then %>
+                            <i class="fas fa-check-circle text-warning me-1" title="Comissão parcialmente paga"></i>
+                        <% End If %>
+                        Comissão: R$ <%= FormatNumber(dblValorDiretoriaAPagar, 2) %>
+                    </small>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-success">Pago: R$ <%= FormatNumber(totalPagoDiretoria, 2) %></small>
+                    <small class="text-success">
+                        <% If totalPagoDiretoria > 0 Then %>
+                            <i class="fas fa-check-circle me-1"></i>
+                        <% End If %>
+                        Pago: R$ <%= FormatNumber(totalPagoDiretoria, 2) %>
+                    </small>
                 </div>
                 
                 <% ' PRÊMIO DIRETORIA %>
                 <% If dblPremioDiretoria > 0 Then %>
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-info fw-bold">
-                        <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioDiretoria, 2) %>
-                    </span>
-                    <% If premioDiretoriaPago Then %>
-                        <i class="fas fa-check-circle text-success ms-2" title="Prêmio totalmente pago"></i>
-                    <% ElseIf totalPremioPagoDiretoria > 0 Then %>
-                        <i class="fas fa-check-circle text-warning ms-2" title="Prêmio parcialmente pago"></i>
-                    <% End If %>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-success">
-                        <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPremioPagoDiretoria, 2) %>
-                    </small>
-                </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-info fw-bold">
+                            <% If premioDiretoriaPago Then %>
+                                <i class="fas fa-check-circle text-success me-1" title="Prêmio totalmente pago"></i>
+                            <% ElseIf totalPremioPagoDiretoria > 0 Then %>
+                                <i class="fas fa-check-circle text-warning me-1" title="Prêmio parcialmente pago"></i>
+                            <% End If %>
+                            <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioDiretoria, 2) %>
+                        </span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success">
+                            <% If totalPremioPagoDiretoria > 0 Then %>
+                                <i class="fas fa-check-circle me-1"></i>
+                            <% End If %>
+                            R$ <%= FormatNumber(totalPremioPagoDiretoria, 2) %>
+                        </small>
+                    </div>
                 <% End If %>
             </td>
 
@@ -511,36 +524,46 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 
                 <% ' COMISSÃO GERÊNCIA %>
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-muted">Comissão: R$ <%= FormatNumber(dblValorGerenciaAPagar, 2) %></small>
-                    <% If comissaoGerenciaPaga Then %>
-                    <i class="fas fa-check-circle text-success ms-2" title="Comissão totalmente paga"></i>
-                    <% ElseIf totalPagoGerencia > 0 Then %>
-                    <i class="fas fa-check-circle text-warning ms-2" title="Comissão parcialmente paga"></i>
-                    <% End If %>
+                    <small class="text-muted">
+                        <% If comissaoGerenciaPaga Then %>
+                            <i class="fas fa-check-circle text-success me-1" title="Comissão totalmente paga"></i>
+                        <% ElseIf totalPagoGerencia > 0 Then %>
+                            <i class="fas fa-check-circle text-warning me-1" title="Comissão parcialmente paga"></i>
+                        <% End If %>
+                        Comissão: R$ <%= FormatNumber(dblValorGerenciaAPagar, 2) %>
+                    </small>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-success">Pago: R$ <%= FormatNumber(totalPagoGerencia, 2) %></small>
+                    <small class="text-success">
+                        <% If totalPagoGerencia > 0 Then %>
+                            <i class="fas fa-check-circle me-1"></i>
+                        <% End If %>
+                        Pago: R$ <%= FormatNumber(totalPagoGerencia, 2) %>
+                    </small>
                 </div>
                 
                 <% ' PRÊMIO GERÊNCIA %>
                 <% If dblPremioGerencia > 0 Then %>
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-info fw-bold">
-                        <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioGerencia, 2) %>
-                    </span>
-                    <% If premioGerenciaPago Then %>
-                    <i class="fas fa-check-circle text-success ms-2" title="Prêmio totalmente pago"></i>
-                    <% ElseIf totalPremioPagoGerencia > 0 Then %>
-                    <i class="fas fa-check-circle text-warning ms-2" title="Prêmio parcialmente pago"></i>
-                    <% End If %>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-success">
-                        <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPremioPagoGerencia, 2) %>
-                    </small>
-                </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-info fw-bold">
+                            <% If premioGerenciaPago Then %>
+                                <i class="fas fa-check-circle text-success me-1" title="Prêmio totalmente pago"></i>
+                            <% ElseIf totalPremioPagoGerencia > 0 Then %>
+                                <i class="fas fa-check-circle text-warning me-1" title="Prêmio parcialmente pago"></i>
+                            <% End If %>
+                            <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioGerencia, 2) %>
+                        </span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success">
+                            <% If totalPremioPagoGerencia > 0 Then %>
+                                <i class="fas fa-check-circle me-1"></i>
+                            <% End If %>
+                            R$ <%= FormatNumber(totalPremioPagoGerencia, 2) %>
+                        </small>
+                    </div>
                 <% End If %>
             </td>
 
@@ -552,36 +575,46 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 
                 <% ' COMISSÃO CORRETOR %>
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-muted">Comissão: R$ <%= FormatNumber(dblValorCorretorAPagar, 2) %></small>
-                    <% If comissaoCorretorPaga Then %>
-                    <i class="fas fa-check-circle text-success ms-2" title="Comissão totalmente paga"></i>
-                    <% ElseIf totalPagoCorretor > 0 Then %>
-                    <i class="fas fa-check-circle text-warning ms-2" title="Comissão parcialmente paga"></i>
-                    <% End If %>
+                    <small class="text-muted">
+                        <% If comissaoCorretorPaga Then %>
+                            <i class="fas fa-check-circle text-success me-1" title="Comissão totalmente paga"></i>
+                        <% ElseIf totalPagoCorretor > 0 Then %>
+                            <i class="fas fa-check-circle text-warning me-1" title="Comissão parcialmente paga"></i>
+                        <% End If %>
+                        Comissão: R$ <%= FormatNumber(dblValorCorretorAPagar, 2) %>
+                    </small>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-success">Pago: R$ <%= FormatNumber(totalPagoCorretor, 2) %></small>
+                    <small class="text-success">
+                        <% If totalPagoCorretor > 0 Then %>
+                            <i class="fas fa-check-circle me-1"></i>
+                        <% End If %>
+                        Pago: R$ <%= FormatNumber(totalPagoCorretor, 2) %>
+                    </small>
                 </div>
                 
                 <% ' PRÊMIO CORRETOR %>
                 <% If dblPremioCorretor > 0 Then %>
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-info fw-bold">
-                        <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioCorretor, 2) %>
-                    </span>
-                    <% If premioCorretorPago Then %>
-                    <i class="fas fa-check-circle text-success ms-2" title="Prêmio totalmente pago"></i>
-                    <% ElseIf totalPremioPagoCorretor > 0 Then %>
-                    <i class="fas fa-check-circle text-warning ms-2" title="Prêmio parcialmente pago"></i>
-                    <% End If %>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-success">
-                        <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPremioPagoCorretor, 2) %>
-                    </small>
-                </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-info fw-bold">
+                            <% If premioCorretorPago Then %>
+                                <i class="fas fa-check-circle text-success me-1" title="Prêmio totalmente pago"></i>
+                            <% ElseIf totalPremioPagoCorretor > 0 Then %>
+                                <i class="fas fa-check-circle text-warning me-1" title="Prêmio parcialmente pago"></i>
+                            <% End If %>
+                            <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioCorretor, 2) %>
+                        </span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-success">
+                            <% If totalPremioPagoCorretor > 0 Then %>
+                                <i class="fas fa-check-circle me-1"></i>
+                            <% End If %>
+                            R$ <%= FormatNumber(totalPremioPagoCorretor, 2) %>
+                        </small>
+                    </div>
                 <% End If %>
             </td>
 
@@ -606,7 +639,6 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                     <i class="fas fa-hand-holding-usd"></i> Pagar Comiss.
                 </button>
 
-                <!-- Botão para Pagar Prêmio - Aparece apenas se houver prêmio -->
                 <% If dblPremioDiretoria > 0 Or dblPremioGerencia > 0 Or dblPremioCorretor > 0 Then %>
                 <button class="btn btn-premio btn-sm mb-1" 
                     data-bs-toggle="modal" data-bs-target="#premioModal"
@@ -805,9 +837,10 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                                 <tr>
                                     <th>ID</th>
                                     <th>Data</th>
+                                    <th>Tipo</th>
                                     <th class="text-end">Valor</th>
                                     <th>Destinatário</th>
-                                    <th>Tipo</th>
+                                    <th>Cargo</th>
                                     <th>Status</th>
                                     <th>Observações</th>
                                 </tr>
@@ -926,6 +959,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                             <tr>
                                 <td>#${payment.ID_Pagamento || 'N/A'}</td>
                                 <td>${payment.DataPagamento}</td>
+                                <td>${payment.TipoPagamento}</td>
                                 <td class="text-end">${formatCurrency(valorPago)}</td>
                                 <td>${payment.UsuariosNome || 'N/A'}</td>
                                 <td>${(payment.TipoRecebedor || 'N/A').toUpperCase()}</td>
