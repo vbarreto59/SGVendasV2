@@ -189,21 +189,6 @@ Response.Charset = "utf-8"
                 </a>
             </div>      
 
-            <div class="col-12 col-md-6 col-lg-4">
-                <a href="gestao_corretores_mapa_vendas.asp" class="text-decoration-none" target="_blank">
-                    <div class="card h-100">
-                        <div class="card-header text-center">
-                            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>E - Corretor - Mapa de Vendas (QTD)</h5>
-                        </div>
-                        <div class="card-body text-center d-flex flex-column">
-                            <p class="card-text">Visualização da quantidade de unidades vendidas.</p>
-                            <span class="btn btn-primary btn-sm mt-auto">
-                                <i class="fas fa-arrow-right me-1"></i> Visualizar
-                            </span>
-                        </div>
-                    </div>
-                </a>
-            </div>  
 
             <div class="col-12 col-md-6 col-lg-4">
                 <a href="gestao_vendas_localidade1.asp" class="text-decoration-none" target="_blank">

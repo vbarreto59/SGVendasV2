@@ -16,7 +16,7 @@ End If
 Dim vendaId
 vendaId = Request.QueryString("id")
 If vendaId = "" Then
-    Response.Redirect "gestao_vendas_list2r.asp?mensagem=ID da venda não fornecido."
+    Response.Redirect "gestao_vendas_list2x.asp?mensagem=ID da venda não fornecido."
 End If
 
 ' Cria a conexão
@@ -45,7 +45,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     ' Redireciona para a página de listagem com mensagem de sucesso
     conn.Close
     Set conn = Nothing
-    Response.Redirect "gestao_vendas_list2r.asp?mensagem=Venda excluída com sucesso!"
+    Response.Redirect "gestao_vendas_list2x.asp?mensagem=Venda excluída com sucesso!"
 End If
 
 ' Busca os dados da venda para exibir a confirmação
@@ -56,7 +56,7 @@ rsVenda.Open "SELECT * FROM Vendas WHERE ID = " & vendaId, conn
 If rsVenda.EOF Then
     conn.Close
     Set conn = Nothing
-    Response.Redirect "gestao_vendas_list2r.asp?mensagem=Venda não encontrada."
+    Response.Redirect "gestao_vendas_list2x.asp?mensagem=Venda não encontrada."
 End If
 %>
 

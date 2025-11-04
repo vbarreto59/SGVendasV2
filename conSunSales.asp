@@ -2,7 +2,7 @@
 On Error Resume Next ' Habilita o tratamento de erros
 
 ' Constantes para strings de conexão
-vDbLocalhost = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\inetpub\wwwroot\iTeste\db\SunSales.mdb"
+vDbLocalhost = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\inetpub\wwwroot\SGVendas\db\SunSales.mdb"
 vDbProduction = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=E:\ClientHome\gabnetweb.com.br\bdados\SunSales.mdb;"
 
 

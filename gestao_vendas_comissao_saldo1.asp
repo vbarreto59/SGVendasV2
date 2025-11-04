@@ -16,7 +16,6 @@ Set conn = Server.CreateObject("ADODB.Connection")
 conn.Open StrConnSales
 
 ' Constrói a consulta SQL para totalizar as colunas por Nome, incluindo o Saldo
-' O nome do campo "TotalPago" foi alterado para "TotalComissaoPago"
 sql = "SELECT Nome, " & _
       "Sum(TotalVenda) AS SomaDeTotalVenda, " & _
       "Sum(TotalComissao) AS SomaDeTotalComissao, " & _
@@ -37,7 +36,7 @@ rs.Open sql, conn
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saldo Comissões</title>
+    <title>Saldo Comissões Dinâmicas</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
@@ -45,81 +44,64 @@ rs.Open sql, conn
 <body>
 
 <div class="container mt-5">
-    <h1 class="mb-4">Saldo Comissões a Pagar</h1>
+    <h1 class="mb-4">Saldo Comissões a Pagar (Totais Dinâmicos)</h1>
 
-    <table id="myTable" class="table table-striped table-bordered" style="width:100%">
+    <table id="myTable" class="table table-striped table-bordered table-sm" style="width:100%">
         <thead>
-            <tr>
+            <tr class="bg-primary text-white">
                 <th>Nome</th>
-                <th>Total Venda</th>
-                <th>Total Comissao</th>
-                <th>Total Pago</th>
-                <th>Saldo</th>
+                <th class="text-end">Total Venda</th>
+                <th class="text-end">Total Comissao</th>
+                <th class="text-end">Total Pago</th>
+                <th class="text-end">Saldo</th>
             </tr>
         </thead>
         <tbody>
             <% 
             If Not rs.EOF Then
                 Do While Not rs.EOF
-            %>
+                    ' =======================================================
+                    ' PRE-CÁLCULO DOS VALORES PARA DISPLAY E DATA-ATTRIBUTES
+                    ' =======================================================
+                    Dim vTotalVenda, vTotalComissao, vTotalComissaoPago, vSaldo
+                    
+                    vTotalVenda = 0
+                    If Not IsNull(rs("SomaDeTotalVenda")) Then vTotalVenda = rs("SomaDeTotalVenda")
+                    
+                    vTotalComissao = 0
+                    If Not IsNull(rs("SomaDeTotalComissao")) Then vTotalComissao = rs("SomaDeTotalComissao")
+                    
+                    vTotalComissaoPago = 0
+                    If Not IsNull(rs("SomaDeTotalComissaoPago")) Then vTotalComissaoPago = rs("SomaDeTotalComissaoPago")
+                    
+                    vSaldo = vTotalComissao - vTotalComissaoPago
+                %>
             <tr>
                 <td><%= rs("Nome") %></td>
-                <td class="text-end">
-                    <%
-                    If Not IsNull(rs("SomaDeTotalVenda")) And rs("SomaDeTotalVenda") <> 0 Then
-                        Response.Write "R$ " & FormatNumber(rs("SomaDeTotalVenda"), 2)
-                    Else
-                        Response.Write "R$ 0,00"
-                    End If
-                    %>
+                <td class="text-end total-venda-col" data-numeric-value="<%= vTotalVenda %>">
+                    <% Response.Write "R$ " & FormatNumber(vTotalVenda, 2) %>
                 </td>
-                <td class="text-end">
-                    <%
-                    If Not IsNull(rs("SomaDeTotalComissao")) And rs("SomaDeTotalComissao") <> 0 Then
-                        Response.Write "R$ " & FormatNumber(rs("SomaDeTotalComissao"), 2)
-                    Else
-                        Response.Write "R$ 0,00"
-                    End If
-                    %>
+                <td class="text-end total-comissao-col" data-numeric-value="<%= vTotalComissao %>">
+                    <% Response.Write "R$ " & FormatNumber(vTotalComissao, 2) %>
                 </td>
-                <td class="text-end">
-                    <%
-                    ' A referência ao campo foi alterada para "SomaDeTotalComissaoPago"
-                    If Not IsNull(rs("SomaDeTotalComissaoPago")) And rs("SomaDeTotalComissaoPago") <> 0 Then
-                        Response.Write "R$ " & FormatNumber(rs("SomaDeTotalComissaoPago"), 2)
-                    Else
-                        Response.Write "R$ 0,00"
-                    End If
-                    %>
+                <td class="text-end total-pago-col" data-numeric-value="<%= vTotalComissaoPago %>">
+                    <% Response.Write "R$ " & FormatNumber(vTotalComissaoPago, 2) %>
                 </td>
-                <td class="text-end">
+                <td class="text-end saldo-col" data-numeric-value="<%= vSaldo %>">
                     <%
-                    Dim vSaldo
-                    vSaldo = 0
-                    vComisPago = 0
-                     If Not IsNull(rs("SomaDeTotalComissaoPago")) And rs("SomaDeTotalComissaoPago") <> 0 Then
-                        vComisPago = rs("SomaDeTotalComissaoPago")
-                     end if   
-                     vComisTotal = 0
-                     If Not IsNull(rs("SomaDeTotalComissao")) And rs("SomaDeTotalComissao") <> 0 Then
-                        vComisTotal = rs("SomaDeTotalComissao")
-                     end if   
-                    
-                    vSaldo = vComisTotal-vComisPago
-
-                    If vSaldo < 0 Then%>
-                           <span style="background-color: #B9C7E7; display: block;">
-                           <%Response.Write "R$ " & FormatNumber(vSaldo, 2)
-                             Response.Write "<br><small>Não há venda relacionada.</small></br>"
-                    else
-                            If Not IsNull(vSaldo) And vSaldo <> 0 Then%>
-                                <span style="background-color: #ffcdd2; display: block;">
-                                <%Response.Write "R$ " & FormatNumber(vSaldo, 2)
-                            Else
-                                    Response.Write "R$ 0,00"
-                            End If
+                    ' Adiciona classes CSS baseadas no Saldo para melhor visualização
+                    Dim saldoClass
+                    If vSaldo < 0 Then
+                        saldoClass = "text-success fw-bold" ' Pago a mais/Ajuste
+                    ElseIf vSaldo > 0 Then
+                        saldoClass = "text-danger fw-bold" ' A Pagar
+                    Else
+                        saldoClass = "text-secondary" ' Saldo Zero
                     End If
                     %>
+                    <span class="<%= saldoClass %>">
+                        <%Response.Write "R$ " & FormatNumber(vSaldo, 2)%>
+                    </span>
                 </td>
             </tr>
             <% 
@@ -140,6 +122,17 @@ rs.Open sql, conn
             Set conn = Nothing
             %>
         </tbody>
+        <!-- Seção TFOOT adicionada para exibir os totais -->
+        <tfoot>
+            <tr class="bg-dark text-white fw-bold">
+                <th>Total Geral (Filtro)</th>
+                <!-- IDs para as células de total, que serão atualizadas pelo JavaScript -->
+                <th id="total-venda" class="text-end">R$ 0,00</th>
+                <th id="total-comissao" class="text-end">R$ 0,00</th>
+                <th id="total-pago" class="text-end">R$ 0,00</th>
+                <th id="total-saldo" class="text-end">R$ 0,00</th>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
@@ -149,16 +142,78 @@ rs.Open sql, conn
 <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-$(document).ready(function() {
-    // Inicialização da tabela
-    $('#myTable').DataTable({
-        "order": [[ 0, "asc" ]], 
-        "pageLength": 100,
-        "language": {
-            "url": "https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
-        }
+    /**
+     * Recalcula e exibe os totais das colunas visíveis/filtradas lendo o atributo data-numeric-value.
+     * @param {object} api Instância da API do DataTables.
+     */
+    function updateTotals(api) {
+        // Mapeamento: Coluna Index -> ID do elemento no rodapé
+        // Lembre-se: Colunas são 0 (Nome), 1 (Venda), 2 (Comissão), 3 (Pago), 4 (Saldo)
+        const columnsMap = {
+            1: '#total-venda',    // Total Venda
+            2: '#total-comissao', // Total Comissao
+            3: '#total-pago',     // Total Pago
+            4: '#total-saldo'     // Saldo
+        };
+
+        Object.keys(columnsMap).forEach(colIndex => {
+            const totalId = columnsMap[colIndex];
+            const columnIndex = parseInt(colIndex);
+
+            // 1. Usa o seletor DataTables para obter os elementos <td> APENAS das linhas VISÍVEIS (filtradas)
+            const total = api
+                .column(columnIndex, { search: 'applied' }) // Garante que apenas as linhas filtradas sejam consideradas
+                .nodes() // Obtém os elementos <td>
+                .reduce(function(a, b) {
+                    // 2. LÊ O VALOR NUMÉRICO BRUTO DO ATRIBUTO data-numeric-value
+                    // O .data('numeric-value') do jQuery lê o atributo 'data-numeric-value'
+                    const val = $(b).data('numeric-value') || 0;
+                    
+                    // Garante que o valor seja um número
+                    const numericValue = parseFloat(val);
+                    return a + (isNaN(numericValue) ? 0 : numericValue);
+                }, 0); // 0 é o valor inicial do acumulador
+
+            // 3. Formata o total de volta para o formato de moeda brasileiro (R$ X.XXX,XX)
+            const formattedTotal = 'R$ ' + total.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            // 4. Atualiza a célula no rodapé
+            $(totalId).text(formattedTotal);
+        });
+    }
+
+    $(document).ready(function() {
+        const table = $('#myTable').DataTable({
+            "order": [
+                [0, "asc"]
+            ],
+            "pageLength": 100,
+            "language": {
+                "url": "https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
+            },
+            // Função DataTables que é chamada após a inicialização
+            "initComplete": function(settings, json) {
+                const api = this.api();
+                updateTotals(api); // Calcula o total inicial (total geral)
+            }
+        });
+
+        // Evento que dispara após qualquer operação de redesenho (filtro, busca, paginação, etc.)
+        // Isso garante que os totais sejam sempre atualizados com base nos dados visíveis.
+        table.on('draw', function() {
+            const api = table.api();
+            updateTotals(api); 
+        });
+
+        // Também atualiza os totais quando há mudanças na busca/filtro
+        table.on('search.dt', function() {
+            const api = table.api();
+            updateTotals(api);
+        });
     });
-});
 </script>
 
 </body>

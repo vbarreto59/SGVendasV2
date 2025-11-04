@@ -1,7 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 
-<% 'funcional'
-    If Len(StrConn) = 0 Then %>
+<% If Len(StrConn) = 0 Then %>
     <!--#include file="conexao.asp"-->
 <% End If %>
 
@@ -536,26 +535,26 @@ End If
 <div class="row mb-4">
     <div class="col-md-2 col-sm-4 mb-2">
         <div class="p-2 border rounded text-center bg-light">
-            <div class="text-primary" style="font-size: 0.8em;"><i class="fas fa-shopping-cart mr-1"></i> <%= totalVendas %></div>
+            <div class="text-primary font-weight-bold" style="font-size: 1.2em;"><i class="fas fa-shopping-cart mr-1"></i> <%= totalVendas %></div>
             <div class="text-muted" style="font-size: 0.8em;">Vendas</div>
         </div>
     </div>
     <div class="col-md-2 col-sm-4 mb-2">
         <div class="p-2 border rounded text-center bg-light">
-            <div class="text-success font-weight-bold" style="font-size: 0.8em;"><i class="fas fa-money-bill-wave mr-1"></i> R$ <%= FormatNumber(totalValorHtml, 2) %></div>
+            <div class="text-success font-weight-bold" style="font-size: 1.2em;"><i class="fas fa-money-bill-wave mr-1"></i> R$ <%= FormatNumber(totalValorHtml, 2) %></div>
             <div class="text-muted" style="font-size: 0.8em;">Valor Total</div>
         </div>
     </div>
     <div class="col-md-2 col-sm-4 mb-2">
         <div class="p-2 border rounded text-center bg-light">
-            <div class="text-info font-weight-bold" style="font-size: 0.8em;"><i class="fas fa-percentage mr-1"></i> R$ <%= FormatNumber(totalComissaoHtml, 2) %></div>
+            <div class="text-info font-weight-bold" style="font-size: 1.2em;"><i class="fas fa-percentage mr-1"></i> R$ <%= FormatNumber(totalComissaoHtml, 2) %></div>
             <div class="text-muted" style="font-size: 0.8em;">Total Comissões</div>
         </div>
     </div>
 
     <div class="col-md-3 col-sm-6 mb-2">
         <div class="p-2 border rounded text-center bg-light">
-            <div class="text-success font-weight-bold" style="font-size: 0.8em;">
+            <div class="text-success font-weight-bold" style="font-size: 1.2em;">
                 <i class="fas fa-check-circle mr-1"></i> R$ <%= FormatNumber(totalComissoesPagas, 2) %>
                 <span class="badge badge-success ml-1"><%= FormatNumber(percentualPagas, 1) %>%</span>
             </div>
@@ -567,7 +566,7 @@ End If
     </div>
     <div class="col-md-3 col-sm-6 mb-2">
         <div class="p-2 border rounded text-center bg-light">
-            <div class="text-warning font-weight-bold" style="font-size: 0.8em;">
+            <div class="text-warning font-weight-bold" style="font-size: 1.2em;">
                 <i class="fas fa-clock mr-1"></i> R$ <%= FormatNumber(totalComissoesAPagar, 2) %>
                 <span class="badge badge-warning ml-1"><%= FormatNumber(percentualAPagar, 1) %>%</span>
             </div>
@@ -834,8 +833,6 @@ End If
         </div>
     </div>
 
-
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
@@ -849,7 +846,7 @@ End If
                     language: {
                         url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
                     },
-                    pageLength: 10,
+                    pageLength: 25,
                     order: [[0, "desc"]],
                     responsive: true,
                     dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'

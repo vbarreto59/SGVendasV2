@@ -285,7 +285,7 @@ End Sub
 </head>
 <body>
     <div class="container">
-        <h3>Módulo Gestão/Vendas - v2</h3>
+        <h3>Tocca Onze - SGVendas - v2</h3>
         <div class="logo-container">
             <img src="img/cupe.jpg" alt="Logo" width="550" height="287" class="logo-animado">
         </div>

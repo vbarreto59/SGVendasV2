@@ -542,11 +542,11 @@ End Function
                             </div>
                             <div class="col-md-3">
                                 <label for="unidade" class="form-label required-field">Unidade</label>
-                                <input type="text" class="form-control" id="unidade" name="unidade" placeholder="Ex: 101A" required>
+                                <input type="text" class="form-control" id="unidade" name="unidade" placeholder="Ex: 101A">
                             </div>
                             <div class="col-md-3">
                                 <label for="m2" class="form-label required-field">Metragem (m²)</label>
-                                <input type="text" class="form-control" id="m2" name="m2" placeholder="Ex: 75,00" required>
+                                <input type="text" class="form-control" id="m2" name="m2" value="0" placeholder="Ex: 75,00">
                             </div>
                         </div>
                         

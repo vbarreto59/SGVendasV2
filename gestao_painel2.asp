@@ -182,20 +182,50 @@ End if
                 </div>
             </div>
 
-
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Corretores/Vendas</h5>
+                        <h5 class="mb-0"><i class="fas fa-funnel-dollar me-2"></i>Dashboard Metas x Vendas</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Listagem de Corretores com Vendas.</p>
-                        <a href="gestao_corretores_estat1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                        <p class="card-text">Acompanhamento das Metass</p>
+                        
+                        <a href="gestao_vendas_metas.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
                             <i class="fas fa-arrow-right me-1"></i> Acessar
                         </a>
                     </div>
                 </div>
             </div>            
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Dashboard Vendas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as vendas.</p>
+                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>   
+
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Saldos Comissões</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as vendas.</p>
+                        <a href="gestao_vendas_comissao_saldo2.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div> 
+
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -227,19 +257,7 @@ End if
                 </a>
             </div>              
 
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Dashboard</h5>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Visualize as vendas.</p>
-                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
-                            <i class="fas fa-arrow-right me-1"></i> Acessar
-                        </a>
-                    </div>
-                </div>
-            </div>            
+         
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -282,6 +300,21 @@ End if
                     </div>
                 </div>
             </div>
+
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Metas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Cadastro de Metas da Tocca.</p>
+                        <a href="gestao_metasEmpresa.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>            
         </div>
     </div>
 
