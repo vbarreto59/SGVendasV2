@@ -1,6 +1,9 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conexao.asp"-->
+<!--#include file="conSunSales.asp"-->
 <!--#include file="usr_acoes.inc"-->
+
+<!--#include file="registra_log.asp"-->
 
 <%Session("redirecionar") = "gestao_painel2.asp"%>
 
@@ -18,6 +21,27 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
         Session("usuario") = usuario
         Session("Acoes") = AcoesPermitidas()
         Session("Funcao") = UserFuncao()
+
+        'registrar no log'
+        Call InserirLog ("Sistema", "LOGIN", "Usuário autenticado com sucesso: " & usuario) 
+
+
+'============================= EMAIL ============================================'
+if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+    set objMail = server.createobject("CDONTS.NewMail")
+        objMail.From = "sendmail@gabnetweb.com.br"
+        objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+    objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+    objMail.MailFormat = 0
+    objMail.Body = "Login SGVendas"
+    objMail.Send
+    set objMail = Nothing
+end if 
+'----------- fim envio de email'      
+
+
+
+        
 
         Response.Redirect(Session("redirecionar"))
     Else

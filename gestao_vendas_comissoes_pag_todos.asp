@@ -55,7 +55,7 @@ Set rsVendas = connSales.Execute(sqlVendas)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista Completa de Vendas - Sistema de Comissões</title>
+    <title>Comissões a Pagar - 2</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -148,7 +148,7 @@ Set rsVendas = connSales.Execute(sqlVendas)
         <div class="row mb-4">
             <div class="col-12">
                 <h1 class="text-center header-title">
-                    <i class="fas fa-list-alt me-2"></i>Lista Completa de Vendas
+                    <i class="fas fa-list-alt me-2"></i>Comissões a Pagar - 2
                 </h1>
             </div>
         </div>
@@ -306,9 +306,10 @@ Set rsVendas = connSales.Execute(sqlVendas)
                     %>
                     <tr class="<%= rowClass %>">
                         <td class="text-center">
+                            <%= Year(rsVendas("DataVenda")) & "-" & Right("0" & Month(rsVendas("DataVenda")),2) & "-" & Right("0" & Day(rsVendas("DataVenda")),2) %><br>
                             <strong>V<%= rsVendas("ID") %></strong>
                             <% If Not IsNull(rsVendas("ID_Comissoes")) Then %>
-                                <br><small class="text-muted">C<%= rsVendas("ID_Comissoes") %></small>
+                                <small class="text-muted">C<%= rsVendas("ID_Comissoes") %></small>
                             <% End If %>
                         </td>
                         <td class="text-center">

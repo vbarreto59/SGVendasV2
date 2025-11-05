@@ -54,18 +54,7 @@ Else
     vendasFile = "gestao_vendas_list2x.asp"
 End If
 
-'============================= LOG ============================================'
-if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
-    set objMail = server.createobject("CDONTS.NewMail")
-        objMail.From = "sendmail@gabnetweb.com.br"
-        objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
-    objMail.Subject = "SGVendas-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
-    objMail.MailFormat = 0
-    objMail.Body = "Menu Principal"
-    objMail.Send
-    set objMail = Nothing
-end if 
-'----------- fim envio de email'
+
 
 '============================= ATUALIZANDO O BANCO DE DADOS ==================='
 Response.Buffer = True
@@ -115,7 +104,7 @@ On Error GoTo 0
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="600">
+    <meta http-equiv="refresh" content="300">
     <title>Menu Administrativo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

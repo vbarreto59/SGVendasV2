@@ -137,7 +137,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Comissões a Pagar</title>
+    <title>Lista de Comissões a Pagar 1</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -260,7 +260,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 </head>
 <body>
     <div class="container-fluid mt-5">
-        <h2 class="text-center mb-4 header-title"><i class="fas fa-coins me-2"></i>Comissões a Pagar</h2>
+        <h2 class="text-center mb-4 header-title"><i class="fas fa-coins me-2"></i>Comissões a Pagar - 1</h2>
         <a href="gestao_vendas_comissao_saldo1.asp" class="btn btn-success" target="_blank"><i class="fas fa-plus"></i> Saldos</a>
         <a href="inserirVendasTeste.asp" class="btn btn-success" target="_blank"><i class="fas fa-plus"></i> Inserir Testes</a>
         <br><br>
@@ -270,10 +270,10 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 <table id="comissoesTable" class="table table-striped table-bordered align-middle nowrap" style="width:100%">
     <thead>
         <tr>
-            <th class="text-center">ID</th>
+            <th class="text-center">Data/ID</th>
             <th class="text-center">Status</th>
             <th class="text-center">Venda</th>
-            <th class="text-center">Data</th>
+            
             
             <th class="text-center">Diretoria</th>
             <th class="text-center">Gerência</th>
@@ -503,7 +503,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 End If
         %>
         <tr class="<%= rowClass %>">
-            <td class="text-center"><%="V"&vendaID%>-<%="C"& rsComissoes("ID_Comissoes")%></td>
+            <td class="text-center"><%= Year(rsComissoes("DataVenda")) & "-" & Right("0" & Month(rsComissoes("DataVenda")),2) & "-" & Right("0" & Day(rsComissoes("DataVenda")),2) %><br><%="V"&vendaID%>-<%="C"& rsComissoes("ID_Comissoes")%></td>
             <td class="text-center"><span class="status-badge <%= statusClass %>"><%= UCase(status) %></span></td>
             <td class="text-center">
                 <small class="text-muted"><b><%= rsComissoes("NomeEmpreendimento") %></b></small><br>
@@ -511,7 +511,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 Comissão: R$ <%= FormatNumber(rsComissoes("ValorComissaoGeral"), 2) %><br>
                 <small class="text-muted">ID Venda: <%= rsComissoes("ID_Venda") %></small>
             </td>
-            <td class="text-center"><%= FormatDateTime(rsComissoes("DataVenda"), 2) %></td>
+            
             
             <% ' ----------------------------------------------------------------- %>
             <% ' COLUNA DIRETORIA: COM ÍCONES DE CONFIRMAÇÃO %>

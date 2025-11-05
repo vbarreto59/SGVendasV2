@@ -29,7 +29,7 @@ if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVa
     set objMail = server.createobject("CDONTS.NewMail")
         objMail.From = "sendmail@gabnetweb.com.br"
         objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
-    objMail.Subject = "SGVendas-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+    objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
     objMail.MailFormat = 0
     objMail.Body = "Página de Vendas (Gestão Vendas)"
     objMail.Send
@@ -185,7 +185,7 @@ End If
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Vendas | Sistema</title>
-    <meta http-equiv="refresh" content="600">
+    <meta http-equiv="refresh" content="300">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -607,15 +607,20 @@ End If
                         <a href="gestao_vendas_list_excluidos.asp" class="btn btn-warning btn-sm" target="_blank">
                             <i class="fas fa-trash-restore me-1"></i>Excluídos
                         </a>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                                <i class="fas fa-tools me-1"></i>Utilitários
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="inserirVendasTeste2.asp" target="_blank"><i class="fas fa-plus me-1"></i>Inserir Testes</a></li>
-                                <li><a class="dropdown-item" href="excluir_testes.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Testes</a></li>
-                            </ul>
-                        </div>
+                        <%if Session("Usuario")="BARRETO" Then%>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fas fa-tools me-1"></i>Utilitários
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="inserirVendasTeste2.asp" target="_blank"><i class="fas fa-plus me-1"></i>Inserir Testes</a></li>
+                                    <li><a class="dropdown-item" href="excluir_testes.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Testes</a></li>
+                                    <li><a class="dropdown-item" href="tool_excluir_tudo.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Vendas</a></li>   
+
+                                    <li><a class="dropdown-item" href="tool_visualizar_log.asp" target="_blank"><i class="fas fa-trash me-1"></i>Log Sistema</a></li>  
+                                </ul>
+                            </div>
+                        <%end if%>
                     </div>
                 </div>
             </div>
@@ -638,10 +643,10 @@ End If
                         <table id="tabelaVendas" class="table table-hover" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Data/ID</th>
                                     <th>Status</th>
-                                    <th>Período</th>
-                                    <th>Data Venda</th>
+                                    <th>Trimestre</th>
+                                    
                                     <th>Empreendimento</th>
                                     <th>Unidade</th>
                                     <th>Diretoria</th>
@@ -755,7 +760,8 @@ End If
                                 %>
                                 <tr class="<%= linhaClasse %>">
                                     <td>
-                                        <span class="fw-bold"><%= rs("ID") %></span>
+                                        <%= rs("AnoVenda") & "-" & Right("0"&rs("MesVenda"),2) & "-" & Right("0"&rs("DiaVenda"),2) %>
+                                        <br><span class="fw-bold"><%= rs("ID") %></span>
                                     </td>
                                     <td>
                                         <% If pagoDiretoria And pagoGerencia And pagoCorretor Then %>
@@ -765,10 +771,9 @@ End If
                                         <% End If %>
                                     </td>  
                                     <td>
-                                        <%= rs("AnoVenda") & "-" & Right("0"&rs("MesVenda"),2) %>
-                                        <br><small class="text-muted"><%= vAno & "T" & rs("Trimestre") %></small>
+                                        <small class="text-muted"><%= vAno & "T" & rs("Trimestre") %></small>
                                     </td>
-                                    <td><%= FormatDateTime(rs("DataVenda"), 2) %></td>
+                                    
                                     <td>
                                         <strong><%= rs("Empreend_ID") %>-<%= RemoverNumeros(rs("NomeEmpreendimento")) %></strong>
                                         <br><small class="text-muted"><%= RemoverNumeros(rs("Localidade")) %></small>
@@ -984,11 +989,11 @@ End If
                                                     <i class="fas fa-hand-holding-usd"></i>
                                                 </a>
                                             <% End If %>
-                                            <% If UCase(Session("Usuario")) = "BARRETO" Then %>
+                                            <% 'If UCase(Session("Usuario")) = "BARRETO" Then %>
                                                 <a href="gestao_vendas_delete.asp?id=<%= rs("id") %>" class="btn btn-danger btn-sm" title="Excluir" onclick="return confirm('Confirma exclusão desta venda?');">
                                                     <i class="fas fa-trash"></i>
                                                 </a>
-                                            <% End If %>
+                                            <% 'End If %>
                                         </div>
                                     </td>
                                 </tr>

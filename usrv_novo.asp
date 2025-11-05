@@ -12,7 +12,7 @@ Function SendMail(sql)
              objMail.From = "sendmail@gabnetweb.com.br"
              objMail.To  = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
 
-         objMail.Subject = "S.IMOB3-USR.NOVO-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+         objMail.Subject = "SI-USR.NOVO-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
 
          objMail.MailFormat = 0
          objMail.Body = sql

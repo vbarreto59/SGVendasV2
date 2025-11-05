@@ -1,6 +1,7 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
+<!--#include file="registra_log.asp"-->
 
 <% ' funcional'
     Function RemoverNumeros(texto)
@@ -163,18 +164,35 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     If Not rsLastID.EOF Then vendaId = rsLastID("NewID")
     rsLastID.Close
     
-    '-------- Inserção na tabela COMISSOES_A_PAGAR. (Sem alteração, pois é apenas para comissões)
+    '-------- Inserção na tabela COMISSOES_A_PAGAR. (COM PRÊMIOS INCLUÍDOS)
     sqlComissoes = "INSERT INTO COMISSOES_A_PAGAR (" & _
     "ID_Venda, Empreendimento, Unidade, DataVenda, UserIdDiretoria, NomeDiretor, " & _
     "UserIdGerencia, NomeGerente, UserIdCorretor, NomeCorretor, PercDiretoria, ValorDiretoria, " & _
-    "PercGerencia, ValorGerencia, PercCorretor, ValorCorretor, TotalComissao, StatusPagamento, Usuario) " & _
+    "PercGerencia, ValorGerencia, PercCorretor, ValorCorretor, TotalComissao, StatusPagamento, Usuario, " & _
+    "PremioDiretoria, PremioGerencia, PremioCorretor) " & _
     "VALUES (" & vendaId & ", '" & SanitizeSQL(nomeEmpreendimento) & "', '" & SanitizeSQL(unidade) & "', " & _
     dataVendaSQL & ", " & diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
     "'" & SanitizeSQL(gerenciaNome) & "', " & corretorId & ", '" & SanitizeSQL(corretorNome) & "', " & _
     comissaoDiretoria & ", " & valorComissaoDiretoria & ", " & comissaoGerencia & ", " & valorComissaoGerencia & ", " & _
-    comissaoCorretor & ", " & valorComissaoCorretor & ", " & valorComissaoGeral & ", 'Pendente', '" & SanitizeSQL(usuario) & "')"
+    comissaoCorretor & ", " & valorComissaoCorretor & ", " & valorComissaoGeral & ", 'Pendente', '" & SanitizeSQL(usuario) & "', " & _
+    premioDiretoria & ", " & premioGerencia & ", " & premioCorretor & ")"    
 
     connSales.Execute(sqlComissoes)
+    
+    '============================= LOG ============================================'
+    if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+        set objMail = server.createobject("CDONTS.NewMail")
+            objMail.From = "sendmail@gabnetweb.com.br"
+            objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+        objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+        objMail.MailFormat = 0
+        objMail.Body = "Nova venda. " & sqlVendas
+        objMail.Send
+        set objMail = Nothing
+    end if 
+    '----------- fim envio de email'
+    ' registrar log'
+    Call InserirLog ("VENDAS", "INSERT", "Nova venda inserida ID: " & vendaId )
     
     ' Redireciona para a página de sucesso após a inserção.
     Response.Redirect "gestao_vendas_list2x.asp?mensagem=Venda cadastrada com sucesso!"
@@ -233,7 +251,7 @@ End Function
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="600">
+    <meta http-equiv="refresh" content="300">
     <title>Nova Venda | Sistema</title>
     
     <!-- Bootstrap CSS -->

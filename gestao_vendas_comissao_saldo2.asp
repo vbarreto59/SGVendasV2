@@ -248,7 +248,7 @@ totalAPagar = 0
                             <%
                             ' Opções de anos
                             Dim anos
-                            anos = Array("2024", "2025", "2026")
+                            anos = Array("2025", "2026")
                             
                             For Each ano In anos
                                 If CStr(anoSelecionado) = ano Then

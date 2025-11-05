@@ -27,7 +27,7 @@ if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVa
     set objMail = server.createobject("CDONTS.NewMail")
         objMail.From = "sendmail@gabnetweb.com.br"
         objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
-    objMail.Subject = "SGVendas-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+    objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
     objMail.MailFormat = 0
     objMail.Body = "Página de Vendas (Gestão Vendas)"
     objMail.Send
@@ -138,7 +138,7 @@ Response.Write "</script>"
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Vendas</title>
-    <meta http-equiv="refresh" content="600">
+    <meta http-equiv="refresh" content="300">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

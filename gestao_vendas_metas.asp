@@ -1,6 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 
-<% ' funcional janeiro sem valor'
+<% ' funcional cores com problemas'
     If Len(StrConn) = 0 Then %>
     <!--#include file="conexao.asp"-->
 <% End If %>
@@ -10,6 +10,26 @@
 <%End If%>
 
 <!--#include file="gestao_header.inc"-->
+
+
+<%
+' ===========================================================
+' Função substituta para Nz() do Access
+' ===========================================================
+Function Nz(valor, opcional)
+    If IsNull(valor) Or IsEmpty(valor) Or valor = "" Then
+        If IsMissing(opcional) Then
+            Nz = 0
+        Else
+            Nz = opcional
+        End If
+    Else
+        Nz = valor
+    End If
+End Function
+%>
+
+
 
 <%
 ' ==============================================================================
@@ -85,59 +105,43 @@ End If
 rsVendasMensais.Close
 Set rsVendasMensais = Nothing
 
-' ==============================================================================
-' BUSCAR METAS E CALCULAR DIFERENÇAS/CORES - CORREÇÃO DEFINITIVA
-' ==============================================================================
+' ===========================================================
+' Definir cores com base nas metas e vendas
+' ===========================================================
 Set rsMetas = Server.CreateObject("ADODB.Recordset")
 sqlMetas = "SELECT Mes, Meta FROM MetaEmpresa WHERE Ano = " & anoSelecionado & " ORDER BY Mes"
-
 rsMetas.Open sqlMetas, connSales
 
 If Not rsMetas.EOF Then
     Do While Not rsMetas.EOF
         mes = CInt(rsMetas("Mes"))
         If mes >= 1 And mes <= 12 Then
-            If Not IsNull(rsMetas("Meta")) Then
-                metasMensais(mes) = CDbl(rsMetas("Meta"))
-            Else
-                metasMensais(mes) = 0
-            End If
-           
-            ' Calcular diferença
+            metasMensais(mes) = CDbl(Nz(rsMetas("Meta"), 0))
             diferencasMensais(mes) = vendasMensais(mes) - metasMensais(mes)
-           
-            ' CORREÇÃO DEFINITIVA: Lógica INTUITIVA para cores
-            If metasMensais(mes) > 0 Then ' Só avalia meta se houver meta definida
-                If vendasMensais(mes) >= metasMensais(mes) Then
-                    ' REGRA 1: Meta Atingida/Superada -> VERDE (BOM)
-                    coresMensais(mes) = "#28a745" 
-                Else 
-                    ' REGRA 2: Meta Não Atingida -> VERMELHO (RUIM)
-                    coresMensais(mes) = "#dc3545" 
-                End If
-            Else 
-                ' Sem meta definida
-                If vendasMensais(mes) > 0 Then
-                    coresMensais(mes) = "#17a2b8" ' Azul para meses com vendas mas sem meta
-                Else
-                    coresMensais(mes) = "#6c757d" ' Cinza para meses sem vendas
-                End If
+            
+            If vendasMensais(mes) > metasMensais(mes) Then
+                coresMensais(mes) = "#007bff" ' Azul
+            ElseIf vendasMensais(mes) < metasMensais(mes) Then
+                coresMensais(mes) = "#dc3545" ' Vermelho
+            Else
+                coresMensais(mes) = "#007bff" ' Azul
             End If
         End If
         rsMetas.MoveNext
     Loop
-Else
-    ' Se não há metas definidas para nenhum mês
-    For i = 1 To 12
-        If vendasMensais(i) > 0 Then
-            coresMensais(i) = "#17a2b8" ' Azul para meses com vendas
-        Else
-            coresMensais(i) = "#6c757d" ' Cinza para meses sem vendas
-        End If
-    Next
 End If
 rsMetas.Close
 Set rsMetas = Nothing
+
+' ===========================================================
+' AQUI entra o novo código (antes de fechar o ASP)
+' ===========================================================
+Dim strCoresJS
+strCoresJS = ""
+For i = 1 To 12
+    If i > 1 Then strCoresJS = strCoresJS & ","
+    strCoresJS = strCoresJS & "'" & coresMensais(i) & "'"
+Next
 
 ' ==============================================================================
 ' CÁLCULOS GERAIS (Total Unidades, Últimas Vendas, Totais Anuais)
@@ -395,7 +399,7 @@ Next
                             <%
                             ' Opções de ano
                             Dim ano
-                            For ano = 2024 To Year(Date()) + 2 ' Exemplo: 2024 até 2 anos à frente
+                            For ano = 2025 To Year(Date()) + 1 ' Exemplo: 2024 até 2 anos à frente
                                 Response.Write "<option value='" & ano & "'"
                                 If CStr(ano) = anoSelecionado Then
                                     Response.Write " selected"
@@ -593,7 +597,7 @@ Next
     const vendas = [<%= strVendasJS %>];
     const metas = [<%= strMetasJS %>];
     
-    const coresVendas = ['<%= Join(coresMensais, "','") %>'];
+   const coresVendas = [<%= strCoresJS %>];
 
     // Debug no console para verificar os valores injetados
     console.log('Vendas (JS):', vendas);
@@ -619,7 +623,7 @@ Next
                     label: 'Meta',
                     data: metas,
                     type: 'bar',
-                    backgroundColor: 'rgba(253, 126, 20, 0.7)',
+                    backgroundColor: 'rgba(157, 209, 169, 0.7)',
                     borderColor: 'rgba(253, 126, 20, 1)',
                     borderWidth: 1,
                     barPercentage: 0.6,
