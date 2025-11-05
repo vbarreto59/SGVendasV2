@@ -8,7 +8,11 @@
 <!--#include file="usr_acoes_v4GVendas.inc"-->
 <!--#include file="atualizarVendas.asp"-->
 <!--#include file="atualizarVendas2.asp"-->
-
+<%
+if Session("Usuario") = "" then
+   Response.redirect "gestao_login.asp"
+end if   
+%>
 
 <%
 ' =========================================================================

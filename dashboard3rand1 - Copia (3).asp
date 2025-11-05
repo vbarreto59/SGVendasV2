@@ -74,31 +74,6 @@ uniqueGerencias = GetUniqueValues(conn, "Gerencia", "Vendas")
 uniqueCorretores = GetUniqueValues(conn, "Corretor", "Vendas")
 uniqueEmpreendimentos = GetUniqueValues(conn, "NomeEmpreendimento", "Vendas")
 
-' CALCULAR TICKET MÉDIO E QUANTIDADE DE UNIDADES
-Dim ticketMedio, quantidadeUnidades, totalVendas
-quantidadeUnidades = 0
-totalVendas = 0
-
-SQL = "SELECT COUNT(*) AS TotalUnidades, SUM(ValorUnidade) AS TotalVendas FROM Vendas " & whereClause
-Set rs = Server.CreateObject("ADODB.Recordset")
-rs.Open SQL, conn
-
-If Not rs.EOF Then
-    If Not IsNull(rs("TotalUnidades")) Then
-        quantidadeUnidades = rs("TotalUnidades")
-    End If
-    If Not IsNull(rs("TotalVendas")) Then
-        totalVendas = rs("TotalVendas")
-    End If
-End If
-rs.Close
-
-If quantidadeUnidades > 0 And totalVendas > 0 Then
-    ticketMedio = totalVendas / quantidadeUnidades
-Else
-    ticketMedio = 0
-End If
-
 Dim arrMesesNome(12)
 arrMesesNome(1) = "Janeiro"
 arrMesesNome(2) = "Fevereiro"
@@ -181,15 +156,6 @@ If autoTime = "" Then autoTime = 5
         .bg-warning {
             background-color: #f72585 !important;
         }
-        .bg-purple {
-            background-color: #7209b7 !important;
-        }
-        .bg-orange {
-            background-color: #f3722c !important;
-        }
-        .bg-teal {
-            background-color: #2a9d8f !important;
-        }
         .badge {
             font-weight: 600;
             padding: 5px 10px;
@@ -253,34 +219,6 @@ If autoTime = "" Then autoTime = 5
             .content-right {
                 grid-column: 1 / -1; /* Ocupa a largura total */
             }
-        }
-        .metric-card {
-            text-align: center;
-            padding: 20px;
-        }
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .metric-label {
-            font-size: 1rem;
-            color: #6c757d;
-            margin-bottom: 0;
-        }
-        .venda-item {
-            border-left: 4px solid #2a9d8f;
-            padding-left: 15px;
-            margin-bottom: 10px;
-        }
-        .venda-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .venda-details {
-            font-size: 0.9rem;
-            color: #6c757d;
         }
     </style>
 </head>
@@ -385,28 +323,6 @@ If autoTime = "" Then autoTime = 5
         </div>
 
         <div class="content-center">
-            <!-- NOVOS CARDS DE MÉTRICAS -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card bg-purple text-white">
-                        <div class="card-body metric-card">
-                            <i class="fas fa-ticket-alt fa-3x mb-3"></i>
-                            <div class="metric-value">R$ <%=FormatNumber(ticketMedio, 2)%></div>
-                            <p class="metric-label text-white">Ticket Médio</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card bg-orange text-white">
-                        <div class="card-body metric-card">
-                            <i class="fas fa-cube fa-3x mb-3"></i>
-                            <div class="metric-value"><%=FormatNumber(quantidadeUnidades, 0)%></div>
-                            <p class="metric-label text-white">Unidades Vendidas</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="row">
                 <div class="col-md-6 mb-4">
                     <div class="card">
@@ -459,7 +375,7 @@ If autoTime = "" Then autoTime = 5
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header text-white">
-                            <h5 class="mb-0">🏢 Top 5 Diretorias</h5>
+                            <h5 class="mb-0">🏢 Top 10 Diretorias</h5>
                         </div>
                         <ul class="list-group list-group-flush">
                             <%
@@ -468,7 +384,7 @@ If autoTime = "" Then autoTime = 5
                             rs.Open SQL, conn
 
                             contador = 0
-                            Do Until rs.EOF Or contador = 5
+                            Do Until rs.EOF Or contador = 10
                                 Response.Write "<li class='list-group-item d-flex justify-content-between align-items-center'><span>" & rs("Diretoria") & "</span><span class='badge bg-info'>R$ " & FormatNumber(rs("Total"), 2) & "</span></li>"
                                 contador = contador + 1
                                 rs.MoveNext
@@ -483,11 +399,11 @@ If autoTime = "" Then autoTime = 5
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <div class="card-header text-white">
-                            <h5 class="mb-0">🏗️ Top 5 Empreendimentos</h5>
+                            <h5 class="mb-0">🏗️ Top 10 Empreendimentos</h5>
                         </div>
                         <ul class="list-group list-group-flush">
                             <%
-                            SQL = "SELECT TOP 5 NomeEmpreendimento, SUM(ValorUnidade) AS Total FROM vendas " & whereClause & " GROUP BY NomeEmpreendimento ORDER BY SUM(ValorUnidade) DESC"
+                            SQL = "SELECT TOP 10 NomeEmpreendimento, SUM(ValorUnidade) AS Total FROM vendas " & whereClause & " GROUP BY NomeEmpreendimento ORDER BY SUM(ValorUnidade) DESC"
                             Set rs = Server.CreateObject("ADODB.Recordset")
                             rs.Open SQL, conn
 
@@ -514,50 +430,6 @@ If autoTime = "" Then autoTime = 5
                 </div>
                 <div class="card-body">
                     <canvas id="graficoVendas" height="250"></canvas>
-                </div>
-            </div>
-
-            <!-- NOVA SEÇÃO: ÚLTIMAS 5 VENDAS -->
-            <div class="card mt-4">
-                <div class="card-header text-white bg-teal">
-                    <h5 class="mb-0"><i class="fas fa-clock"></i> Últimas 5 Vendas</h5>
-                </div>
-                <div class="card-body">
-                    <%
-              
-                    SQL_UltimasVendas = "SELECT TOP 5 Corretor, ValorUnidade, NomeEmpreendimento, Gerencia, DiaVenda, MesVenda, AnoVenda FROM Vendas " & whereClause & " ORDER BY AnoVenda DESC, MesVenda DESC, DiaVenda DESC, ID DESC"
-                    'response.write SQL_UltimasVendas
-                    'Response.end 
-                    
-                    Set rsUltimasVendas = Server.CreateObject("ADODB.Recordset")
-                    rsUltimasVendas.Open SQL_UltimasVendas, conn
-                    
-                    If Not rsUltimasVendas.EOF Then
-                        Do While Not rsUltimasVendas.EOF
-                            %>
-                            <div class="venda-item">
-                                <div class="venda-info">
-                                    <strong><%=rsUltimasVendas("Corretor")%></strong>
-                                    <span class="badge bg-teal">R$ <%=FormatNumber(rsUltimasVendas("ValorUnidade"), 2)%></span>
-                                </div>
-                                <div class="venda-details">
-                                    <small>
-                                        <i class="fas fa-building"></i> <%=rsUltimasVendas("NomeEmpreendimento")%> | 
-                                        <i class="fas fa-user-tie"></i> <%=rsUltimasVendas("Gerencia")%> | 
-                                        <i class="fas fa-calendar"></i> <%=rsUltimasVendas("DiaVenda")%>/<%=rsUltimasVendas("MesVenda")%>/<%=rsUltimasVendas("AnoVenda")%>
-                                    </small>
-                                </div>
-                            </div>
-                            <%
-                            rsUltimasVendas.MoveNext
-                        Loop
-                    Else
-                        Response.Write "<p class='text-center text-muted'>Nenhuma venda encontrada</p>"
-                    End If
-                    
-                    rsUltimasVendas.Close
-                    Set rsUltimasVendas = Nothing
-                    %>
                 </div>
             </div>
         </div>

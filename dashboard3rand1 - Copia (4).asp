@@ -1,7 +1,7 @@
 <%@ LANGUAGE="VBSCRIPT" CODEPAGE="65001" %>
 <!--#include file="conSunSales.asp"-->
 
-<%
+<% 'funcional sem ultimas vendas'
 ' FUNÇÃO PARA POPULAR OS SELECTS DE FILTRO
 Function GetUniqueValues(conn, fieldName, tableName)
     Dim dict, rs, sqlQuery
@@ -187,9 +187,6 @@ If autoTime = "" Then autoTime = 5
         .bg-orange {
             background-color: #f3722c !important;
         }
-        .bg-teal {
-            background-color: #2a9d8f !important;
-        }
         .badge {
             font-weight: 600;
             padding: 5px 10px;
@@ -267,20 +264,6 @@ If autoTime = "" Then autoTime = 5
             font-size: 1rem;
             color: #6c757d;
             margin-bottom: 0;
-        }
-        .venda-item {
-            border-left: 4px solid #2a9d8f;
-            padding-left: 15px;
-            margin-bottom: 10px;
-        }
-        .venda-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .venda-details {
-            font-size: 0.9rem;
-            color: #6c757d;
         }
     </style>
 </head>
@@ -514,50 +497,6 @@ If autoTime = "" Then autoTime = 5
                 </div>
                 <div class="card-body">
                     <canvas id="graficoVendas" height="250"></canvas>
-                </div>
-            </div>
-
-            <!-- NOVA SEÇÃO: ÚLTIMAS 5 VENDAS -->
-            <div class="card mt-4">
-                <div class="card-header text-white bg-teal">
-                    <h5 class="mb-0"><i class="fas fa-clock"></i> Últimas 5 Vendas</h5>
-                </div>
-                <div class="card-body">
-                    <%
-              
-                    SQL_UltimasVendas = "SELECT TOP 5 Corretor, ValorUnidade, NomeEmpreendimento, Gerencia, DiaVenda, MesVenda, AnoVenda FROM Vendas " & whereClause & " ORDER BY AnoVenda DESC, MesVenda DESC, DiaVenda DESC, ID DESC"
-                    'response.write SQL_UltimasVendas
-                    'Response.end 
-                    
-                    Set rsUltimasVendas = Server.CreateObject("ADODB.Recordset")
-                    rsUltimasVendas.Open SQL_UltimasVendas, conn
-                    
-                    If Not rsUltimasVendas.EOF Then
-                        Do While Not rsUltimasVendas.EOF
-                            %>
-                            <div class="venda-item">
-                                <div class="venda-info">
-                                    <strong><%=rsUltimasVendas("Corretor")%></strong>
-                                    <span class="badge bg-teal">R$ <%=FormatNumber(rsUltimasVendas("ValorUnidade"), 2)%></span>
-                                </div>
-                                <div class="venda-details">
-                                    <small>
-                                        <i class="fas fa-building"></i> <%=rsUltimasVendas("NomeEmpreendimento")%> | 
-                                        <i class="fas fa-user-tie"></i> <%=rsUltimasVendas("Gerencia")%> | 
-                                        <i class="fas fa-calendar"></i> <%=rsUltimasVendas("DiaVenda")%>/<%=rsUltimasVendas("MesVenda")%>/<%=rsUltimasVendas("AnoVenda")%>
-                                    </small>
-                                </div>
-                            </div>
-                            <%
-                            rsUltimasVendas.MoveNext
-                        Loop
-                    Else
-                        Response.Write "<p class='text-center text-muted'>Nenhuma venda encontrada</p>"
-                    End If
-                    
-                    rsUltimasVendas.Close
-                    Set rsUltimasVendas = Nothing
-                    %>
                 </div>
             </div>
         </div>

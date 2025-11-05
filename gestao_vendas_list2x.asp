@@ -503,6 +503,11 @@ End If
             font-size: 0.8rem;
             color: #6c757d;
         }
+        
+        .premio-pago {
+            color: var(--success);
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -518,7 +523,6 @@ End If
                         <button type="button" onclick="window.close();" class="btn btn-light btn-sm">
                             <i class="fas fa-times me-1"></i>Fechar
                         </button>
-
                     </div>
                 </div>
             </div>
@@ -533,52 +537,52 @@ End If
             </div>
         <% End If %>
         
-<div class="row mb-4">
-    <div class="col-md-2 col-sm-4 mb-2">
-        <div class="p-2 border rounded text-center bg-light">
-            <div class="text-primary" style="font-size: 0.8em;"><i class="fas fa-shopping-cart mr-1"></i> <%= totalVendas %></div>
-            <div class="text-muted" style="font-size: 0.8em;">Vendas</div>
-        </div>
-    </div>
-    <div class="col-md-2 col-sm-4 mb-2">
-        <div class="p-2 border rounded text-center bg-light">
-            <div class="text-success font-weight-bold" style="font-size: 0.8em;"><i class="fas fa-money-bill-wave mr-1"></i> R$ <%= FormatNumber(totalValorHtml, 2) %></div>
-            <div class="text-muted" style="font-size: 0.8em;">Valor Total</div>
-        </div>
-    </div>
-    <div class="col-md-2 col-sm-4 mb-2">
-        <div class="p-2 border rounded text-center bg-light">
-            <div class="text-info font-weight-bold" style="font-size: 0.8em;"><i class="fas fa-percentage mr-1"></i> R$ <%= FormatNumber(totalComissaoHtml, 2) %></div>
-            <div class="text-muted" style="font-size: 0.8em;">Total Comissões</div>
-        </div>
-    </div>
+        <div class="row mb-4">
+            <div class="col-md-2 col-sm-4 mb-2">
+                <div class="p-2 border rounded text-center bg-light">
+                    <div class="text-primary" style="font-size: 0.8em;"><i class="fas fa-shopping-cart mr-1"></i> <%= totalVendas %></div>
+                    <div class="text-muted" style="font-size: 0.8em;">Vendas</div>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-4 mb-2">
+                <div class="p-2 border rounded text-center bg-light">
+                    <div class="text-success font-weight-bold" style="font-size: 0.8em;"><i class="fas fa-money-bill-wave mr-1"></i> R$ <%= FormatNumber(totalValorHtml, 2) %></div>
+                    <div class="text-muted" style="font-size: 0.8em;">Valor Total</div>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-4 mb-2">
+                <div class="p-2 border rounded text-center bg-light">
+                    <div class="text-info font-weight-bold" style="font-size: 0.8em;"><i class="fas fa-percentage mr-1"></i> R$ <%= FormatNumber(totalComissaoHtml, 2) %></div>
+                    <div class="text-muted" style="font-size: 0.8em;">Total Comissões</div>
+                </div>
+            </div>
 
-    <div class="col-md-3 col-sm-6 mb-2">
-        <div class="p-2 border rounded text-center bg-light">
-            <div class="text-success font-weight-bold" style="font-size: 0.8em;">
-                <i class="fas fa-check-circle mr-1"></i> R$ <%= FormatNumber(totalComissoesPagas, 2) %>
-                <span class="badge badge-success ml-1"><%= FormatNumber(percentualPagas, 1) %>%</span>
+            <div class="col-md-3 col-sm-6 mb-2">
+                <div class="p-2 border rounded text-center bg-light">
+                    <div class="text-success font-weight-bold" style="font-size: 0.8em;">
+                        <i class="fas fa-check-circle mr-1"></i> R$ <%= FormatNumber(totalComissoesPagas, 2) %>
+                        <span class="badge badge-success ml-1"><%= FormatNumber(percentualPagas, 1) %>%</span>
+                    </div>
+                    <div class="progress mt-1" style="height: 5px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: <%= percentualPagas %>%"></div>
+                    </div>
+                    <div class="text-muted" style="font-size: 0.8em;">Comissões Pagas (<%= totalVendasPagas %> Vendas)</div>
+                </div>
             </div>
-            <div class="progress mt-1" style="height: 5px;">
-                <div class="progress-bar bg-success" role="progressbar" style="width: <%= percentualPagas %>%"></div>
+            <div class="col-md-3 col-sm-6 mb-2">
+                <div class="p-2 border rounded text-center bg-light">
+                    <div class="text-warning font-weight-bold" style="font-size: 0.8em;">
+                        <i class="fas fa-clock mr-1"></i> R$ <%= FormatNumber(totalComissoesAPagar, 2) %>
+                        <span class="badge badge-warning ml-1"><%= FormatNumber(percentualAPagar, 1) %>%</span>
+                    </div>
+                    <div class="progress mt-1" style="height: 5px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: <%= percentualAPagar %>%"></div>
+                    </div>
+                    <div class="text-muted" style="font-size: 0.8em;">Comissões a Pagar (<%= totalVendasPendentes %> Pendentes)</div>
+                </div>
             </div>
-            <div class="text-muted" style="font-size: 0.8em;">Comissões Pagas (<%= totalVendasPagas %> Vendas)</div>
         </div>
-    </div>
-    <div class="col-md-3 col-sm-6 mb-2">
-        <div class="p-2 border rounded text-center bg-light">
-            <div class="text-warning font-weight-bold" style="font-size: 0.8em;">
-                <i class="fas fa-clock mr-1"></i> R$ <%= FormatNumber(totalComissoesAPagar, 2) %>
-                <span class="badge badge-warning ml-1"><%= FormatNumber(percentualAPagar, 1) %>%</span>
-            </div>
-            <div class="progress mt-1" style="height: 5px;">
-                <div class="progress-bar bg-warning" role="progressbar" style="width: <%= percentualAPagar %>%"></div>
-            </div>
-            <div class="text-muted" style="font-size: 0.8em;">Comissões a Pagar (<%= totalVendasPendentes %> Pendentes)</div>
-        </div>
-    </div>
-</div>
-        <!-- ################################## -->
+
         <div class="filter-section">
             <div class="row">
                 <div class="col-md-8">
@@ -590,8 +594,16 @@ End If
                             <i class="fas fa-plus me-1"></i>Nova Venda
                         </a>
                         <a href="gestao_vendas_gerenc_comissoes.asp" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fas fa-money-bill-wave me-1"></i>Comissões
+                            <i class="fas fa-money-bill-wave me-1"></i>Comissões 1
                         </a>
+                        <a href="gestao_vendas_comissoes_pag_todos.asp" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="fas fa-money-bill-wave me-1"></i>Comissões 2
+                        </a>       
+
+                        <a href="gestao_vendas_inserir_comissao_todos1.asp" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="fas fa-money-bill-wave me-1"></i>Inserir Todas
+                        </a>  
+
                         <a href="gestao_vendas_list_excluidos.asp" class="btn btn-warning btn-sm" target="_blank">
                             <i class="fas fa-trash-restore me-1"></i>Excluídos
                         </a>
@@ -646,250 +658,343 @@ End If
                                 If Not rs.EOF Then
                                     rs.MoveFirst
 
-'-----------------------------------------'
-Do While Not rs.EOF
-    
-    totalPagoDiretoria = 0
-    totalPagoGerencia = 0
-    totalPagoCorretor = 0
-    dataPagamentoDiretoria = ""
-    dataPagamentoGerencia = ""
-    dataPagamentoCorretor = ""
-    tooltipDiretoria = ""
-    tooltipGerencia = ""
-    tooltipCorretor = ""
-    pagoDiretoria = False
-    pagoGerencia = False
-    pagoCorretor = False
+                                    Do While Not rs.EOF
+                                    
+                                        totalPagoDiretoria = 0
+                                        totalPagoGerencia = 0
+                                        totalPagoCorretor = 0
+                                        dataPagamentoDiretoria = ""
+                                        dataPagamentoGerencia = ""
+                                        dataPagamentoCorretor = ""
+                                        tooltipDiretoria = ""
+                                        tooltipGerencia = ""
+                                        tooltipCorretor = ""
+                                        pagoDiretoria = False
+                                        pagoGerencia = False
+                                        pagoCorretor = False
 
-    sqlPagamentos = "SELECT * FROM PAGAMENTOS_COMISSOES WHERE ID_Venda = " & rs("ID") & " ORDER BY DataPagamento ASC;"
-    Set rsPagamentos = connSales.Execute(sqlPagamentos)
+                                        sqlPagamentos = "SELECT * FROM PAGAMENTOS_COMISSOES WHERE ID_Venda = " & rs("ID") & " ORDER BY DataPagamento ASC;"
+                                        Set rsPagamentos = connSales.Execute(sqlPagamentos)
 
-    If Not rsPagamentos.EOF Then
-        Do While Not rsPagamentos.EOF
-            Dim detalhePagamento
-            detalhePagamento = "Data: " & FormatDateTime(rsPagamentos("DataPagamento"), 2) & " | Valor: R$ " & FormatNumber(rsPagamentos("ValorPago"), 2) & " | Status: " & rsPagamentos("Status")
-            Select Case LCase(rsPagamentos("TipoRecebedor"))
-                Case "diretoria"
-                    If tooltipDiretoria <> "" Then tooltipDiretoria = tooltipDiretoria & Chr(13)
-                    tooltipDiretoria = tooltipDiretoria & detalhePagamento
+                                        If Not rsPagamentos.EOF Then
+                                            Do While Not rsPagamentos.EOF
+                                                Dim detalhePagamento
+                                                detalhePagamento = "Data: " & FormatDateTime(rsPagamentos("DataPagamento"), 2) & " | Valor: R$ " & FormatNumber(rsPagamentos("ValorPago"), 2) & " | Status: " & rsPagamentos("Status")
+                                                Select Case LCase(rsPagamentos("TipoRecebedor"))
+                                                    Case "diretoria"
+                                                        If tooltipDiretoria <> "" Then tooltipDiretoria = tooltipDiretoria & Chr(13)
+                                                        tooltipDiretoria = tooltipDiretoria & detalhePagamento
+                                                        
+                                                        If Not IsNull(rsPagamentos("ValorPago")) And IsNumeric(rsPagamentos("ValorPago")) Then
+                                                            totalPagoDiretoria = totalPagoDiretoria + CDbl(rsPagamentos("ValorPago"))
+                                                        End If
+                                                        
+                                                        dataPagamentoDiretoria = FormatDateTime(rsPagamentos("DataPagamento"), 2)
+                                                    Case "gerencia"
+                                                        If tooltipGerencia <> "" Then tooltipGerencia = tooltipGerencia & Chr(13)
+                                                        tooltipGerencia = tooltipGerencia & detalhePagamento
+                                                        
+                                                        If Not IsNull(rsPagamentos("ValorPago")) And IsNumeric(rsPagamentos("ValorPago")) Then
+                                                            totalPagoGerencia = totalPagoGerencia + CDbl(rsPagamentos("ValorPago"))
+                                                        End If
+                                                        
+                                                        dataPagamentoGerencia = FormatDateTime(rsPagamentos("DataPagamento"), 2)
+                                                    Case "corretor"
+                                                        If tooltipCorretor <> "" Then tooltipCorretor = tooltipCorretor & Chr(13)
+                                                        tooltipCorretor = tooltipCorretor & detalhePagamento
+                                                        
+                                                        If Not IsNull(rsPagamentos("ValorPago")) And IsNumeric(rsPagamentos("ValorPago")) Then
+                                                            totalPagoCorretor = totalPagoCorretor + CDbl(rsPagamentos("ValorPago"))
+                                                        End If
+                                                        
+                                                        dataPagamentoCorretor = FormatDateTime(rsPagamentos("DataPagamento"), 2)
+                                                End Select
+                                                rsPagamentos.MoveNext
+                                            Loop
+                                        End If
+                                        
+                                        If Not rsPagamentos Is Nothing Then
+                                            rsPagamentos.Close
+                                            Set rsPagamentos = Nothing
+                                        End If
+
+                                        Dim dblValorDiretoria, dblValorGerencia, dblValorCorretor
+                                        
+                                        If Not IsNull(rs("ValorDiretoria")) And IsNumeric(rs("ValorDiretoria")) Then dblValorDiretoria = CDbl(rs("ValorDiretoria")) Else dblValorDiretoria = 0
+                                        If Not IsNull(rs("ValorGerencia")) And IsNumeric(rs("ValorGerencia")) Then dblValorGerencia = CDbl(rs("ValorGerencia")) Else dblValorGerencia = 0
+                                        If Not IsNull(rs("ValorCorretor")) And IsNumeric(rs("ValorCorretor")) Then dblValorCorretor = CDbl(rs("ValorCorretor")) Else dblValorCorretor = 0
+                                        
+                                        If dblValorDiretoria > 0 And totalPagoDiretoria >= dblValorDiretoria Then pagoDiretoria = True
+                                        If dblValorDiretoria = 0 Then pagoDiretoria = True
+                                        If dblValorGerencia > 0 And totalPagoGerencia >= dblValorGerencia Then pagoGerencia = True
+                                        If dblValorGerencia = 0 Then pagoGerencia = True
+                                        If dblValorCorretor > 0 And totalPagoCorretor >= dblValorCorretor Then pagoCorretor = True
+                                        If dblValorCorretor = 0 Then pagoCorretor = True
+
+                                        Dim comissaoText
+                                        comissaoText = FormatNumber(rs("ComissaoPercentual"), 2) & "%"
+                                        If Not IsNull(rs("ValorComissaoGeral")) And CDbl(rs("ValorComissaoGeral")) > 0 Then
+                                            comissaoText = comissaoText & " (R$ " & FormatNumber(rs("ValorComissaoGeral"), 2) & ")"
+                                        End If
+
+                                        vAno = Right(rs("AnoVenda"), 2)
+
+                                        Dim rsComissaoCheck, comissaoExiste
+                                        Set rsComissaoCheck = Server.CreateObject("ADODB.Recordset")
+                                        rsComissaoCheck.Open "SELECT ID_Venda FROM COMISSOES_A_PAGAR WHERE ID_Venda = " & CInt(rs("ID")), connSales
+                                        comissaoExiste = Not rsComissaoCheck.EOF
+                                        rsComissaoCheck.Close
+                                        Set rsComissaoCheck = Nothing
+                                        
+                                        Dim linhaClasse
+                                        If pagoDiretoria And pagoGerencia And pagoCorretor Then
+                                            linhaClasse = "linha-paga"
+                                        Else
+                                            linhaClasse = "linha-pendente"
+                                        End If
+                                %>
+                                <tr class="<%= linhaClasse %>">
+                                    <td>
+                                        <span class="fw-bold"><%= rs("ID") %></span>
+                                    </td>
+                                    <td>
+                                        <% If pagoDiretoria And pagoGerencia And pagoCorretor Then %>
+                                            <span class="badge status-pago" title="Comissões pagas">PAGO</span>
+                                        <% Else %>  
+                                            <span class="badge status-pendente" title="Comissões pendentes">PENDENTE</span>
+                                        <% End If %>
+                                    </td>  
+                                    <td>
+                                        <%= rs("AnoVenda") & "-" & Right("0"&rs("MesVenda"),2) %>
+                                        <br><small class="text-muted"><%= vAno & "T" & rs("Trimestre") %></small>
+                                    </td>
+                                    <td><%= FormatDateTime(rs("DataVenda"), 2) %></td>
+                                    <td>
+                                        <strong><%= rs("Empreend_ID") %>-<%= RemoverNumeros(rs("NomeEmpreendimento")) %></strong>
+                                        <br><small class="text-muted"><%= RemoverNumeros(rs("Localidade")) %></small>
+                                    </td>
+                                    <td><%= rs("Unidade") %></td>
+                                    <!-- ############################ -->
+                                    <% ' --------------------------------------- %>
+<% ' COLUNA DIRETORIA: Comissao + Prêmio     %>
+<% ' --------------------------------------- %>
+<td>
+    <div class="fw-bold"><%= rs("Diretoria") %></div>
+    <small class="comissao-info">
+        <% If pagoDiretoria Then %>
+            <span class="badge bg-success">
+                <i class="fas fa-check"></i>
+            </span>
+        <% End If %> 
+        R$ <%= FormatNumber(rs("ValorDiretoria"), 2) %>
+        
+        <% ' Verificação e Exibição do PRÊMIO DIRETORIA %>
+        <% If Not IsNull(rs("premioDiretoria")) Then %>
+            <% If IsNumeric(rs("premioDiretoria")) And CDbl(rs("premioDiretoria")) > 0 Then %>         
+                <br>
+                <span class="text-primary fw-bold">
+                    <% ' VERIFICAR SE O PRÊMIO DA DIRETORIA FOI PAGO %>
+                    <%
+                    Dim premioPagoDiretoria
+                    premioPagoDiretoria = False
                     
-                    ' Verificação de Null/Empty antes de CDbl, conforme discutido
-                    If Not IsNull(rsPagamentos("ValorPago")) And IsNumeric(rsPagamentos("ValorPago")) Then
-                        totalPagoDiretoria = totalPagoDiretoria + CDbl(rsPagamentos("ValorPago"))
+                    ' CORREÇÃO: Usando o campo TipoPagamento = 'Premiação'
+                    sqlPagamentosPremio = "SELECT * FROM PAGAMENTOS_COMISSOES WHERE ID_Venda = " & rs("ID") & " AND TipoRecebedor = 'diretoria' AND TipoPagamento = 'Premiação'"
+                    Set rsPagamentosPremio = connSales.Execute(sqlPagamentosPremio)
+                    
+                    If Not rsPagamentosPremio.EOF Then
+                        Dim totalPagoPremioDiretoria
+                        totalPagoPremioDiretoria = 0
+                        Do While Not rsPagamentosPremio.EOF
+                            ' Soma todos os pagamentos do tipo Premiação para diretoria
+                            If Not IsNull(rsPagamentosPremio("ValorPago")) And IsNumeric(rsPagamentosPremio("ValorPago")) Then
+                                totalPagoPremioDiretoria = totalPagoPremioDiretoria + CDbl(rsPagamentosPremio("ValorPago"))
+                            End If
+                            rsPagamentosPremio.MoveNext
+                        Loop
+                        
+                        ' Verifica se o total pago em premiações é maior ou igual ao prêmio devido
+                        If totalPagoPremioDiretoria >= CDbl(rs("premioDiretoria")) Then
+                            premioPagoDiretoria = True
+                        End If
                     End If
                     
-                    dataPagamentoDiretoria = FormatDateTime(rsPagamentos("DataPagamento"), 2)
-                Case "gerencia"
-                    If tooltipGerencia <> "" Then tooltipGerencia = tooltipGerencia & Chr(13)
-                    tooltipGerencia = tooltipGerencia & detalhePagamento
-                    
-                    If Not IsNull(rsPagamentos("ValorPago")) And IsNumeric(rsPagamentos("ValorPago")) Then
-                        totalPagoGerencia = totalPagoGerencia + CDbl(rsPagamentos("ValorPago"))
+                    If Not rsPagamentosPremio Is Nothing Then
+                        rsPagamentosPremio.Close
+                        Set rsPagamentosPremio = Nothing
                     End If
+                    %>
                     
-                    dataPagamentoGerencia = FormatDateTime(rsPagamentos("DataPagamento"), 2)
-                Case "corretor"
-                    If tooltipCorretor <> "" Then tooltipCorretor = tooltipCorretor & Chr(13)
-                    tooltipCorretor = tooltipCorretor & detalhePagamento
-                    
-                    If Not IsNull(rsPagamentos("ValorPago")) And IsNumeric(rsPagamentos("ValorPago")) Then
-                        totalPagoCorretor = totalPagoCorretor + CDbl(rsPagamentos("ValorPago"))
-                    End If
-                    
-                    dataPagamentoCorretor = FormatDateTime(rsPagamentos("DataPagamento"), 2)
-            End Select
-            rsPagamentos.MoveNext
-        Loop
-    End If
-    
-    If Not rsPagamentos Is Nothing Then
-        rsPagamentos.Close
-        Set rsPagamentos = Nothing
-    End If
-
-    ' Prevenção de erro Null para os valores de comissão na verificação de pagamento
-    Dim dblValorDiretoria, dblValorGerencia, dblValorCorretor
-    
-    If Not IsNull(rs("ValorDiretoria")) And IsNumeric(rs("ValorDiretoria")) Then dblValorDiretoria = CDbl(rs("ValorDiretoria")) Else dblValorDiretoria = 0
-    If Not IsNull(rs("ValorGerencia")) And IsNumeric(rs("ValorGerencia")) Then dblValorGerencia = CDbl(rs("ValorGerencia")) Else dblValorGerencia = 0
-    If Not IsNull(rs("ValorCorretor")) And IsNumeric(rs("ValorCorretor")) Then dblValorCorretor = CDbl(rs("ValorCorretor")) Else dblValorCorretor = 0
-    
-    If dblValorDiretoria > 0 And totalPagoDiretoria >= dblValorDiretoria Then pagoDiretoria = True
-    If dblValorDiretoria = 0 Then pagoDiretoria = True
-    If dblValorGerencia > 0 And totalPagoGerencia >= dblValorGerencia Then pagoGerencia = True
-    If dblValorGerencia = 0 Then pagoGerencia = True
-    If dblValorCorretor > 0 And totalPagoCorretor >= dblValorCorretor Then pagoCorretor = True
-    If dblValorCorretor = 0 Then pagoCorretor = True
-
-    Dim comissaoText
-    comissaoText = FormatNumber(rs("ComissaoPercentual"), 2) & "%"
-    If Not IsNull(rs("ValorComissaoGeral")) And CDbl(rs("ValorComissaoGeral")) > 0 Then
-        comissaoText = comissaoText & " (R$ " & FormatNumber(rs("ValorComissaoGeral"), 2) & ")"
-    End If
-
-    vAno = Right(rs("AnoVenda"), 2)
-
-    ' Verifica se a venda já possui comissão cadastrada
-    Dim rsComissaoCheck, comissaoExiste
-    Set rsComissaoCheck = Server.CreateObject("ADODB.Recordset")
-    rsComissaoCheck.Open "SELECT ID_Venda FROM COMISSOES_A_PAGAR WHERE ID_Venda = " & CInt(rs("ID")), connSales
-    comissaoExiste = Not rsComissaoCheck.EOF
-    rsComissaoCheck.Close
-    Set rsComissaoCheck = Nothing
-    
-    ' Definir classe CSS baseada no status de pagamento
-    Dim linhaClasse
-    If pagoDiretoria And pagoGerencia And pagoCorretor Then
-        linhaClasse = "linha-paga"
-    Else
-        linhaClasse = "linha-pendente"
-    End If
-%>
-<tr class="<%= linhaClasse %>">
-    <td>
-        <span class="fw-bold"><%= rs("ID") %></span>
-
-    </td>
-    <td>
-        <% If pagoDiretoria And pagoGerencia And pagoCorretor Then %>
-            <span class="badge status-pago" title="Comissões pagas">PAGO</span>
-        <%else%>  
-            <span class="badge status-pendente" title="Comissões pendentes">PENDENTE</span>
-        <% End If %>
-    </td>  
-    <td>
-        <%= rs("AnoVenda") & "-" & Right("0"&rs("MesVenda"),2) %>
-        <br><small class="text-muted"><%= vAno & "T" & rs("Trimestre") %></small>
-    </td>
-    <td><%= FormatDateTime(rs("DataVenda"), 2) %></td>
-    <td>
-        <strong><%= rs("Empreend_ID") %>-<%= RemoverNumeros(rs("NomeEmpreendimento")) %></strong>
-        <br><small class="text-muted"><%= RemoverNumeros(rs("Localidade")) %></small>
-    </td>
-    <td><%= rs("Unidade") %></td>
-    
-    <% ' --------------------------------------- %>
-    <% ' COLUNA DIRETORIA: Comissao + Prêmio     %>
-    <% ' --------------------------------------- %>
-    <td>
-        <div class="fw-bold"><%= rs("Diretoria") %></div>
-        <small class="comissao-info">
-            <% If pagoDiretoria Then %>
-                <span class="badge bg-success">
-                    <i class="fas fa-check"></i>
-                </span>
-            <% End If %> 
-            R$ <%= FormatNumber(rs("ValorDiretoria"), 2) %>
-
-           
-            
-            <% ' Verificação e Exibição do PRÊMIO DIRETORIA %>
-                <% If Not IsNull(rs("premioDiretoria")) Then %>
-                    <% If IsNumeric(rs("premioDiretoria")) And CDbl(rs("premioDiretoria")) > 0 Then %>         
-                        <br>
-                        <span class="text-primary fw-bold">
-                            <i class="fas fa-trophy"></i> R$ <%= FormatNumber(rs("premioDiretoria"), 2) %>
+                    <% If premioPagoDiretoria Then %>
+                        <span class="badge bg-success me-1">
+                            <i class="fas fa-check"></i>
                         </span>
                     <% End If %>
-                <% End If %>
-                
-
-            </small>
-        </td>
-    
-    <% ' --------------------------------------- %>
-    <% ' COLUNA GERÊNCIA: Comissao + Prêmio      %>
-    <% ' --------------------------------------- %>
-    <td>
-        <div class="fw-bold"><%= rs("Gerencia") %></div>
-        <small class="comissao-info">
-            <% If pagoGerencia Then %>
-                <span class="badge bg-success">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-trophy"></i> R$ <%= FormatNumber(rs("premioDiretoria"), 2) %>
                 </span>
-            <% End If %>              
-            R$ <%= FormatNumber(rs("ValorGerencia"), 2) %>
-            
-         
-            
-            <% ' Verificação e Exibição do PRÊMIO GERÊNCIA %>
-            <% If Not IsNull(rs("premioGerencia")) Then %>
-               <% If IsNumeric(rs("premioGerencia")) And CDbl(rs("premioGerencia")) > 0 Then %>
-                <br>
-                  <span class="text-primary fw-bold">
-                      <i class="fas fa-trophy"></i> R$ <%= FormatNumber(rs("premioGerencia"), 2) %>
-                  </span>
-               <% End If %>
             <% End If %>
+        <% End If %>
+    </small>
+</td>
 
-
-        </small>
-    </td>
-    
-    <% ' --------------------------------------- %>
-    <% ' COLUNA CORRETOR: Comissao + Prêmio      %>
-    <% ' --------------------------------------- %>
-    <td>
-        <div class="fw-bold"><%= rs("Corretor") %></div>
-        <small class="comissao-info">
-            <% If pagoCorretor Then %>
-                <span class="badge bg-success">
-                    <i class="fas fa-check"></i>
-                </span>
-            <% End If %>             
-            R$ <%= FormatNumber(rs("ValorCorretor"), 2) %>
-            
+<% ' --------------------------------------- %>
+<% ' COLUNA GERÊNCIA: Comissao + Prêmio      %>
+<% ' --------------------------------------- %>
+<td>
+    <div class="fw-bold"><%= rs("Gerencia") %></div>
+    <small class="comissao-info">
+        <% If pagoGerencia Then %>
+            <span class="badge bg-success">
+                <i class="fas fa-check"></i>
+            </span>
+        <% End If %>              
+        R$ <%= FormatNumber(rs("ValorGerencia"), 2) %>
         
-            
-            <% ' Verificação e Exibição do PRÊMIO CORRETOR (atenção à grafia do campo: premiioCorretor) %>
-            <% If Not IsNull(rs("premioCorretor")) Then %>
-               <% If IsNumeric(rs("premioCorretor")) And CDbl(rs("premioCorretor")) > 0 Then %>
+        <% ' Verificação e Exibição do PRÊMIO GERÊNCIA %>
+        <% If Not IsNull(rs("premioGerencia")) Then %>
+            <% If IsNumeric(rs("premioGerencia")) And CDbl(rs("premioGerencia")) > 0 Then %>
+                <br>
+                <span class="text-primary fw-bold">
+                    <% ' VERIFICAR SE O PRÊMIO DA GERÊNCIA FOI PAGO %>
+                    <%
+                    Dim premioPagoGerencia
+                    premioPagoGerencia = False
+                    
+                    ' CORREÇÃO: Usando o campo TipoPagamento = 'Premiação'
+                    sqlPagamentosPremio = "SELECT * FROM PAGAMENTOS_COMISSOES WHERE ID_Venda = " & rs("ID") & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Premiação'"
+                    Set rsPagamentosPremio = connSales.Execute(sqlPagamentosPremio)
+                    
+                    If Not rsPagamentosPremio.EOF Then
+                        Dim totalPagoPremioGerencia
+                        totalPagoPremioGerencia = 0
+                        Do While Not rsPagamentosPremio.EOF
+                            ' Soma todos os pagamentos do tipo Premiação para gerencia
+                            If Not IsNull(rsPagamentosPremio("ValorPago")) And IsNumeric(rsPagamentosPremio("ValorPago")) Then
+                                totalPagoPremioGerencia = totalPagoPremioGerencia + CDbl(rsPagamentosPremio("ValorPago"))
+                            End If
+                            rsPagamentosPremio.MoveNext
+                        Loop
+                        
+                        ' Verifica se o total pago em premiações é maior ou igual ao prêmio devido
+                        If totalPagoPremioGerencia >= CDbl(rs("premioGerencia")) Then
+                            premioPagoGerencia = True
+                        End If
+                    End If
+                    
+                    If Not rsPagamentosPremio Is Nothing Then
+                        rsPagamentosPremio.Close
+                        Set rsPagamentosPremio = Nothing
+                    End If
+                    %>
+                    
+                    <% If premioPagoGerencia Then %>
+                        <span class="badge bg-success me-1">
+                            <i class="fas fa-check"></i>
+                        </span>
+                    <% End If %>
+                    <i class="fas fa-trophy"></i> R$ <%= FormatNumber(rs("premioGerencia"), 2) %>
+                </span>
+            <% End If %>
+        <% End If %>
+    </small>
+</td>
+
+<% ' --------------------------------------- %>
+<% ' COLUNA CORRETOR: Comissao + Prêmio      %>
+<% ' --------------------------------------- %>
+<td>
+    <div class="fw-bold"><%= rs("Corretor") %></div>
+    <small class="comissao-info">
+        <% If pagoCorretor Then %>
+            <span class="badge bg-success">
+                <i class="fas fa-check"></i>
+            </span>
+        <% End If %>             
+        R$ <%= FormatNumber(rs("ValorCorretor"), 2) %>
+        
+        <% ' Verificação e Exibição do PRÊMIO CORRETOR %>
+        <% If Not IsNull(rs("premioCorretor")) Then %>
+            <% If IsNumeric(rs("premioCorretor")) And CDbl(rs("premioCorretor")) > 0 Then %>
                 <br>                        
                 <span class="text-primary fw-bold">
+                    <% ' VERIFICAR SE O PRÊMIO DO CORRETOR FOI PAGO %>
+                    <%
+                    Dim premioPagoCorretor
+                    premioPagoCorretor = False
+                    
+                    ' CORREÇÃO: Usando o campo TipoPagamento = 'Premiação'
+                    sqlPagamentosPremio = "SELECT * FROM PAGAMENTOS_COMISSOES WHERE ID_Venda = " & rs("ID") & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Premiação'"
+                    Set rsPagamentosPremio = connSales.Execute(sqlPagamentosPremio)
+                    
+                    If Not rsPagamentosPremio.EOF Then
+                        Dim totalPagoPremioCorretor
+                        totalPagoPremioCorretor = 0
+                        Do While Not rsPagamentosPremio.EOF
+                            ' Soma todos os pagamentos do tipo Premiação para corretor
+                            If Not IsNull(rsPagamentosPremio("ValorPago")) And IsNumeric(rsPagamentosPremio("ValorPago")) Then
+                                totalPagoPremioCorretor = totalPagoPremioCorretor + CDbl(rsPagamentosPremio("ValorPago"))
+                            End If
+                            rsPagamentosPremio.MoveNext
+                        Loop
+                        
+                        ' Verifica se o total pago em premiações é maior ou igual ao prêmio devido
+                        If totalPagoPremioCorretor >= CDbl(rs("premioCorretor")) Then
+                            premioPagoCorretor = True
+                        End If
+                    End If
+                    
+                    If Not rsPagamentosPremio Is Nothing Then
+                        rsPagamentosPremio.Close
+                        Set rsPagamentosPremio = Nothing
+                    End If
+                    %>
+                    
+                    <% If premioPagoCorretor Then %>
+                        <span class="badge bg-success me-1">
+                            <i class="fas fa-check"></i>
+                        </span>
+                    <% End If %>
                     <i class="fas fa-trophy"></i> R$ <%= FormatNumber(rs("premioCorretor"), 2) %>
                 </span>
-               <% End If %>
             <% End If %>
-
-
-        </small>
-    </td>
-    
-    <td class="text-end fw-bold" data-order="<%= rs("ValorUnidade") %>">
-        <%= FormatNumber(rs("ValorUnidade"), 2) %>
-    </td>
-    <td class="text-end">
-        <span class="badge badge-comissao"><%= comissaoText %></span>
-    </td>
-    <td>
-        <small>
-            <%= FormatDateTime(rs("DataRegistro"),2) %>
-            <br>por <%= rs("Usuario") %>
-        </small>
-    </td>
-    <td class="text-center">
-        <div class="action-buttons">
-            <a href="gestao_vendas_update2.asp?id=<%= rs("id") %>" class="btn btn-warning btn-sm" title="Editar">
-                <i class="fas fa-edit"></i>
-            </a>
-            <% If Not comissaoExiste Then %>
-                <a href="gestao_vendas_inserir_comissao1.asp?id=<%= rs("id") %>" class="btn btn-primary btn-sm" title="Inserir Comissão">
-                    <i class="fas fa-hand-holding-usd"></i>
-                </a>
-            <% End If %>
-            <% If UCase(Session("Usuario")) = "BARRETO" Then %>
-                <a href="gestao_vendas_delete.asp?id=<%= rs("id") %>" class="btn btn-danger btn-sm" title="Excluir" onclick="return confirm('Confirma exclusão desta venda?');">
-                    <i class="fas fa-trash"></i>
-                </a>
-            <% End If %>
-        </div>
-    </td>
-</tr>
-<%
-    rs.MoveNext
-Loop
-' -----------------------------------------------------------------
+        <% End If %>
+    </small>
+</td>
+                                    <!-- ############################ -->
+                                    
+                                    <td class="text-end fw-bold" data-order="<%= rs("ValorUnidade") %>">
+                                        <%= FormatNumber(rs("ValorUnidade"), 2) %>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge badge-comissao"><%= comissaoText %></span>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            <%= FormatDateTime(rs("DataRegistro"),2) %>
+                                            <br>por <%= rs("Usuario") %>
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="action-buttons">
+                                            <a href="gestao_vendas_update2.asp?id=<%= rs("id") %>" class="btn btn-warning btn-sm" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <% If Not comissaoExiste Then %>
+                                                <a href="gestao_vendas_inserir_comissao1.asp?id=<%= rs("id") %>" class="btn btn-primary btn-sm" title="Inserir Comissão">
+                                                    <i class="fas fa-hand-holding-usd"></i>
+                                                </a>
+                                            <% End If %>
+                                            <% If UCase(Session("Usuario")) = "BARRETO" Then %>
+                                                <a href="gestao_vendas_delete.asp?id=<%= rs("id") %>" class="btn btn-danger btn-sm" title="Excluir" onclick="return confirm('Confirma exclusão desta venda?');">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            <% End If %>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <%
+                                        rs.MoveNext
+                                    Loop
                                 End If
                                 %>
                             </tbody>
@@ -905,15 +1010,13 @@ Loop
                     </div>
                 </div>
                 
-                <!-- Conteúdo Mobile (mantido igual) -->
+                <!-- Conteúdo Mobile -->
                 <div class="mobile-cards p-3" id="mobileCardsContainer">
-                    <!-- ... conteúdo mobile existente ... -->
+                    <!-- O conteúdo mobile permanece o mesmo -->
                 </div>
             </div>
         </div>
     </div>
-
-
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -3,7 +3,7 @@
 <!--#include file="conSunSales.asp"-->
 <!--#include file="AtualizarVendas.asp"-->
 
-<%
+<% ' funcional - tentando melhorar o status'
 ' Função para formatar datas
 Function FormatDateForDisplay(dateValue)
     If Not IsNull(dateValue) And IsDate(dateValue) Then
@@ -143,8 +143,8 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js">
     <!-- jQuery e jQuery Mask (para o modal) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
@@ -177,15 +177,15 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
             border-radius: 0.25rem;
         }
         .status-pago {
-            background-color: #28a745;
+            background-color: #3123E3;
             color: white;
         }
         .status-pendente {
-            background-color: #ffc107;
+            background-color: #F692E9;
             color: #212529;
         }
         .status-parcial {
-            background-color: #17a2b8;
+            background-color: #54BC4A;
             color: white;
         }
         .header-title {
@@ -244,6 +244,17 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
             background-color: #e55a2b;
             border-color: #e55a2b;
             color: white;
+        }
+        
+        /* NOVOS ESTILOS PARA STATUS DE PAGAMENTO */
+        .row-paga {
+            background-color: #e3f2fd !important; /* Azul claro */
+        }
+        .row-pendente {
+            background-color: #ffebee !important; /* Vermelho claro */
+        }
+        .row-parcial {
+            background-color: #fff3e0 !important; /* Laranja claro */
         }
     </style>
 </head>
@@ -453,9 +464,46 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 premioDiretoriaPago = (dblPremioDiretoria > 0 And Round(totalPremioPagoDiretoria, 2) >= Round(dblPremioDiretoria, 2))
                 premioGerenciaPago = (dblPremioGerencia > 0 And Round(totalPremioPagoGerencia, 2) >= Round(dblPremioGerencia, 2))
                 premioCorretorPago = (dblPremioCorretor > 0 And Round(totalPremioPagoCorretor, 2) >= Round(dblPremioCorretor, 2))
+
+                ' ====================================================================
+                ' 🆕 VERIFICAÇÃO COMPLETA DO STATUS DE PAGAMENTO
+                ' ====================================================================
+                Dim todasComissoesPagas, todosPremiosPagos, statusCompleto, rowClass
+                
+                ' Verifica se todas as comissões estão pagas
+                todasComissoesPagas = True
+                If dblValorDiretoriaAPagar > 0 And Not comissaoDiretoriaPaga Then todasComissoesPagas = False
+                If dblValorGerenciaAPagar > 0 And Not comissaoGerenciaPaga Then todasComissoesPagas = False
+                If dblValorCorretorAPagar > 0 And Not comissaoCorretorPaga Then todasComissoesPagas = False
+                
+                ' Verifica se todos os prêmios estão pagos
+                todosPremiosPagos = True
+                If dblPremioDiretoria > 0 And Not premioDiretoriaPago Then todosPremiosPagos = False
+                If dblPremioGerencia > 0 And Not premioGerenciaPago Then todosPremiosPagos = False
+                If dblPremioCorretor > 0 And Not premioCorretorPago Then todosPremiosPagos = False
+                
+                ' Determina o status completo
+                If todasComissoesPagas And todosPremiosPagos Then
+                    statusCompleto = "PAGA"
+                    rowClass = "row-paga"
+                ElseIf (totalPagoDiretoria + totalPagoGerencia + totalPagoCorretor + totalPremioPagoDiretoria + totalPremioPagoGerencia + totalPremioPagoCorretor) > 0 Then
+                    statusCompleto = "PAGA PARCIALMENTE"
+                    rowClass = "row-parcial"
+                Else
+                    statusCompleto = "PENDENTE"
+                    rowClass = "row-pendente"
+                End If
+                
+                ' Atualiza o status no banco de dados se necessário
+                If UCase(status) <> UCase(statusCompleto) Then
+                    sqlUpdateStatus = "UPDATE COMISSOES_A_PAGAR SET StatusPagamento = '" & statusCompleto & "' WHERE ID_Comissoes = " & comissaoId
+                    connSales.Execute(sqlUpdateStatus)
+                    status = statusCompleto
+                    statusClass = "status-" & LCase(Replace(statusCompleto, " ", "-"))
+                End If
         %>
-        <tr>
-            <td class="text-center"><%="C"& rsComissoes("ID_Comissoes") %>-<%="V"&vendaID%></td>
+        <tr class="<%= rowClass %>">
+            <td class="text-center"><%="V"&vendaID%>-<%="C"& rsComissoes("ID_Comissoes")%></td>
             <td class="text-center"><span class="status-badge <%= statusClass %>"><%= UCase(status) %></span></td>
             <td class="text-center">
                 <small class="text-muted"><b><%= rsComissoes("NomeEmpreendimento") %></b></small><br>
@@ -1012,7 +1060,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
     $(document).ready(function() {
         $('#comissoesTable').DataTable({
             responsive: true,
-            order: [[1, "desc"]],
+            order: [[0, "desc"]],
             pageLength: 100,
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
             language: {

@@ -10,7 +10,7 @@
 
 
 
-<%
+<% ' funcional tentando incluir premiacao'
 Response.Buffer = True
 Response.Expires = -1
 Response.CodePage = 65001
@@ -68,7 +68,9 @@ sqlVendasMes = "SELECT " & _
                "V.ValorComissaoGeral, " & _
                "V.ValorDiretoria, " & _
                "V.ValorGerencia, " & _
-               "V.ValorCorretor " & _
+               "V.ValorCorretor, " & _
+               "V.NomeDiretor, " & _
+               "V.NomeGerente " & _
                "FROM Vendas V " & _
                 vWhere & " V.AnoVenda = " & anoDetalhe & " " & _
                "AND V.MesVenda = " & mesDetalhe & " " & _
@@ -84,9 +86,13 @@ Set rsPagamentosMes = Server.CreateObject("ADODB.Recordset")
 sqlPagamentosMes = "SELECT " & _
                    "PC.ID_Venda, " & _
                    "PC.TipoRecebedor, " & _
+                   "PC.TipoPagamento, " & _
                    "PC.ValorPago, " & _
                    "PC.DataPagamento, " & _
-                   "PC.Status " & _
+                   "PC.Status, " & _
+                   "V.NomeDiretor, " & _
+                   "V.NomeGerente, " & _
+                   "V.Corretor " & _
                    "FROM PAGAMENTOS_COMISSOES PC " & _
                    "INNER JOIN Vendas V ON PC.ID_Venda = V.ID " & _
                    "WHERE V.AnoVenda = " & anoDetalhe & " " & _
@@ -97,10 +103,12 @@ sqlPagamentosMes = "SELECT " & _
 rsPagamentosMes.Open sqlPagamentosMes, connSales
 
 ' Calcular totais
-Dim totalVGV, totalComissao, totalPago
+Dim totalVGV, totalComissao, totalPago, totalComissaoPaga, totalPremiacaoPaga
 totalVGV = 0
 totalComissao = 0
 totalPago = 0
+totalComissaoPaga = 0
+totalPremiacaoPaga = 0
 %>
 
 <!DOCTYPE html>
@@ -181,12 +189,35 @@ totalPago = 0
             color: white;
         }
         
+        .badge-comissao {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .badge-premiacao {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
         .info-card {
             background: white;
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
             border-left: 4px solid #3498db;
+        }
+        
+        .info-card-comissao {
+            border-left: 4px solid #3498db;
+        }
+        
+        .info-card-premiacao {
+            border-left: 4px solid #9b59b6;
+        }
+        
+        .nome-recebedor {
+            font-weight: 600;
+            color: #2c3e50;
         }
     </style>
 </head>
@@ -211,7 +242,7 @@ totalPago = 0
     <div class="container-fluid main-content">
         <!-- Cards de Resumo -->
         <div class="row mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="info-card">
                     <h6><i class="fas fa-chart-line me-2"></i>VGV Total</h6>
                     <h4 class="valor-positivo">
@@ -232,16 +263,22 @@ totalPago = 0
                     </h4>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="info-card">
                     <h6><i class="fas fa-money-bill-wave me-2"></i>Comissão Total</h6>
                     <h4 class="valor-positivo">R$ <%= FormatNumber(totalComissao, 2) %></h4>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="info-card">
-                    <h6><i class="fas fa-receipt me-2"></i>Total de Vendas</h6>
-                    <h4><%= vCont %></h4>
+            <div class="col-md-3">
+                <div class="info-card info-card-comissao">
+                    <h6><i class="fas fa-hand-holding-usd me-2"></i>Comissões Pagas</h6>
+                    <h4 class="valor-positivo">R$ <%= FormatNumber(totalComissaoPaga, 2) %></h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-card info-card-premiacao">
+                    <h6><i class="fas fa-trophy me-2"></i>Premiações Pagas</h6>
+                    <h4 class="valor-positivo">R$ <%= FormatNumber(totalPremiacaoPaga, 2) %></h4>
                 </div>
             </div>
         </div>
@@ -312,7 +349,7 @@ totalPago = 0
         <!-- Tabela de Pagamentos -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Pagamentos de Comissões</h5>
+                <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Pagamentos de Comissões e Premiações</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -320,7 +357,9 @@ totalPago = 0
                         <thead>
                             <tr>
                                 <th>ID Venda</th>
-                                <th>Tipo</th>
+                                <th>Tipo Recebedor</th>
+                                <th>Nome do Recebedor</th>
+                                <th>Tipo Pagamento</th>
                                 <th>Valor Pago (R$)</th>
                                 <th>Data Pagamento</th>
                                 <th>Status</th>
@@ -332,19 +371,45 @@ totalPago = 0
                                 Do While Not rsPagamentosMes.EOF
                                     totalPago = totalPago + CDbl(rsPagamentosMes("ValorPago"))
                                     
-                                    Dim badgeClass, statusClass
+                                    ' Acumular totais por tipo de pagamento
+                                    If UCase(rsPagamentosMes("TipoPagamento")) = "COMISSÃO" Or UCase(rsPagamentosMes("TipoPagamento")) = "COMISSAO" Then
+                                        totalComissaoPaga = totalComissaoPaga + CDbl(rsPagamentosMes("ValorPago"))
+                                    ElseIf UCase(rsPagamentosMes("TipoPagamento")) = "PREMIACAO" Or UCase(rsPagamentosMes("TipoPagamento")) = "PREMIAÇÃO" Then
+                                        totalPremiacaoPaga = totalPremiacaoPaga + CDbl(rsPagamentosMes("ValorPago"))
+                                    End If
+                                    
+                                    Dim badgeClass, statusClass, tipoPagamentoClass, tipoPagamentoTexto, iconClass, nomeRecebedor
                                     
                                     ' Definir classe do badge para TipoRecebedor
                                     Select Case UCase(rsPagamentosMes("TipoRecebedor"))
                                         Case "DIRETORIA"
                                             badgeClass = "bg-primary"
+                                            nomeRecebedor = rsPagamentosMes("NomeDiretor")
                                         Case "GERENCIA"
                                             badgeClass = "bg-warning"
+                                            nomeRecebedor = rsPagamentosMes("NomeGerente")
                                         Case "CORRETOR"
                                             badgeClass = "bg-success"
+                                            nomeRecebedor = rsPagamentosMes("Corretor")
                                         Case Else
                                             badgeClass = "bg-secondary"
+                                            nomeRecebedor = "N/A"
                                     End Select
+                                    
+                                    ' Definir classe e texto para TipoPagamento
+                                    If UCase(rsPagamentosMes("TipoPagamento")) = "COMISSÃO" Or UCase(rsPagamentosMes("TipoPagamento")) = "COMISSAO" Then
+                                        tipoPagamentoClass = "badge-comissao"
+                                        tipoPagamentoTexto = "Comissão"
+                                        iconClass = "fa-money-bill-wave"
+                                    ElseIf UCase(rsPagamentosMes("TipoPagamento")) = "PREMIACAO" Or UCase(rsPagamentosMes("TipoPagamento")) = "PREMIAÇÃO" Then
+                                        tipoPagamentoClass = "badge-premiacao"
+                                        tipoPagamentoTexto = "Premiação"
+                                        iconClass = "fa-trophy"
+                                    Else
+                                        tipoPagamentoClass = "bg-secondary"
+                                        tipoPagamentoTexto = rsPagamentosMes("TipoPagamento")
+                                        iconClass = "fa-question"
+                                    End If
                                     
                                     ' Definir classe do badge para Status
                                     If UCase(rsPagamentosMes("Status")) = "PAGO" Then
@@ -358,6 +423,17 @@ totalPago = 0
                                 <td>
                                     <span class="badge <%= badgeClass %>">
                                         <%= UCase(rsPagamentosMes("TipoRecebedor")) %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="nome-recebedor">
+                                        <%= nomeRecebedor %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge <%= tipoPagamentoClass %>">
+                                        <i class="fas <%= iconClass %> me-1"></i>
+                                        <%= tipoPagamentoTexto %>
                                     </span>
                                 </td>
                                 <td class="valor-positivo">R$ <%= FormatNumber(rsPagamentosMes("ValorPago"), 2) %></td>
@@ -374,7 +450,7 @@ totalPago = 0
                             Else
                             %>
                             <tr>
-                                <td colspan="5" class="text-center py-4">
+                                <td colspan="7" class="text-center py-4">
                                     <div class="alert alert-info mb-0">
                                         <i class="fas fa-info-circle me-2"></i>Nenhum pagamento encontrado para <%= nomeMesDetalhe %>/<%= anoDetalhe %>.
                                     </div>
@@ -386,7 +462,7 @@ totalPago = 0
                         </tbody>
                         <tfoot>
                             <tr class="table-light">
-                                <th colspan="2" class="text-end">Total Pago:</th>
+                                <th colspan="4" class="text-end">Total Pago:</th>
                                 <th class="valor-positivo">R$ <%= FormatNumber(totalPago, 2) %></th>
                                 <th colspan="2"></th>
                             </tr>
@@ -418,7 +494,7 @@ totalPago = 0
                 url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
             },
             pageLength: 25,
-            order: [[3, 'desc']],
+            order: [[5, 'desc']], // Ordena por DataPagamento
             responsive: true
         });
     });
