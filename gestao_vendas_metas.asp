@@ -379,8 +379,8 @@ Next
                     <h1 class="app-title"><i class="fas fa-chart-line me-2"></i> KPIs e Metas</h1>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="gestao_vendas.asp" class="btn btn-light btn-sm">
-                        <i class="fas fa-arrow-left me-1"></i>Voltar para Vendas
+                    <a href="javascript:window.close()" class="btn btn-light btn-sm">
+                        <i class="fas fa-times me-1"></i>Fechar
                     </a>
                 </div>
             </div>

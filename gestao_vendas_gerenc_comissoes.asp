@@ -2,8 +2,13 @@
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
 <!--#include file="AtualizarVendas.asp"-->
+<!--#include file="AtualizarVendas2.asp"-->
 
-<% ' funcional - tentando melhorar o status'
+<% 
+' Configurar codificação explicitamente
+Response.CodePage = 65001
+Response.CharSet = "UTF-8"
+
 ' Função para formatar datas
 Function FormatDateForDisplay(dateValue)
     If Not IsNull(dateValue) And IsDate(dateValue) Then
@@ -63,7 +68,7 @@ Set rsComissoes = connSales.Execute(sqlComissoes)
 ' ====================================================================
 Response.Buffer = True
 Response.Expires = -1
-On Error GoTo 0 ' Habilita tratamento de erro explícito para o bloco todo
+On Error Resume Next ' Usar On Error Resume Next para melhor tratamento
 
 Dim rsCheckStatus
 sqlCheckStatus = "SELECT c.ID_Comissoes, c.ID_Venda, c.StatusPagamento, " & _
@@ -71,6 +76,11 @@ sqlCheckStatus = "SELECT c.ID_Comissoes, c.ID_Venda, c.StatusPagamento, " & _
                  "FROM COMISSOES_A_PAGAR c INNER JOIN Vendas v ON c.ID_Venda = v.ID ORDER by c.ID_Comissoes"
 
 Set rsCheckStatus = connSales.Execute(sqlCheckStatus)
+
+If Err.Number <> 0 Then
+    Response.Write "Erro na consulta principal: " & Err.Description
+    Err.Clear
+End If
 
 Do While Not rsCheckStatus.EOF
     Dim comissaoIdCheck, vendaIdCheck, currentStatusComissao
@@ -90,26 +100,42 @@ Do While Not rsCheckStatus.EOF
     totalCorPaid = 0
 
     Dim sqlGetPaid, rsGetPaid
+    
     ' --- Verificar pagamentos para Diretoria (agora na conexão 'connSales') ---
     sqlGetPaid = "SELECT SUM(ValorPago) as TotalPago FROM PAGAMENTOS_COMISSOES " & _
-                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'diretoria' AND TipoPagamento = 'Comissão'"
+                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'diretoria' AND TipoPagamento = 'Comissao'"
     Set rsGetPaid = connSales.Execute(sqlGetPaid)
-    If Not rsGetPaid.EOF And Not IsNull(rsGetPaid("TotalPago")) Then totalDirPaid = rsGetPaid("TotalPago")
-    If Not rsGetPaid Is Nothing Then rsGetPaid.Close : Set rsGetPaid = Nothing
+    If Err.Number <> 0 Then
+        Response.Write "Erro na consulta de diretoria: " & Err.Description & "<br>"
+        Err.Clear
+    Else
+        If Not rsGetPaid.EOF And Not IsNull(rsGetPaid("TotalPago")) Then totalDirPaid = rsGetPaid("TotalPago")
+        If Not rsGetPaid Is Nothing Then rsGetPaid.Close : Set rsGetPaid = Nothing
+    End If
 
     ' --- Verificar pagamentos para Gerência ---
     sqlGetPaid = "SELECT SUM(ValorPago) as TotalPago FROM PAGAMENTOS_COMISSOES " & _
-                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Comissão'"
+                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Comissao'"
     Set rsGetPaid = connSales.Execute(sqlGetPaid)
-    If Not rsGetPaid.EOF And Not IsNull(rsGetPaid("TotalPago")) Then totalGerPaid = rsGetPaid("TotalPago")
-    If Not rsGetPaid Is Nothing Then rsGetPaid.Close : Set rsGetPaid = Nothing
+    If Err.Number <> 0 Then
+        Response.Write "Erro na consulta de gerencia: " & Err.Description & "<br>"
+        Err.Clear
+    Else
+        If Not rsGetPaid.EOF And Not IsNull(rsGetPaid("TotalPago")) Then totalGerPaid = rsGetPaid("TotalPago")
+        If Not rsGetPaid Is Nothing Then rsGetPaid.Close : Set rsGetPaid = Nothing
+    End If
 
     ' --- Verificar pagamentos para Corretor ---
     sqlGetPaid = "SELECT SUM(ValorPago) as TotalPago FROM PAGAMENTOS_COMISSOES " & _
-                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Comissão'"
+                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Comissao'"
     Set rsGetPaid = connSales.Execute(sqlGetPaid)
-    If Not rsGetPaid.EOF And Not IsNull(rsGetPaid("TotalPago")) Then totalCorPaid = rsGetPaid("TotalPago")
-    If Not rsGetPaid Is Nothing Then rsGetPaid.Close : Set rsGetPaid = Nothing
+    If Err.Number <> 0 Then
+        Response.Write "Erro na consulta de corretor: " & Err.Description & "<br>"
+        Err.Clear
+    Else
+        If Not rsGetPaid.EOF And Not IsNull(rsGetPaid("TotalPago")) Then totalCorPaid = rsGetPaid("TotalPago")
+        If Not rsGetPaid Is Nothing Then rsGetPaid.Close : Set rsGetPaid = Nothing
+    End If
 
     newStatusComissao = "PAGA"
     If CDbl(valorDirCheck) > 0 And CDbl(totalDirPaid) < CDbl(valorDirCheck) Then newStatusComissao = "PENDENTE"
@@ -119,6 +145,10 @@ Do While Not rsCheckStatus.EOF
     If newStatusComissao <> currentStatusComissao Then
         sqlUpdateStatus = "UPDATE COMISSOES_A_PAGAR SET StatusPagamento = '" & newStatusComissao & "' WHERE ID_Comissoes = " & comissaoIdCheck
         connSales.Execute(sqlUpdateStatus)
+        If Err.Number <> 0 Then
+            Response.Write "Erro ao atualizar status: " & Err.Description & "<br>"
+            Err.Clear
+        End If
     End If
 
     rsCheckStatus.MoveNext
@@ -127,10 +157,7 @@ Loop
 If Not rsCheckStatus Is Nothing Then rsCheckStatus.Close
 Set rsCheckStatus = Nothing
 
-' ====================================================================
-' Bloco de Limpeza (IMPORTANTE)
-' ====================================================================
-If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales.Close : Set connSales = Nothing  
+On Error GoTo 0 ' Restaura o tratamento de erro padrão
 %>    
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -143,8 +170,8 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
     <!-- jQuery e jQuery Mask (para o modal) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
@@ -273,12 +300,9 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
             <th class="text-center">Data/ID</th>
             <th class="text-center">Status</th>
             <th class="text-center">Venda</th>
-            
-            
             <th class="text-center">Diretoria</th>
             <th class="text-center">Gerência</th>
             <th class="text-center">Corretor</th>
-            
             <th class="text-center">Ações</th>
         </tr>
     </thead>
@@ -344,7 +368,6 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 
                 ' ====================================================================
                 ' Consulta para obter os pagamentos já realizados (COMISSÕES)
-                ' (MANTIDO INALTERADO)
                 ' ====================================================================
                 ' #### Pagamentos para Diretoria (Comissão)
                 sqlPagamentos = "SELECT Sum(ValorPago) AS ValorTotalPago, MAX(DataPagamento) as DataPagamento  " & _
@@ -352,7 +375,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                                 "WHERE PAGAMENTOS_COMISSOES.ID_Venda=" & vendaId & " " & _
                                 "AND PAGAMENTOS_COMISSOES.UsuariosUserId=" & userIdDiretoria & " " & _
                                 "AND PAGAMENTOS_COMISSOES.TipoRecebedor='diretoria' " & _
-                                "AND PAGAMENTOS_COMISSOES.TipoPagamento='Comissão';"
+                                "AND PAGAMENTOS_COMISSOES.TipoPagamento='Comissao';"
                                         
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 Dim dataPagamentoDiretoria
@@ -367,7 +390,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 ' #### Pagamentos para Gerência (Comissão)
                 sqlPagamentos = "SELECT SUM(ValorPago) as ValorTotalPago, MAX(DataPagamento) as DataPag " & _
                                 "FROM PAGAMENTOS_COMISSOES " & _
-                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdGerencia & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Comissão'"
+                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdGerencia & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Comissao'"
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 Dim dataPagamentoGerencia
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
@@ -381,7 +404,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 ' #### Pagamentos para Corretor (Comissão)
                 sqlPagamentos = "SELECT SUM(ValorPago) as ValorTotalPago, MAX(DataPagamento) as DataPag " & _
                                 "FROM PAGAMENTOS_COMISSOES " & _
-                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdCorretor & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Comissão'"
+                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdCorretor & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Comissao'"
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 Dim dataPagamentoCorretor
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
@@ -394,7 +417,6 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 
                 ' ====================================================================
                 ' Consulta para obter os pagamentos já realizados (PRÊMIOS)
-                ' (MANTIDO INALTERADO)
                 ' ====================================================================
                 ' #### Pagamentos para Diretoria (Prêmio)
                 sqlPagamentos = "SELECT Sum(ValorPago) AS ValorTotalPago " & _
@@ -402,7 +424,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                                 "WHERE PAGAMENTOS_COMISSOES.ID_Venda=" & vendaId & " " & _
                                 "AND PAGAMENTOS_COMISSOES.UsuariosUserId=" & userIdDiretoria & " " & _
                                 "AND PAGAMENTOS_COMISSOES.TipoRecebedor='diretoria' " & _
-                                "AND PAGAMENTOS_COMISSOES.TipoPagamento='Premiação';"
+                                "AND PAGAMENTOS_COMISSOES.TipoPagamento='Premiacao';"
                                         
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
@@ -415,7 +437,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 ' #### Pagamentos para Gerência (Prêmio)
                 sqlPagamentos = "SELECT SUM(ValorPago) as ValorTotalPago " & _
                                 "FROM PAGAMENTOS_COMISSOES " & _
-                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdGerencia & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Premiação'"
+                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdGerencia & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Premiacao'"
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
                     totalPremioPagoGerencia = rsPagamentos("ValorTotalPago")
@@ -427,7 +449,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 ' #### Pagamentos para Corretor (Prêmio)
                 sqlPagamentos = "SELECT SUM(ValorPago) as ValorTotalPago " & _
                                 "FROM PAGAMENTOS_COMISSOES " & _
-                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdCorretor & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Premiação'"
+                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdCorretor & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Premiacao'"
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
                     totalPremioPagoCorretor = rsPagamentos("ValorTotalPago")
@@ -438,7 +460,6 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 
                 ' ====================================================================
                 ' Determina o status da comissão
-                ' (MANTIDO INALTERADO)
                 ' ====================================================================
                 Dim status, statusClass
                 status = rsComissoes("StatusPagamento")
@@ -511,7 +532,6 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 Comissão: R$ <%= FormatNumber(rsComissoes("ValorComissaoGeral"), 2) %><br>
                 <small class="text-muted">ID Venda: <%= rsComissoes("ID_Venda") %></small>
             </td>
-            
             
             <% ' ----------------------------------------------------------------- %>
             <% ' COLUNA DIRETORIA: COM ÍCONES DE CONFIRMAÇÃO %>
@@ -745,7 +765,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="paymentForm" action="gestao_vendas_salvar_pagamento.asp" method="post">
-                    <input type="hidden" name="TipoPagamento" value="Comissão">
+                    <input type="hidden" name="TipoPagamento" value="Comissao">
                     <div class="modal-body">
                         <input type="hidden" id="modalComissaoId" name="ID_Comissao">
                         <input type="hidden" id="modalVendaId" name="ID_Venda">
@@ -812,7 +832,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="premioForm" action="gestao_vendas_salvar_premio.asp" method="post">
-                    <input type="hidden" name="TipoPagamento" value="Premiação">
+                    <input type="hidden" name="TipoPagamento" value="Premiacao">
                     <div class="modal-body">
                         <input type="hidden" id="premioModalComissaoId" name="ID_Comissao">
                         <input type="hidden" id="premioModalVendaId" name="ID_Venda">
@@ -891,6 +911,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                                     <th>Cargo</th>
                                     <th>Status</th>
                                     <th>Observações</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="paymentsTableBody">
@@ -987,7 +1008,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
 
     // Função para carregar os pagamentos
     function loadPayments(idVenda) {
-        $('#paymentsTableBody').html('<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></td></tr>');
+        $('#paymentsTableBody').html('<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></td></tr>');
         $('#noPaymentsMessage').hide();
 
         $.ajax({
@@ -1024,7 +1045,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                     $('#noPaymentsMessage').hide();
                 } else {
                     console.warn('Nenhum pagamento encontrado ou resposta inválida:', response);
-                    $('#paymentsTableBody').html('<tr><td colspan="8" class="text-center">Nenhum pagamento encontrado.</td></tr>');
+                    $('#paymentsTableBody').html('<tr><td colspan="9" class="text-center">Nenhum pagamento encontrado.</td></tr>');
                     $('#noPaymentsMessage').show();
                 }
             },
@@ -1046,7 +1067,7 @@ If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales
                 }
                 $('#paymentsTableBody').html(`
                     <tr>
-                        <td colspan="8" class="text-center text-danger">
+                        <td colspan="9" class="text-center text-danger">
                             ${errorMessage}
                         </td>
                     </tr>
@@ -1351,8 +1372,17 @@ If IsObject(rsComissoes) Then
     Set rsComissoes = Nothing
 End If
 
+If IsObject(connSales) Then
+    If connSales.State = 1 Then ' adStateOpen
+        connSales.Close
+    End If
+    Set connSales = Nothing
+End If
+
 If IsObject(conn) Then
-    conn.Close
+    If conn.State = 1 Then ' adStateOpen
+        conn.Close
+    End If
     Set conn = Nothing
 End If
 %>

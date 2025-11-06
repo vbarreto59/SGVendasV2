@@ -159,6 +159,21 @@ End if
     <div class="container mb-5">
         <div class="row g-4">
 
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Dashboard Vendas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as vendas.</p>
+                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>   
+
+
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -190,19 +205,7 @@ End if
                 </div>
             </div>            
 
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Dashboard Vendas</h5>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Visualize as vendas.</p>
-                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
-                            <i class="fas fa-arrow-right me-1"></i> Acessar
-                        </a>
-                    </div>
-                </div>
-            </div>   
+
 
 
             <div class="col-md-6 col-lg-4">
@@ -219,6 +222,20 @@ End if
                 </div>
             </div> 
 
+            <div class="col-12 col-md-6 col-lg-4">
+                <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
+                    <div class="card h-100">
+                        <div class="card-header text-center">
+                            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Geo-Mapa de Vendas</h5>
+                        </div>
+                        <div class="card-body text-center d-flex flex-column">
+                            <p class="card-text">Visualização das regiões com vendas.</p>
+                            <span class="btn btn-primary btn-sm mt-auto">
+                                <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa de Vendas
+                        </div>
+                    </div>
+                </a>
+            </div> 
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -235,20 +252,7 @@ End if
             </div>
 
 
-            <div class="col-12 col-md-6 col-lg-4">
-                <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
-                    <div class="card h-100">
-                        <div class="card-header text-center">
-                            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Geo-Mapa de Vendas</h5>
-                        </div>
-                        <div class="card-body text-center d-flex flex-column">
-                            <p class="card-text">Visualização das regiões com vendas.</p>
-                            <span class="btn btn-primary btn-sm mt-auto">
-                                <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa de Vendas
-                        </div>
-                    </div>
-                </a>
-            </div>              
+             
 
          
 

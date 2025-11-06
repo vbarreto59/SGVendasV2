@@ -618,6 +618,9 @@ End If
                                     <li><a class="dropdown-item" href="tool_excluir_tudo.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Vendas</a></li>   
 
                                     <li><a class="dropdown-item" href="tool_visualizar_log.asp" target="_blank"><i class="fas fa-trash me-1"></i>Log Sistema</a></li>  
+                                     <li><a class="dropdown-item" href="tool_venda_criar_json.asp" target="_blank"><i class="fas fa-trash me-1"></i>Gerar Json</a></li> 
+
+                                    
                                 </ul>
                             </div>
                         <%end if%>
