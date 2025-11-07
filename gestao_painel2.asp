@@ -51,7 +51,7 @@ If IsMobile() Then
     vendasFile = "gestao_vendas_list_mob1.asp"
 Else
     ' O arquivo padrão para visualização em desktop
-    vendasFile = "gestao_vendas_list2x.asp"
+    vendasFile = "gestao_vendas_list3x.asp"
 End If
 
 

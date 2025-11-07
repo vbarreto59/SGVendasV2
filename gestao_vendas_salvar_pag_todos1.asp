@@ -94,9 +94,9 @@ connSales.Open StrConnSales
 Dim sqlVenda, rsVenda
 sqlVenda = "SELECT " & _
            "v.ID, v.NomeEmpreendimento, v.Unidade, " & _
-           "v.ValorDiretoria, v.PremioDiretoria, " & _
-           "v.ValorGerencia, v.PremioGerencia, " & _
-           "v.ValorCorretor, v.PremioCorretor, " & _
+           "v.ValorLiqDiretoria, v.PremioDiretoria, " & _
+           "v.ValorLiqGerencia, v.PremioGerencia, " & _
+           "v.ValorLiqCorretor, v.PremioCorretor, " & _
            "c.UserIdDiretoria, c.UserIdGerencia, c.UserIdCorretor " & _
            "FROM Vendas AS v " & _
            "LEFT JOIN COMISSOES_A_PAGAR AS c ON v.ID = c.ID_Venda " & _
@@ -172,9 +172,10 @@ saldoGerenciaPremio = 0
 saldoCorretorPremio = 0
 
 ' Calcular valores totais (tratando nulos)
-If Not IsNull(rsVenda("ValorDiretoria")) Then saldoDiretoriaComissao = CDbl(rsVenda("ValorDiretoria"))
-If Not IsNull(rsVenda("ValorGerencia")) Then saldoGerenciaComissao = CDbl(rsVenda("ValorGerencia"))
-If Not IsNull(rsVenda("ValorCorretor")) Then saldoCorretorComissao = CDbl(rsVenda("ValorCorretor"))
+If Not IsNull(rsVenda("ValorLiqDiretoria")) Then saldoDiretoriaComissao = CDbl(rsVenda("ValorLiqDiretoria"))
+If Not IsNull(rsVenda("ValorLiqGerencia")) Then saldoGerenciaComissao = CDbl(rsVenda("ValorLiqGerencia"))
+If Not IsNull(rsVenda("ValorLiqCorretor")) Then saldoCorretorComissao = CDbl(rsVenda("ValorLiqCorretor"))
+
 If Not IsNull(rsVenda("PremioDiretoria")) Then saldoDiretoriaPremio = CDbl(rsVenda("PremioDiretoria"))
 If Not IsNull(rsVenda("PremioGerencia")) Then saldoGerenciaPremio = CDbl(rsVenda("PremioGerencia"))
 If Not IsNull(rsVenda("PremioCorretor")) Then saldoCorretorPremio = CDbl(rsVenda("PremioCorretor"))

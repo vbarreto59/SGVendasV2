@@ -31,16 +31,27 @@ Function GetTotalPagoVenda(idVenda, tipoRecebedor, tipoPagamento)
     GetTotalPagoVenda = total
 End Function
 
+' Função para verificar se valor foi pago
+Function IsValuePaid(valorPago, valorDevido)
+    If valorDevido <= 0 Then
+        IsValuePaid = True
+    Else
+        ' Usar comparação com tolerância para valores monetários
+        IsValuePaid = (Abs(valorPago - valorDevido) < 0.01)
+    End If
+End Function
+
 ' ====================================================================
-' Consulta principal para todas as vendas
+' Consulta principal para todas as vendas - ATUALIZADA COM VALORES LÍQUIDOS
 ' ====================================================================
 Dim sqlVendas, rsVendas
 sqlVendas = "SELECT " & _
-           "v.ID, v.NomeEmpreendimento, v.Unidade, v.DataVenda, v.ValorComissaoGeral, " & _
+           "v.ID, v.NomeEmpreendimento, v.Unidade, v.ValorUnidade, v.DataVenda, v.ValorComissaoGeral, " & _
            "v.Diretoria, v.Gerencia, v.Corretor, " & _
-           "v.ValorDiretoria, v.PremioDiretoria, " & _
-           "v.ValorGerencia, v.PremioGerencia, " & _
-           "v.ValorCorretor, v.PremioCorretor, " & _
+           "v.ValorDiretoria, v.PremioDiretoria, v.ValorLiqDiretoria, v.DescontoDiretoria, " & _
+           "v.ValorGerencia, v.PremioGerencia, v.ValorLiqGerencia, v.DescontoGerencia, " & _
+           "v.ValorCorretor, v.PremioCorretor, v.ValorLiqCorretor, v.DescontoCorretor, " & _
+           "v.DescontoPerc, v.DescontoBruto, v.DescontoDescricao, " & _
            "c.ID_Comissoes, c.StatusPagamento " & _
            "FROM Vendas AS v " & _
            "LEFT JOIN COMISSOES_A_PAGAR AS c ON v.ID = c.ID_Venda " & _
@@ -141,6 +152,36 @@ Set rsVendas = connSales.Execute(sqlVendas)
             border-left: 4px solid #e83e8c;
             background-color: #f8f9fa;
         }
+        .comissao-info {
+            font-size: 0.8rem;
+        }
+        .valor-liquido {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .valor-desconto {
+            color: #dc3545;
+            font-size: 0.75rem;
+        }
+        .valor-bruto {
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+        .badge-pago {
+            background-color: #28a745;
+            color: white;
+            font-size: 0.7rem;
+        }
+        .badge-pendente {
+            background-color: #dc3545;
+            color: white;
+            font-size: 0.7rem;
+        }
+        .badge-parcial {
+            background-color: #ffc107;
+            color: #212529;
+            font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
@@ -203,11 +244,11 @@ Set rsVendas = connSales.Execute(sqlVendas)
                         <th class="text-center">ID Venda</th>
                         <th class="text-center">Status</th>
                         <th class="text-center">Empreendimento</th>
-                        <th class="text-center">Data</th>
+                        <th class="text-center">Desconto</th>                        
                         <th class="text-center">Diretoria</th>
                         <th class="text-center">Gerência</th>
                         <th class="text-center">Corretor</th>
-                        <th class="text-center">Valores</th>
+
                         <th class="text-center">Ações</th>
                     </tr>
                 </thead>
@@ -223,8 +264,10 @@ Set rsVendas = connSales.Execute(sqlVendas)
                             totalVendas = totalVendas + 1
                             
                             ' Calcular totais
-                            If Not IsNull(rsVendas("ValorComissaoGeral")) Then
-                                totalComissao = totalComissao + CDbl(rsVendas("ValorComissaoGeral"))
+                            If Not IsNull(rsVendas("ValorDiretoria")) Then
+                                'totalComissao = totalComissao + CDbl(rsVendas("ValorComissaoGeral"))
+
+                                totalComissao = totalComissao + CDbl(rsVendas("ValorLiqDiretoria")) + CDbl(rsVendas("ValorLiqGerencia")) + CDbl(rsVendas("ValorLiqCorretor"))
                             End If
                             
                             If Not IsNull(rsVendas("PremioDiretoria")) Then
@@ -237,72 +280,135 @@ Set rsVendas = connSales.Execute(sqlVendas)
                                 totalPremio = totalPremio + CDbl(rsVendas("PremioCorretor"))
                             End If
                             
-                            ' Determinar status e classe da linha
+                            ' ====================================================================
+                            ' 🟢 TRATAMENTO DE VALORES LÍQUIDOS E DESCONTOS
+                            ' ====================================================================
+                            Dim dblValorLiqDiretoria, dblValorLiqGerencia, dblValorLiqCorretor
+                            Dim dblDescontoDiretoria, dblDescontoGerencia, dblDescontoCorretor
+                            Dim dblPremioDiretoria, dblPremioGerencia, dblPremioCorretor
+                            
+                            ' Valores Líquidos
+                            If IsNull(rsVendas("ValorLiqDiretoria")) Then
+                                dblValorLiqDiretoria = 0
+                            Else
+                                dblValorLiqDiretoria = CDbl(rsVendas("ValorLiqDiretoria"))
+                            End If
+                            
+                            If IsNull(rsVendas("ValorLiqGerencia")) Then
+                                dblValorLiqGerencia = 0
+                            Else
+                                dblValorLiqGerencia = CDbl(rsVendas("ValorLiqGerencia"))
+                            End If
+                            
+                            If IsNull(rsVendas("ValorLiqCorretor")) Then
+                                dblValorLiqCorretor = 0
+                            Else
+                                dblValorLiqCorretor = CDbl(rsVendas("ValorLiqCorretor"))
+                            End If
+                            
+                            ' Descontos
+                            If IsNull(rsVendas("DescontoDiretoria")) Then
+                                dblDescontoDiretoria = 0
+                            Else
+                                dblDescontoDiretoria = CDbl(rsVendas("DescontoDiretoria"))
+                            End If
+                            
+                            If IsNull(rsVendas("DescontoGerencia")) Then
+                                dblDescontoGerencia = 0
+                            Else
+                                dblDescontoGerencia = CDbl(rsVendas("DescontoGerencia"))
+                            End If
+                            
+                            If IsNull(rsVendas("DescontoCorretor")) Then
+                                dblDescontoCorretor = 0
+                            Else
+                                dblDescontoCorretor = CDbl(rsVendas("DescontoCorretor"))
+                            End If
+                            
+                            ' Prêmios
+                            If IsNull(rsVendas("PremioDiretoria")) Then
+                                dblPremioDiretoria = 0
+                            Else
+                                dblPremioDiretoria = CDbl(rsVendas("PremioDiretoria"))
+                            End If
+                            
+                            If IsNull(rsVendas("PremioGerencia")) Then
+                                dblPremioGerencia = 0
+                            Else
+                                dblPremioGerencia = CDbl(rsVendas("PremioGerencia"))
+                            End If
+                            
+                            If IsNull(rsVendas("PremioCorretor")) Then
+                                dblPremioCorretor = 0
+                            Else
+                                dblPremioCorretor = CDbl(rsVendas("PremioCorretor"))
+                            End If
+                            
+                            ' ====================================================================
+                            ' 🟢 VERIFICAÇÃO DE PAGAMENTOS COM VALORES LÍQUIDOS
+                            ' ====================================================================
+                            Dim totalPagoDiretoria, totalPagoGerencia, totalPagoCorretor
+                            Dim totalPremioPagoDiretoria, totalPremioPagoGerencia, totalPremioPagoCorretor
+                            Dim comissaoDiretoriaPaga, comissaoGerenciaPaga, comissaoCorretorPaga
+                            Dim premioDiretoriaPago, premioGerenciaPago, premioCorretorPago
+                            
+                            ' Buscar pagamentos realizados
+                            totalPagoDiretoria = GetTotalPagoVenda(rsVendas("ID"), "diretoria", "Comissão")
+                            totalPagoGerencia = GetTotalPagoVenda(rsVendas("ID"), "gerencia", "Comissão")
+                            totalPagoCorretor = GetTotalPagoVenda(rsVendas("ID"), "corretor", "Comissão")
+                            totalPremioPagoDiretoria = GetTotalPagoVenda(rsVendas("ID"), "diretoria", "Premiação")
+                            totalPremioPagoGerencia = GetTotalPagoVenda(rsVendas("ID"), "gerencia", "Premiação")
+                            totalPremioPagoCorretor = GetTotalPagoVenda(rsVendas("ID"), "corretor", "Premiação")
+                            
+                            ' Verificar se valores foram pagos (usando valores líquidos para comissões)
+                            comissaoDiretoriaPaga = IsValuePaid(totalPagoDiretoria, dblValorLiqDiretoria)
+                            comissaoGerenciaPaga = IsValuePaid(totalPagoGerencia, dblValorLiqGerencia)
+                            comissaoCorretorPaga = IsValuePaid(totalPagoCorretor, dblValorLiqCorretor)
+                            premioDiretoriaPago = IsValuePaid(totalPremioPagoDiretoria, dblPremioDiretoria)
+                            premioGerenciaPago = IsValuePaid(totalPremioPagoGerencia, dblPremioGerencia)
+                            premioCorretorPago = IsValuePaid(totalPremioPagoCorretor, dblPremioCorretor)
+                            
+                            ' Determinar status geral
                             Dim status, statusClass, rowClass
-                            status = "PENDENTE"
-                            If Not IsNull(rsVendas("StatusPagamento")) Then
-                                status = rsVendas("StatusPagamento")
+                            Dim todasComissoesPagas, todosPremiosPagos, statusCompleto
+                            
+                            todasComissoesPagas = True
+                            If dblValorLiqDiretoria > 0 And Not comissaoDiretoriaPaga Then todasComissoesPagas = False
+                            If dblValorLiqGerencia > 0 And Not comissaoGerenciaPaga Then todasComissoesPagas = False
+                            If dblValorLiqCorretor > 0 And Not comissaoCorretorPaga Then todasComissoesPagas = False
+                            
+                            todosPremiosPagos = True
+                            If dblPremioDiretoria > 0 And Not premioDiretoriaPago Then todosPremiosPagos = False
+                            If dblPremioGerencia > 0 And Not premioGerenciaPago Then todosPremiosPagos = False
+                            If dblPremioCorretor > 0 And Not premioCorretorPago Then todosPremiosPagos = False
+                            
+                            If todasComissoesPagas And todosPremiosPagos Then
+                                statusCompleto = "PAGA"
+                                rowClass = "row-paga"
+                            ElseIf (totalPagoDiretoria + totalPagoGerencia + totalPagoCorretor + totalPremioPagoDiretoria + totalPremioPagoGerencia + totalPremioPagoCorretor) > 0 Then
+                                statusCompleto = "PAGA PARCIALMENTE"
+                                rowClass = "row-parcial"
+                            Else
+                                statusCompleto = "PENDENTE"
+                                rowClass = "row-pendente"
                             End If
                             
+                            status = statusCompleto
                             Select Case UCase(status)
-                                Case "PAGA": 
-                                    statusClass = "status-pago"
-                                    rowClass = "row-paga"
-                                Case "PAGA PARCIALMENTE": 
-                                    statusClass = "status-parcial"
-                                    rowClass = "row-parcial"
-                                Case "PENDENTE": 
-                                    statusClass = "status-pendente"
-                                    rowClass = "row-pendente"
-                                Case Else: 
-                                    statusClass = "bg-secondary"
-                                    rowClass = ""
+                                Case "PAGA": statusClass = "status-pago"
+                                Case "PAGA PARCIALMENTE": statusClass = "status-parcial"
+                                Case "PENDENTE": statusClass = "status-pendente"
+                                Case Else: statusClass = "bg-secondary"
                             End Select
-                            
-                            ' Buscar pagamentos realizados para calcular saldos
-                            Dim saldoDiretoria, saldoGerencia, saldoCorretor
-                            Dim saldoPremioDiretoria, saldoPremioGerencia, saldoPremioCorretor
-                            
-                            ' Inicializar valores
-                            saldoDiretoria = 0
-                            saldoGerencia = 0
-                            saldoCorretor = 0
-                            saldoPremioDiretoria = 0
-                            saldoPremioGerencia = 0
-                            saldoPremioCorretor = 0
-                            
-                            ' Calcular valores totais
-                            If Not IsNull(rsVendas("ValorDiretoria")) Then
-                                saldoDiretoria = CDbl(rsVendas("ValorDiretoria"))
-                            End If
-                            If Not IsNull(rsVendas("ValorGerencia")) Then
-                                saldoGerencia = CDbl(rsVendas("ValorGerencia"))
-                            End If
-                            If Not IsNull(rsVendas("ValorCorretor")) Then
-                                saldoCorretor = CDbl(rsVendas("ValorCorretor"))
-                            End If
-                            If Not IsNull(rsVendas("PremioDiretoria")) Then
-                                saldoPremioDiretoria = CDbl(rsVendas("PremioDiretoria"))
-                            End If
-                            If Not IsNull(rsVendas("PremioGerencia")) Then
-                                saldoPremioGerencia = CDbl(rsVendas("PremioGerencia"))
-                            End If
-                            If Not IsNull(rsVendas("PremioCorretor")) Then
-                                saldoPremioCorretor = CDbl(rsVendas("PremioCorretor"))
-                            End If
-                            
-                            ' Calcular saldos subtraindo pagamentos já realizados
-                            saldoDiretoria = saldoDiretoria - GetTotalPagoVenda(rsVendas("ID"), "diretoria", "Comissão")
-                            saldoGerencia = saldoGerencia - GetTotalPagoVenda(rsVendas("ID"), "gerencia", "Comissão")
-                            saldoCorretor = saldoCorretor - GetTotalPagoVenda(rsVendas("ID"), "corretor", "Comissão")
-                            saldoPremioDiretoria = saldoPremioDiretoria - GetTotalPagoVenda(rsVendas("ID"), "diretoria", "Premiação")
-                            saldoPremioGerencia = saldoPremioGerencia - GetTotalPagoVenda(rsVendas("ID"), "gerencia", "Premiação")
-                            saldoPremioCorretor = saldoPremioCorretor - GetTotalPagoVenda(rsVendas("ID"), "corretor", "Premiação")
                             
                             ' Verificar se há saldos pendentes
                             Dim temSaldoPendente
-                            temSaldoPendente = (saldoDiretoria > 0 Or saldoGerencia > 0 Or saldoCorretor > 0 Or _
-                                              saldoPremioDiretoria > 0 Or saldoPremioGerencia > 0 Or saldoPremioCorretor > 0)
+                            temSaldoPendente = (dblValorLiqDiretoria - totalPagoDiretoria > 0 Or _
+                                              dblValorLiqGerencia - totalPagoGerencia > 0 Or _
+                                              dblValorLiqCorretor - totalPagoCorretor > 0 Or _
+                                              dblPremioDiretoria - totalPremioPagoDiretoria > 0 Or _
+                                              dblPremioGerencia - totalPremioPagoGerencia > 0 Or _
+                                              dblPremioCorretor - totalPremioPagoCorretor > 0)
                     %>
                     <tr class="<%= rowClass %>">
                         <td class="text-center">
@@ -317,56 +423,208 @@ Set rsVendas = connSales.Execute(sqlVendas)
                         </td>
                         <td>
                             <strong><%= rsVendas("NomeEmpreendimento") %></strong><br>
-                            <small class="text-muted"><%= rsVendas("Unidade") %></small>
+
+                            <small class="text-muted"><%= "Unid.: " & rsVendas("Unidade") %></small><br>
+                            <small class="text-muted"><%= "R$ " & FormatNumber(rsVendas("ValorUnidade"),2) %></small><br>
+
+                            <%vBrutoComissao = rsVendas("ValorDiretoria")+rsVendas("ValorGerencia")+rsVendas("ValorCorretor")%>
+                            <small class="text-muted"><%= "Comissão: R$ " & FormatNumber(vBrutoComissao,2) %></small>
+
+                            <%vComissaoLiq = rsVendas("ValorLiqDiretoria")+rsVendas("ValorLiqGerencia")+rsVendas("ValorLiqCorretor")%><br>
+                            <small class="text-muted"><%= "Comissão Liq.: R$ " & FormatNumber(vComissaoLiq,2) %></small>
+
                         </td>
+
+                        <!-- COLUNA DESCONTO TRIBUTÁRIO -->
                         <td class="text-center">
-                            <%= FormatDateTime(rsVendas("DataVenda"), 2) %>
-                        </td>
-                        <td>
-                            <strong><%= rsVendas("Diretoria") %></strong><br>
-                            <small class="text-muted">
-                                Comissão: R$ <%= FormatNumber(rsVendas("ValorDiretoria"), 2) %><br>
-                                <% If CDbl(rsVendas("PremioDiretoria")) > 0 Then %>
-                                Prêmio: R$ <%= FormatNumber(rsVendas("PremioDiretoria"), 2) %>
-                                <% End If %>
-                            </small>
-                        </td>
-                        <td>
-                            <strong><%= rsVendas("Gerencia") %></strong><br>
-                            <small class="text-muted">
-                                Comissão: R$ <%= FormatNumber(rsVendas("ValorGerencia"), 2) %><br>
-                                <% If CDbl(rsVendas("PremioGerencia")) > 0 Then %>
-                                Prêmio: R$ <%= FormatNumber(rsVendas("PremioGerencia"), 2) %>
-                                <% End If %>
-                            </small>
-                        </td>
-                        <td>
-                            <strong><%= rsVendas("Corretor") %></strong><br>
-                            <small class="text-muted">
-                                Comissão: R$ <%= FormatNumber(rsVendas("ValorCorretor"), 2) %><br>
-                                <% If CDbl(rsVendas("PremioCorretor")) > 0 Then %>
-                                Prêmio: R$ <%= FormatNumber(rsVendas("PremioCorretor"), 2) %>
-                                <% End If %>
-                            </small>
-                        </td>
-                        <td class="text-center">
-                            <div class="valor-destaque">
-                                R$ <%= FormatNumber(rsVendas("ValorComissaoGeral"), 2) %>
-                            </div>
-                            <% 
-                            Dim totalPremioVenda
-                            totalPremioVenda = 0
-                            If Not IsNull(rsVendas("PremioDiretoria")) Then totalPremioVenda = totalPremioVenda + CDbl(rsVendas("PremioDiretoria"))
-                            If Not IsNull(rsVendas("PremioGerencia")) Then totalPremioVenda = totalPremioVenda + CDbl(rsVendas("PremioGerencia"))
-                            If Not IsNull(rsVendas("PremioCorretor")) Then totalPremioVenda = totalPremioVenda + CDbl(rsVendas("PremioCorretor"))
-                            
-                            If totalPremioVenda > 0 Then 
-                            %>
-                            <div class="valor-premio">
-                                <i class="fas fa-trophy"></i> R$ <%= FormatNumber(totalPremioVenda, 2) %>
-                            </div>
+                            <% If Not IsNull(rsVendas("DescontoPerc")) And CDbl(rsVendas("DescontoPerc")) > 0 Then %>
+                                <div class="small">
+                                    <div class="fw-bold text-danger"><%= FormatNumber(rsVendas("DescontoPerc"), 2) %>%</div>
+                                    <div class="text-muted">R$ <%= FormatNumber(rsVendas("DescontoBruto"), 2) %></div>
+                                    <% If Not IsNull(rsVendas("DescontoDescricao")) And rsVendas("DescontoDescricao") <> "" Then %>
+                                        <div class="text-info mt-1" title="<%= rsVendas("DescontoDescricao") %>">
+                                            <i class="fas fa-info-circle"></i>
+                                        </div>
+                                    <% End If %>
+                                </div>
+                            <% Else %>
+                                <span class="text-muted">-</span>
                             <% End If %>
                         </td>
+                        
+                        <!-- COLUNA DIRETORIA COM VALORES LÍQUIDOS -->
+                        <td class="text-center">
+                            <div class="comissao-info">
+                                <strong><%= rsVendas("Diretoria") %></strong><br>
+                                
+                                <!-- COMISSÃO DIRETORIA -->
+                                <div class="valor-bruto">
+                                    Bruto: R$ <%= FormatNumber(rsVendas("ValorDiretoria"), 2) %>
+                                </div>
+                                
+                                <% If dblDescontoDiretoria > 0 Then %>
+                                <div class="valor-desconto">
+                                    <i class="fas fa-minus-circle"></i> R$ <%= FormatNumber(dblDescontoDiretoria, 2) %>
+                                </div>
+                                <% End If %>
+                                
+                                <div class="valor-liquido">
+                                    <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqDiretoria, 2) %>
+                                </div>
+                                
+                                <div class="mt-1">
+                                    <% If comissaoDiretoriaPaga Then %>
+                                        <span class="badge badge-pago">PAGA</span>
+                                    <% ElseIf totalPagoDiretoria > 0 Then %>
+                                        <span class="badge badge-parcial">PARCIAL</span>
+                                        <small class="text-success">
+                                            <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPagoDiretoria, 2) %>
+                                        </small>
+                                    <% Else %>
+                                        <span class="badge badge-pendente">PENDENTE</span>
+                                    <% End If %>
+                                </div>
+                                
+                                <!-- PRÊMIO DIRETORIA -->
+                                <% If dblPremioDiretoria > 0 Then %>
+                                <div class="mt-2 pt-2 border-top">
+                                    <div class="text-info fw-bold">
+                                        <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioDiretoria, 2) %>
+                                    </div>
+                                    
+                                    <div class="mt-1">
+                                        <% If premioDiretoriaPago Then %>
+                                            <span class="badge badge-pago">PAGA</span>
+                                        <% ElseIf totalPremioPagoDiretoria > 0 Then %>
+                                            <span class="badge badge-parcial">PARCIAL</span>
+                                            <small class="text-success">
+                                                <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPremioPagoDiretoria, 2) %>
+                                            </small>
+                                        <% Else %>
+                                            <span class="badge badge-pendente">PENDENTE</span>
+                                        <% End If %>
+                                    </div>
+                                </div>
+                                <% End If %>
+                            </div>
+                        </td>
+                        
+                        <!-- COLUNA GERÊNCIA COM VALORES LÍQUIDOS -->
+                        <td class="text-center">
+                            <div class="comissao-info">
+                                <strong><%= rsVendas("Gerencia") %></strong><br>
+                                
+                                <!-- COMISSÃO GERÊNCIA -->
+                                <div class="valor-bruto">
+                                    Bruto: R$ <%= FormatNumber(rsVendas("ValorGerencia"), 2) %>
+                                </div>
+                                
+                                <% If dblDescontoGerencia > 0 Then %>
+                                <div class="valor-desconto">
+                                    <i class="fas fa-minus-circle"></i> R$ <%= FormatNumber(dblDescontoGerencia, 2) %>
+                                </div>
+                                <% End If %>
+                                
+                                <div class="valor-liquido">
+                                    <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqGerencia, 2) %>
+                                </div>
+                                
+                                <div class="mt-1">
+                                    <% If comissaoGerenciaPaga Then %>
+                                        <span class="badge badge-pago">PAGA</span>
+                                    <% ElseIf totalPagoGerencia > 0 Then %>
+                                        <span class="badge badge-parcial">PARCIAL</span>
+                                        <small class="text-success">
+                                            <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPagoGerencia, 2) %>
+                                        </small>
+                                    <% Else %>
+                                        <span class="badge badge-pendente">PENDENTE</span>
+                                    <% End If %>
+                                </div>
+                                
+                                <!-- PRÊMIO GERÊNCIA -->
+                                <% If dblPremioGerencia > 0 Then %>
+                                <div class="mt-2 pt-2 border-top">
+                                    <div class="text-info fw-bold">
+                                        <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioGerencia, 2) %>
+                                    </div>
+                                    
+                                    <div class="mt-1">
+                                        <% If premioGerenciaPago Then %>
+                                            <span class="badge badge-pago">PAGA</span>
+                                        <% ElseIf totalPremioPagoGerencia > 0 Then %>
+                                            <span class="badge badge-parcial">PARCIAL</span>
+                                            <small class="text-success">
+                                                <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPremioPagoGerencia, 2) %>
+                                            </small>
+                                        <% Else %>
+                                            <span class="badge badge-pendente">PENDENTE</span>
+                                        <% End If %>
+                                    </div>
+                                </div>
+                                <% End If %>
+                            </div>
+                        </td>
+                        
+                        <!-- COLUNA CORRETOR COM VALORES LÍQUIDOS -->
+                        <td class="text-center">
+                            <div class="comissao-info">
+                                <strong><%= rsVendas("Corretor") %></strong><br>
+                                
+                                <!-- COMISSÃO CORRETOR -->
+                                <div class="valor-bruto">
+                                    Bruto: R$ <%= FormatNumber(rsVendas("ValorCorretor"), 2) %>
+                                </div>
+                                
+                                <% If dblDescontoCorretor > 0 Then %>
+                                <div class="valor-desconto">
+                                    <i class="fas fa-minus-circle"></i> R$ <%= FormatNumber(dblDescontoCorretor, 2) %>
+                                </div>
+                                <% End If %>
+                                
+                                <div class="valor-liquido">
+                                    <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqCorretor, 2) %>
+                                </div>
+                                
+                                <div class="mt-1">
+                                    <% If comissaoCorretorPaga Then %>
+                                        <span class="badge badge-pago">PAGA</span>
+                                    <% ElseIf totalPagoCorretor > 0 Then %>
+                                        <span class="badge badge-parcial">PARCIAL</span>
+                                        <small class="text-success">
+                                            <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPagoCorretor, 2) %>
+                                        </small>
+                                    <% Else %>
+                                        <span class="badge badge-pendente">PENDENTE</span>
+                                    <% End If %>
+                                </div>
+                                
+                                <!-- PRÊMIO CORRETOR -->
+                                <% If dblPremioCorretor > 0 Then %>
+                                <div class="mt-2 pt-2 border-top">
+                                    <div class="text-info fw-bold">
+                                        <i class="fas fa-trophy"></i> R$ <%= FormatNumber(dblPremioCorretor, 2) %>
+                                    </div>
+                                    
+                                    <div class="mt-1">
+                                        <% If premioCorretorPago Then %>
+                                            <span class="badge badge-pago">PAGA</span>
+                                        <% ElseIf totalPremioPagoCorretor > 0 Then %>
+                                            <span class="badge badge-parcial">PARCIAL</span>
+                                            <small class="text-success">
+                                                <i class="fas fa-check-circle"></i> R$ <%= FormatNumber(totalPremioPagoCorretor, 2) %>
+                                            </small>
+                                        <% Else %>
+                                            <span class="badge badge-pendente">PENDENTE</span>
+                                        <% End If %>
+                                    </div>
+                                </div>
+                                <% End If %>
+                            </div>
+                        </td>
+                        
+
+
                         <td class="text-center">
                             <div class="btn-group-vertical" role="group">
                                 <% If temSaldoPendente Then %>
@@ -383,7 +641,6 @@ Set rsVendas = connSales.Execute(sqlVendas)
                                 <% Else %>
                                 <span class="badge bg-success">Tudo Pago</span>
                                 <% End If %>
-                                
                                 
                                 <button class="btn btn-warning btn-sm ver-pagamentos-btn"
                                     data-bs-toggle="modal" 

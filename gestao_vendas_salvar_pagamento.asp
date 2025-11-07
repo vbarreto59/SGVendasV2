@@ -83,10 +83,12 @@ vNomeUsuario = rs("Nome")
 rs.Close
 
 
-sqlInsert = "INSERT INTO PAGAMENTOS_COMISSOES (ID_Venda, UsuariosUserId, UsuariosNome, DataPagamento, ValorPago, Status, Obs, TipoRecebedor, TipoPagamento) VALUES (" & _
+'------------------------ 
+vUser = Session("Usuario")
+sqlInsert = "INSERT INTO PAGAMENTOS_COMISSOES (ID_Venda, UsuariosUserId, UsuariosNome, Usuario, DataPagamento, ValorPago, Status, Obs, TipoRecebedor, TipoPagamento) VALUES (" & _
             CInt(idVenda) & ", " & _
-            CInt(userId) & ", '" & Replace(vNomeUsuario, "'", "''") & "', '" & dataPagamento & "', " & _
-            (valorPago) & ", '" & Replace(statusPagamento, "'", "''") & "', '" & Replace(obs, "'", "''") & "', '" & Replace(recipientType, "'", "''") & "', 'Comissão')"            
+            CInt(userId) & ", '" & Replace(vNomeUsuario, "'", "''") & "', '" & Replace(vUser, "'", "''") & "', '" & dataPagamento & "', " & _
+            (valorPago) & ", '" & Replace(statusPagamento, "'", "''") & "', '" & Replace(obs, "'", "''") & "', '" & Replace(recipientType, "'", "''") & "', 'Comissão')"
 
 connSales.Execute sqlInsert
 

@@ -59,6 +59,11 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     ' CAMPOS DE PREMIAÇÃO ADICIONADOS
     Dim premioDiretoria, premioGerencia, premioCorretor
     
+    ' CAMPOS DE DESCONTO TRIBUTÁRIO ADICIONADOS
+    Dim descontoPerc, descontoBruto, descontoDescricao
+    Dim descontoDiretoria, descontoGerencia, descontoCorretor
+    Dim valorLiqDiretoria, valorLiqGerencia, valorLiqCorretor
+    
     ' Coleta e formatação dos dados do formulário.
     ' A função `GetFormattedNumber` centraliza a lógica de formatação.
     empreend_id = Request.Form("empreend_id")
@@ -77,11 +82,25 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     comissaoCorretor = GetFormattedNumber(Request.Form("comissaoCorretor"))
 
     ' Premiação em 04 11 2025 -----------------------------
-    ' Coleta dos valores monetários da premiação. A divisão por 100 foi removida,
-    ' assumindo que GetFormattedNumber já entrega o valor numérico (ex: 10000.00).
     premioDiretoria = GetFormattedNumber(Request.Form("premioDiretoria"))    
     premioGerencia  = GetFormattedNumber(Request.Form("premioGerencia"))    
     premioCorretor  = GetFormattedNumber(Request.Form("premioCorretor"))    
+    '----------------------'
+
+    ' Desconto Tributário em 06 11 2025 -------------------
+    descontoPerc = GetFormattedNumber(Request.Form("descontoPerc"))
+    descontoBruto = GetFormattedNumber(Request.Form("descontoBruto"))/100
+    descontoDescricao = Request.Form("descontoDescricao")
+    descontoDiretoria = GetFormattedNumber(Request.Form("descontoDiretoria"))/100
+    descontoGerencia = GetFormattedNumber(Request.Form("descontoGerencia"))/100
+    descontoCorretor = GetFormattedNumber(Request.Form("descontoCorretor"))/100
+    valorLiqDiretoria = GetFormattedNumber(Request.Form("valorLiqDiretoria"))/100
+    valorLiqGerencia = GetFormattedNumber(Request.Form("valorLiqGerencia"))/100
+    valorLiqCorretor = GetFormattedNumber(Request.Form("valorLiqCorretor"))/100
+
+    'Valor Liq'
+
+    valorLiqGeral = valorLiqDiretoria + valorLiqGerencia+valorLiqCorretor
     '----------------------'
 
     usuario = Session("Usuario")
@@ -137,6 +156,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     ' INSERÇÃO NO BANCO DE DADOS
     ' -----------------------------------------------------------------------------------
     ' Inserção na tabela Vendas.
+    valorLiqGeral = valorLiqDiretoria + valorLiqGerencia + valorLiqCorretor
     sqlVendas = "INSERT INTO Vendas (" & _
     "Empreend_ID, NomeEmpreendimento, Unidade, UnidadeM2, Corretor, CorretorId, " & _
     "ValorUnidade, ComissaoPercentual, ValorComissaoGeral, DataVenda, " & _
@@ -145,7 +165,10 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     "ComissaoDiretoria, ValorDiretoria, " & _
     "ComissaoGerencia, ValorGerencia, " & _
     "ComissaoCorretor, ValorCorretor, " & _
-    "PremioDiretoria, PremioGerencia, PremioCorretor) " & _
+    "PremioDiretoria, PremioGerencia, PremioCorretor, " & _
+    "DescontoPerc, DescontoBruto, DescontoDescricao, " & _
+    "DescontoDiretoria, DescontoGerencia, DescontoCorretor, " & _
+    "ValorLiqDiretoria, ValorLiqGerencia, ValorLiqCorretor, ValorLiqGeral) " & _
     "VALUES (" & empreend_id & ", '" & SanitizeSQL(nomeEmpreendimento) & "', " & _
     "'" & SanitizeSQL(unidade) & "', " & m2 & ", " & _
     "'" & SanitizeSQL(corretorNome) & "', " & corretorId & ", " & _
@@ -155,7 +178,13 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
     "'" & SanitizeSQL(gerenciaNome) & "', " & comissaoDiretoria & ", " & valorComissaoDiretoria & ", " & _
     comissaoGerencia & ", " & valorComissaoGerencia & ", " & comissaoCorretor & ", " & valorComissaoCorretor & ", " & _
-    premioDiretoria & ", " & premioGerencia & ", " & premioCorretor & ")"
+    premioDiretoria & ", " & premioGerencia & ", " & premioCorretor & ", " & _
+    descontoPerc & ", " & descontoBruto & ", '" & SanitizeSQL(descontoDescricao) & "', " & _
+    descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
+    valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ", " & valorLiqGeral & ")"
+
+    'Response.Write sqlVendas
+    'Response.end 
 
     connSales.Execute(sqlVendas)
 
@@ -164,18 +193,24 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     If Not rsLastID.EOF Then vendaId = rsLastID("NewID")
     rsLastID.Close
     
-    '-------- Inserção na tabela COMISSOES_A_PAGAR. (COM PRÊMIOS INCLUÍDOS)
+    '-------- Inserção na tabela COMISSOES_A_PAGAR. (COM PRÊMIOS E DESCONTOS INCLUÍDOS)
     sqlComissoes = "INSERT INTO COMISSOES_A_PAGAR (" & _
     "ID_Venda, Empreendimento, Unidade, DataVenda, UserIdDiretoria, NomeDiretor, " & _
     "UserIdGerencia, NomeGerente, UserIdCorretor, NomeCorretor, PercDiretoria, ValorDiretoria, " & _
     "PercGerencia, ValorGerencia, PercCorretor, ValorCorretor, TotalComissao, StatusPagamento, Usuario, " & _
-    "PremioDiretoria, PremioGerencia, PremioCorretor) " & _
+    "PremioDiretoria, PremioGerencia, PremioCorretor, " & _
+    "DescontoPerc, DescontoBruto, DescontoDescricao, " & _
+    "DescontoDiretoria, DescontoGerencia, DescontoCorretor, " & _
+    "ValorLiqDiretoria, ValorLiqGerencia, ValorLiqCorretor) " & _
     "VALUES (" & vendaId & ", '" & SanitizeSQL(nomeEmpreendimento) & "', '" & SanitizeSQL(unidade) & "', " & _
     dataVendaSQL & ", " & diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
     "'" & SanitizeSQL(gerenciaNome) & "', " & corretorId & ", '" & SanitizeSQL(corretorNome) & "', " & _
     comissaoDiretoria & ", " & valorComissaoDiretoria & ", " & comissaoGerencia & ", " & valorComissaoGerencia & ", " & _
     comissaoCorretor & ", " & valorComissaoCorretor & ", " & valorComissaoGeral & ", 'Pendente', '" & SanitizeSQL(usuario) & "', " & _
-    premioDiretoria & ", " & premioGerencia & ", " & premioCorretor & ")"    
+    premioDiretoria & ", " & premioGerencia & ", " & premioCorretor & ", " & _
+    descontoPerc & ", " & descontoBruto & ", '" & SanitizeSQL(descontoDescricao) & "', " & _
+    descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
+    valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ")"    
 
     connSales.Execute(sqlComissoes)
     
@@ -214,7 +249,11 @@ Set rsCorretores = conn.Execute("SELECT UserId, Nome FROM Usuarios WHERE Funcao 
 <%
 ' Função para formatar números, removendo pontos e substituindo vírgulas por pontos.
 Function GetFormattedNumber(sValue)
-    GetFormattedNumber = Replace(Replace(sValue, ".", ""), ",", ".")
+    If sValue = "" Then
+        GetFormattedNumber = "0"
+    Else
+        GetFormattedNumber = Replace(Replace(sValue, ".", ""), ",", ".")
+    End If
 End Function
 
 ' Função para buscar dados de uma tabela com base em um critério.
@@ -422,10 +461,21 @@ End Function
             border-left: 4px solid var(--secondary);
         }
         
+        .desconto-card {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 4px solid var(--warning);
+        }
+        
         .comissao-value {
             font-weight: 700;
             color: var(--primary);
             font-size: 1.1rem;
+        }
+        
+        .valor-liquido {
+            font-weight: 700;
+            color: var(--success);
+            font-size: 1rem;
         }
         
         /* Select2 Custom Styles */
@@ -547,6 +597,12 @@ End Function
                     <input type="hidden" id="diaVenda" name="diaVenda">
                     <input type="hidden" id="mesVenda" name="mesVenda">
                     <input type="hidden" id="anoVenda" name="anoVenda">
+                    
+                    <!-- Campos hidden para descontos -->
+                    <input type="hidden" id="descontoBruto" name="descontoBruto">
+                    <input type="hidden" id="descontoDiretoria" name="descontoDiretoria">
+                    <input type="hidden" id="descontoGerencia" name="descontoGerencia">
+                    <input type="hidden" id="descontoCorretor" name="descontoCorretor">
                     
                     <!-- Seção Empreendimento -->
                     <div class="form-section">
@@ -698,7 +754,55 @@ End Function
                         </div>
                     </div>
 
-                    <!-- #### Distribuicao de Premios 04 11 2025 -->
+                    <!-- Seção Desconto Tributário -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-percentage me-2"></i>Desconto Tributário
+                        </h3>
+                        <div class="card desconto-card">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="descontoPerc" class="form-label">Percentual de Desconto</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="descontoPerc" name="descontoPerc" value="0,00">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label for="descontoDescricao" class="form-label">Descrição do Desconto</label>
+                                        <input type="text" class="form-control" id="descontoDescricao" name="descontoDescricao" placeholder="Ex: Desconto IRRF, Desconto ISS, etc.">
+                                    </div>
+                                </div>
+                                
+                                <!-- Valores Líquidos após desconto -->
+                                <div class="row g-3 mt-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label">V. Líquido Diretoria</label>
+                                        <div class="valor-liquido" id="valorLiqDiretoriaText">R$ 0,00</div>
+                                        <input type="hidden" id="valorLiqDiretoria" name="valorLiqDiretoria">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">V. Líquido Gerência</label>
+                                        <div class="valor-liquido" id="valorLiqGerenciaText">R$ 0,00</div>
+                                        <input type="hidden" id="valorLiqGerencia" name="valorLiqGerencia">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">V. Líquido Corretor</label>
+                                        <div class="valor-liquido" id="valorLiqCorretorText">R$ 0,00</div>
+                                        <input type="hidden" id="valorLiqCorretor" name="valorLiqCorretor">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">V. Líquido Total</label>
+                                        <div class="valor-liquido" id="valorLiqTotalText">R$ 0,00</div>
+                                        <input type="hidden" id="valorLiqTotal" name="valorLiqTotal">
+                                    </div>                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção Premiações -->
                     <div class="form-section">
                         <h3 class="section-title">
                             <i class="fas fa-trophy me-2"></i>Premiações
@@ -731,7 +835,6 @@ End Function
                             </div>
                         </div>
                     </div>
-                    <!-- ################## -->
                     
                     <!-- Seção Informações Adicionais -->
                     <div class="form-section">
@@ -785,26 +888,6 @@ End Function
     <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/pt-BR.js"></script>
-    
-
-
-<script>
-    // 3. Aplicação da máscara
-    $(document).ready(function() {
-        $('#premioDiretoria, #premioGerencia, #premioCorretor').maskMoney({
-            allowNegative: false,
-            thousands: '.',
-            decimal: ',',
-            affixesStay: true
-        });
-        
-        // Importante: para que a máscara funcione corretamente no primeiro carregamento, 
-        // é uma boa prática chamar o trigger no carregamento.
-        $('#premioDiretoria').trigger('mask.maskMoney');
-        $('#premioGerencia').trigger('mask.maskMoney');
-        $('#premioCorretor').trigger('mask.maskMoney');
-    });
-</script>
 
     <script>
         $(document).ready(function() {
@@ -818,8 +901,16 @@ End Function
             
             // Máscaras para os campos
             $('#valorUnidade').mask('#.##0,00', {reverse: true});
-            $('#comissaoPercentual, #comissaoDiretoria, #comissaoGerencia, #comissaoCorretor').mask('##0,00', {reverse: true});
+            $('#comissaoPercentual, #comissaoDiretoria, #comissaoGerencia, #comissaoCorretor, #descontoPerc').mask('##0,00', {reverse: true});
             $('#m2').mask('#0,00', {reverse: true});
+            
+            // Máscara para prêmios
+            $('#premioDiretoria, #premioGerencia, #premioCorretor').maskMoney({
+                allowNegative: false,
+                thousands: '.',
+                decimal: ',',
+                affixesStay: true
+            });
             
             // Carrega gerencias quando seleciona diretoria
             $('#diretoriaId').change(function() {
@@ -864,10 +955,51 @@ End Function
                 }
             });
             
-            // Função para validar números
-            function validarNumero(valor) {
-                valor = valor.replace(/\./g, '').replace(',', '.');
-                return !isNaN(parseFloat(valor)) && isFinite(valor);
+            // Função para calcular descontos tributários
+            function calcularDescontosTributarios() {
+                try {
+                    var percentualDesconto = parseFloat($('#descontoPerc').val().replace(',', '.')) || 0;
+                    
+                    // Valores brutos das comissões
+                    var valorDiretoria = parseFloat($('#valorComissaoDiretoria').val()) || 0;
+                    var valorGerencia = parseFloat($('#valorComissaoGerencia').val()) || 0;
+                    var valorCorretor = parseFloat($('#valorComissaoCorretor').val()) || 0;
+
+                    
+                    // Cálculo dos descontos
+                    var descontoDiretoria = valorDiretoria * (percentualDesconto / 100);
+                    var descontoGerencia = valorGerencia * (percentualDesconto / 100);
+                    var descontoCorretor = valorCorretor * (percentualDesconto / 100);
+                    
+                    // Valores líquidos
+                    var valorLiqDiretoria = valorDiretoria - descontoDiretoria;
+                    var valorLiqGerencia = valorGerencia - descontoGerencia;
+                    var valorLiqCorretor = valorCorretor - descontoCorretor;
+                    var valorLiqTotal = valorDiretoria + valorLiqGerencia + valorLiqCorretor
+                    
+                    // Atualiza os campos ocultos
+                    $('#descontoBruto').val((descontoDiretoria + descontoGerencia + descontoCorretor).toFixed(2));
+                    $('#descontoDiretoria').val(descontoDiretoria.toFixed(2));
+                    $('#descontoGerencia').val(descontoGerencia.toFixed(2));
+                    $('#descontoCorretor').val(descontoCorretor.toFixed(2));
+                    
+                    // Atualiza a exibição dos valores líquidos
+                    $('#valorLiqDiretoriaText').text('R$ ' + valorLiqDiretoria.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#valorLiqDiretoria').val(valorLiqDiretoria.toFixed(2));
+                    
+                    $('#valorLiqGerenciaText').text('R$ ' + valorLiqGerencia.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#valorLiqGerencia').val(valorLiqGerencia.toFixed(2));
+                    
+                    $('#valorLiqCorretorText').text('R$ ' + valorLiqCorretor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#valorLiqCorretor').val(valorLiqCorretor.toFixed(2));
+
+                    // liquido total
+                    $('#valorLiqTotalText').text('R$ ' + valorLiqTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#valorLiqTotal').val(valorLiqTotal.toFixed(2));
+                    
+                } catch(e) {
+                    console.error("Erro no cálculo dos descontos:", e);
+                }
             }
             
             // Calcula a comissão
@@ -921,6 +1053,9 @@ End Function
                     $('#valorComissaoSomaText').text('R$ ' + totalDistribuido.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                     $('#valorComissaoSoma').val(totalDistribuido.toFixed(2));
 
+                    // Calcula os descontos após calcular as comissões
+                    calcularDescontosTributarios();
+
                 } catch(e) {
                     console.error("Erro no cálculo:", e);
                 }
@@ -929,6 +1064,7 @@ End Function
             // Configura os eventos para cálculo automático
             $('#valorUnidade, #comissaoPercentual').on('input change', calcularComissoes);
             $('#comissaoDiretoria, #comissaoGerencia, #comissaoCorretor').on('input change', calcularComissoes);
+            $('#descontoPerc').on('input change', calcularDescontosTributarios);
             
             // Calcula a comissão inicial
             calcularComissoes();
