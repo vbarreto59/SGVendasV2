@@ -157,6 +157,7 @@ If Not rs.EOF Then
             Set rsPagamentos = Nothing
         End If
 
+
         If rs("ValorLiqDiretoria") > 0 And totalPagoDiretoria >= CDbl(rs("ValorLiqDiretoria")) Then pagoDiretoria = True
         If rs("ValorLiqDiretoria") = 0 Then pagoDiretoria = True
         If rs("ValorLiqGerencia") > 0 And totalPagoGerencia >= CDbl(rs("ValorLiqGerencia")) Then pagoGerencia = True
@@ -733,6 +734,40 @@ End If
                                         sqlPagamentos = "SELECT * FROM PAGAMENTOS_COMISSOES WHERE ID_Venda = " & rs("ID") & " ORDER BY DataPagamento ASC;"
                                         Set rsPagamentos = connSales.Execute(sqlPagamentos)
 
+                                        'logica de pagamentos prêmios'
+
+                                        ' ======================== LÓGICA CORRIGIDA PARA PRÊMIOS 08 11 2025========================
+
+                                        Dim premioPagoDiretoria, premioPagoGerencia, premioPagoCorretor
+                                        premioPagoDiretoria = False
+                                        premioPagoGerencia = False
+                                        premioPagoCorretor = False
+
+                                        ' Verificar se os PRÊMIOS foram pagos (TipoPagamento = 'Premiação')
+                                        sqlPremios = "SELECT * FROM PAGAMENTOS_COMISSOES WHERE ID_Venda = " & rs("ID") & " AND TipoPagamento = 'Premiação'"
+                                        Set rsPremios = connSales.Execute(sqlPremios)
+
+                                        If Not rsPremios.EOF Then
+                                            Do While Not rsPremios.EOF
+                                                Select Case LCase(rsPremios("TipoRecebedor"))
+                                                    Case "diretoria"
+                                                        premioPagoDiretoria = True
+                                                    Case "gerencia"
+                                                        premioPagoGerencia = True
+                                                    Case "corretor"
+                                                        premioPagoCorretor = True
+                                                End Select
+                                                rsPremios.MoveNext
+                                            Loop
+                                        End If
+
+                                        If Not rsPremios Is Nothing Then
+                                            rsPremios.Close
+                                            Set rsPremios = Nothing
+                                        End If
+
+                                        ' ======================== FIM DA LÓGICA DOS PRÊMIOS ========================
+
                                         If Not rsPagamentos.EOF Then
                                             Do While Not rsPagamentos.EOF
                                                 Dim detalhePagamento
@@ -866,9 +901,6 @@ End If
     <small class="comissao-info">
         <!-- Valor Bruto com badge PAGA se pago -->
         <div class="valor-pago d-flex align-items-center gap-2 mb-1">
-            <% If pagoDiretoria Then %>
-                <span class="badge bg-success badge-sm">PAGA</span>
-            <% End If %>
             R$ <%= FormatNumber(dblValorDiretoria, 2) %>
         </div>
         
@@ -880,7 +912,10 @@ End If
         <% End If %>
         
         <!-- Valor Líquido -->
-        <div class="valor-liquido">
+        <div class="valor-liquido d-flex align-items-center gap-2">
+            <% If pagoDiretoria Then %>
+                <span class="badge bg-success badge-sm">PAGA</span>
+            <% End If %>
             <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqDiretoria, 2) %>
         </div>
         
@@ -908,9 +943,7 @@ End If
     <small class="comissao-info">
         <!-- Valor Bruto com badge PAGA se pago -->
         <div class="valor-pago d-flex align-items-center gap-2 mb-1">
-            <% If pagoGerencia Then %>
-                <span class="badge bg-success badge-sm">PAGA</span>
-            <% End If %>
+
             R$ <%= FormatNumber(dblValorGerencia, 2) %>
         </div>
         
@@ -924,6 +957,13 @@ End If
         <!-- Valor Líquido -->
         <div class="valor-liquido">
             <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqGerencia, 2) %>
+        </div>
+
+        <div class="valor-liquido d-flex align-items-center gap-2">
+            <% If pagoGerencia Then %>
+           <span class="badge bg-success badge-sm">PAGA</span>
+            <% End If %>
+           <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqGerencia, 2) %>
         </div>
         
         <% ' Verificação e Exibição do PRÊMIO GERÊNCIA %>
@@ -950,9 +990,7 @@ End If
     <small class="comissao-info">
         <!-- Valor Bruto com badge PAGA se pago -->
         <div class="valor-pago d-flex align-items-center gap-2 mb-1">
-            <% If pagoCorretor Then %>
-                <span class="badge bg-success badge-sm">PAGA</span>
-            <% End If %>
+
             R$ <%= FormatNumber(dblValorCorretor, 2) %>
         </div>
         
@@ -964,7 +1002,10 @@ End If
         <% End If %>
         
         <!-- Valor Líquido -->
-        <div class="valor-liquido">
+        <div class="valor-liquido d-flex align-items-center gap-2">
+            <% If pagoCorretor Then %>
+                <span class="badge bg-success badge-sm">PAGA</span>
+            <% End If %>
             <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqCorretor, 2) %>
         </div>
         
@@ -973,6 +1014,7 @@ End If
             <% If IsNumeric(rs("premioCorretor")) And CDbl(rs("premioCorretor")) > 0 Then %>
                 <div class="text-primary fw-bold mt-1">
                     <div class="valor-pago d-flex align-items-center gap-2">
+
                         <% If premioPagoCorretor Then %>
                             <span class="badge bg-success badge-sm">PAGA</span>
                         <% End If %>

@@ -1135,7 +1135,8 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Saldo do Prêmio a Pagar:</label>
-                            <p class="form-control-plaintext" id="premioModalSaldoAPagar">R$ 0,00</p>
+                            <p class="form-control-plaintext" id="premioModalSaldoAPagar"
+                               style="font-weight: bold; color: #ff0000; font-size: 1.2em;">R$ 0,00</p>
                         </div>
 
                         <div class="mb-3">

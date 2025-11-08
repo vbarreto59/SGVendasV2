@@ -137,9 +137,9 @@ End Sub
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
     :root {
-        --bordo-principal: #390f0a;
+        --bordo-principal: #D9B1AC;
         --bordo-hover: #300909;
-        --fundo-claro: #390f0a;
+        --fundo-claro: #E0CCC9;
         --texto-principal: #2c1e1e;
     }
 
