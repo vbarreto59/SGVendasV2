@@ -380,10 +380,10 @@ totalAPagar = 0
                                     nomeMes = GetNomeMes(mes)
                                     
                                     If comissaoAPagarMes <= 0 Then
-                                        statusComissao = "Quitado"
+                                        statusComissao = "PAGA"
                                         badgeStatus = "badge-pago"
                                     Else
-                                        statusComissao = "Pendente"
+                                        statusComissao = "PENDENTE"
                                         badgeStatus = "badge-pendente"
                                     End If
                             %>
@@ -410,7 +410,7 @@ totalAPagar = 0
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="gestao_vendas_comissao_detalhes1.asp?ano=<%= rsResumo("AnoVenda") %>&mes=<%= rsResumo("MesVenda") %>" 
+                                    <a href="gestao_vendas_comissao_detalhes3.asp?ano=<%= rsResumo("AnoVenda") %>&mes=<%= rsResumo("MesVenda") %>" 
                                        class="btn btn-detalhes" 
                                        title="Ver detalhes do mês" target="_blank">
                                         <i class="fas fa-search me-1"></i>Detalhes
@@ -446,7 +446,7 @@ totalAPagar = 0
                                 <th class="valor-pendente">R$ <%= FormatNumber(totalAPagar, 2) %></th>
                                 <th>
                                     <span class="badge <% If totalAPagar = 0 Then Response.Write "badge-pago" Else Response.Write "badge-pendente" End If %>">
-                                        <% If totalAPagar = 0 Then Response.Write "Quitado" Else Response.Write "Pendente" End If %>
+                                        <% If totalAPagar = 0 Then Response.Write "PAGA" Else Response.Write "PENDENTE" End If %>
                                     </span>
                                 </th>
                                 <th></th>
@@ -593,7 +593,7 @@ totalAPagar = 0
                                 <td class="fw-bold valor-pendente">R$ <%= FormatNumber(totalMesAPagar, 2) %></td>
                                 <td>
                                     <span class="badge <% If totalMesAPagar = 0 Then Response.Write "badge-pago" Else Response.Write "badge-pendente" End If %>">
-                                        <% If totalMesAPagar = 0 Then Response.Write "Quitado" Else Response.Write "Pendente" End If %>
+                                        <% If totalMesAPagar = 0 Then Response.Write "PAGA" Else Response.Write "PENDENTE" End If %>
                                     </span>
                                 </td>
                                 <td></td>
@@ -642,10 +642,10 @@ totalAPagar = 0
                                     nomeMesDiretoria = GetNomeMes(mes)
                                     
                                     If comissaoAPagarDiretoria <= 0 Then
-                                        statusComissaoDiretoria = "Quitado"
+                                        statusComissaoDiretoria = "PAGA"
                                         badgeStatusDiretoria = "badge-pago"
                                     Else
-                                        statusComissaoDiretoria = "Pendente"
+                                        statusComissaoDiretoria = "PENDENTE"
                                         badgeStatusDiretoria = "badge-pendente"
                                     End If
                             %>
@@ -673,7 +673,7 @@ totalAPagar = 0
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="gestao_vendas_comissao_detalhes1.asp?ano=<%= rsDiretoria("AnoVenda") %>&mes=<%= rsDiretoria("MesVenda") %>&diretoria=<%= Server.URLEncode(diretoria) %>" 
+                                    <a href="gestao_vendas_comissao_detalhes3.asp?ano=<%= rsDiretoria("AnoVenda") %>&mes=<%= rsDiretoria("MesVenda") %>&diretoria=<%= Server.URLEncode(diretoria) %>" 
                                        class="btn btn-detalhes" 
                                        title="Ver detalhes da diretoria" target="_blank">
                                         <i class="fas fa-search me-1"></i>Detalhes
@@ -697,7 +697,7 @@ totalAPagar = 0
                                 <td class="fw-bold valor-pendente">R$ <%= FormatNumber(totalMesAPagar, 2) %></td>
                                 <td>
                                     <span class="badge <% If totalMesAPagar = 0 Then Response.Write "badge-pago" Else Response.Write "badge-pendente" End If %>">
-                                        <% If totalMesAPagar = 0 Then Response.Write "Quitado" Else Response.Write "Pendente" End If %>
+                                        <% If totalMesAPagar = 0 Then Response.Write "PAGA" Else Response.Write "PENDENTE" End If %>
                                     </span>
                                 </td>
                                 <td></td>
@@ -735,7 +735,7 @@ totalAPagar = 0
                                 <th class="fw-bold valor-pendente">R$ <%= FormatNumber(totalGeralAPagar, 2) %></th>
                                 <th>
                                     <span class="badge <% If totalGeralAPagar = 0 Then Response.Write "badge-pago" Else Response.Write "badge-pendente" End If %>">
-                                        <% If totalGeralAPagar = 0 Then Response.Write "Quitado" Else Response.Write "Pendente" End If %>
+                                        <% If totalGeralAPagar = 0 Then Response.Write "PAGA" Else Response.Write "PENDENTE" End If %>
                                     </span>
                                 </th>
                                 <th></th>

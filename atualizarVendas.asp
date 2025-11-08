@@ -51,6 +51,27 @@ rsAjustaData.Execute()
 rsAjustaData.CommandText = "qryAtuNomes"
 rsAjustaData.Execute()
 
+'=== Mudanças em 08 11 2025 Resumo de vendas e comissões ===='
+
+'limpar e popular a tabela VENDA_TEMP'
+rsAjustaData.CommandText = "qryDelVTemp"
+'rsAjustaData.Execute()
+
+
+rsAjustaData.CommandText = "qryAddDiretoriaVTemp"
+'rsAjustaData.Execute()
+
+rsAjustaData.CommandText = "qryAddGerenciaVTemp"
+'rsAjustaData.Execute()
+
+rsAjustaData.CommandText = "qryAddCorretorVTemp"
+'rsAjustaData.Execute()
+
+
+
+
+
+
 '================================================================'
 ' Fecha ambas as conexões
 conn.Close
@@ -58,6 +79,7 @@ Set conn = Nothing
 
 connSales.Close
 Set connSales = Nothing
+
 'Response.Write " Atulizado!"
 %>
 

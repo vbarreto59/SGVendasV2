@@ -117,6 +117,12 @@ On Error GoTo 0
         .welcome-section h1, .card-header h5, footer .col-md-6:first-child h5 {
             color: white;
         }
+        /* Linha divisória entre os blocos */
+        .divider-line {
+            border-top: 3px solid #800020;
+            margin: 2rem 0;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
@@ -158,7 +164,57 @@ End if
 
     <div class="container mb-5">
         <div class="row g-4">
+            <!-- PRIMEIRA LINHA: VENDAS E SALDOS E COMISSÕES -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-funnel-dollar me-2"></i>Vendas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Gerenciamento de Vendas</p>
+                        <a href="<%= vendasFile %>" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>
 
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Saldos Comissões 1</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize os saldos das comissões.</p>
+                        <a href="venda_pag_resumo1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Saldos Comissões</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize os saldos das comissões.</p>
+                        <a href="gestao_vendas_comissao_saldo3.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- LINHA DIVISÓRIA -->
+        <div class="divider-line"></div>
+
+        <div class="row g-4">
+            <!-- SEGUNDA LINHA: DEMAIS OPÇÕES -->
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
@@ -171,23 +227,6 @@ End if
                         </a>
                     </div>
                 </div>
-            </div>   
-
-
-
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-funnel-dollar me-2"></i>Vendas</h5>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Gerenciamento de Vendas</p>
-                        
-                                                <a href="<%= vendasFile %>" class="btn btn-primary btn-sm mt-auto" target="_blank">
-                            <i class="fas fa-arrow-right me-1"></i> Acessar
-                        </a>
-                    </div>
-                </div>
             </div>
 
             <div class="col-md-6 col-lg-4">
@@ -196,31 +235,13 @@ End if
                         <h5 class="mb-0"><i class="fas fa-funnel-dollar me-2"></i>Dashboard Metas x Vendas</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Acompanhamento das Metass</p>
-                        
+                        <p class="card-text">Acompanhamento das Metas</p>
                         <a href="gestao_vendas_metas.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
                             <i class="fas fa-arrow-right me-1"></i> Acessar
                         </a>
                     </div>
                 </div>
-            </div>            
-
-
-
-
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Saldos Comissões</h5>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Visualize as vendas.</p>
-                        <a href="gestao_vendas_comissao_saldo2.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
-                            <i class="fas fa-arrow-right me-1"></i> Acessar
-                        </a>
-                    </div>
-                </div>
-            </div> 
+            </div>
 
             <div class="col-12 col-md-6 col-lg-4">
                 <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
@@ -232,10 +253,11 @@ End if
                             <p class="card-text">Visualização das regiões com vendas.</p>
                             <span class="btn btn-primary btn-sm mt-auto">
                                 <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa de Vendas
+                            </span>
                         </div>
                     </div>
                 </a>
-            </div> 
+            </div>
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -250,11 +272,8 @@ End if
                     </div>
                 </div>
             </div>
-
-
-             
-
-         
+                    <!-- LINHA DIVISÓRIA -->
+        <div class="divider-line"></div>
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -298,7 +317,6 @@ End if
                 </div>
             </div>
 
-
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
@@ -311,7 +329,7 @@ End if
                         </a>
                     </div>
                 </div>
-            </div>            
+            </div>
         </div>
     </div>
 
@@ -320,9 +338,8 @@ End if
             <div class="row">
                 <div class="col-md-12">
                     <p><small>Valter Barreto</p>
-                    <p>&copy; 2025 Todos os direitos reservados</p></smaal>
+                    <p>&copy; 2025 Todos os direitos reservados</p></small>
                     <div class="social-icons">
-
                     </div>
                 </div>
             </div>

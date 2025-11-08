@@ -43,25 +43,25 @@ valorPago = FormatNumberForSQL(valorPago)
 
 ' Validação básica
 If Not IsNumeric(idComissao) Or idComissao = "" Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro: ID da comissão inválido."
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro: ID da comissão inválido."
 End If
 If Not IsNumeric(idVenda) Or idVenda = "" Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro: ID da venda inválido."
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro: ID da venda inválido."
 End If
 If Not IsNumeric(userId) Or userId = "" Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro: ID do usuário inválido."
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro: ID do usuário inválido."
 End If
 If Not IsNumeric(valorPago) Or CDbl(valorPago) <= 0 Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro: Valor a pagar inválido."
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro: Valor a pagar inválido."
 End If
 If dataPagamento = "" Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro: Data do pagamento não informada."
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro: Data do pagamento não informada."
 End If
 If statusPagamento = "" Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro: Status do pagamento não informado."
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro: Status do pagamento não informado."
 End If
 If recipientType = "" Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro: Tipo de recebedor não informado."
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro: Tipo de recebedor não informado."
 End If
 
 
@@ -93,7 +93,7 @@ sqlInsert = "INSERT INTO PAGAMENTOS_COMISSOES (ID_Venda, UsuariosUserId, Usuario
 connSales.Execute sqlInsert
 
 If Err.Number <> 0 Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro ao salvar pagamento: " & Err.Description
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro ao salvar pagamento: " & Err.Description
 End If
 
 ' ----------------------------------------------------------------------
@@ -108,7 +108,7 @@ sqlUpdate = "UPDATE PAGAMENTOS_COMISSOES INNER JOIN " & adodb_path & ".Diretoria
 connSales.Execute sqlUpdate
 
 If Err.Number <> 0 Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro ao atualizar dados de Diretoria: " & Err.Description
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro ao atualizar dados de Diretoria: " & Err.Description
 End If
 
 ' UPDATE para Gerencias
@@ -116,7 +116,7 @@ sqlUpdate = "UPDATE PAGAMENTOS_COMISSOES INNER JOIN " & adodb_path & ".Gerencias
 connSales.Execute sqlUpdate
 
 If Err.Number <> 0 Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro ao atualizar dados de Gerencia: " & Err.Description
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro ao atualizar dados de Gerencia: " & Err.Description
 End If
 
 
@@ -125,14 +125,14 @@ sqlUpdate = "UPDATE PAGAMENTOS_COMISSOES INNER JOIN " & adodb_path & ".Usuarios 
 connSales.Execute sqlUpdate
 
 If Err.Number <> 0 Then
-    Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Erro ao atualizar dados de Corretor: " & Err.Description
+    Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Erro ao atualizar dados de Corretor: " & Err.Description
 End If
 
 
 ' ----------------------------------------------------------------------
 ' REDIRECIONAMENTO FINAL E LIMPEZA
 ' ----------------------------------------------------------------------
-Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Pagamento salvo com sucesso!"
+Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Pagamento salvo com sucesso!"
 
 
 ' Fecha e destrói os objetos de conexão

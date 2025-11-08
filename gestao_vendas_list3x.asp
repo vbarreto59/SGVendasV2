@@ -637,7 +637,7 @@ End If
                 </div>
                 <div class="col-md-4 text-end">
                     <div class="btn-group">
-                        <a href="gestao_vendas_create2.asp" class="btn btn-info btn-sm" target="_blank">
+                        <a href="gestao_vendas_create3.asp" class="btn btn-info btn-sm">
                             <i class="fas fa-plus me-1"></i>Nova Venda
                         </a>
                         <a href="gestao_vendas_gerenc_comissoes3.asp" class="btn btn-primary btn-sm" target="_blank">

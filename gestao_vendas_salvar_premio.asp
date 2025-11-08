@@ -131,7 +131,7 @@ End If
 ' ----------------------------------------------------------------------
 ' REDIRECIONAMENTO FINAL E LIMPEZA
 ' ----------------------------------------------------------------------
-Response.Redirect "gestao_vendas_gerenc_comissoes.asp?mensagem=Pagamento do prêmio salvo com sucesso!"
+Response.Redirect "gestao_vendas_gerenc_comissoes3.asp?mensagem=Pagamento do prêmio salvo com sucesso!"
 
 ' Fecha e destrói os objetos de conexão
 If Not connSales Is Nothing Then If connSales.State = adStateOpen Then connSales.Close

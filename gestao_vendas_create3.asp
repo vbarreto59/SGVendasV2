@@ -230,7 +230,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     Call InserirLog ("VENDAS", "INSERT", "Nova venda inserida ID: " & vendaId )
     
     ' Redireciona para a página de sucesso após a inserção.
-    Response.Redirect "gestao_vendas_list2x.asp?mensagem=Venda cadastrada com sucesso!"
+    Response.Redirect "gestao_vendas_list3x.asp?mensagem=Venda cadastrada com sucesso!"
 End If
 
 
@@ -565,6 +565,45 @@ End Function
     </style>
 </head>
 <body>
+
+<!-- verifica a mensagem e fecha a aba 07 11 2025 -->
+
+<%
+    Dim strMensagem
+    strMensagem = Request.QueryString("mensagem")
+
+    If strMensagem <> "" Then
+%>
+<script type="text/javascript">
+    // Exibe a mensagem de sucesso em um pop-up de confirmação
+    var confirmacao = confirm("<%= strMensagem %>"); 
+
+    if (confirmacao) {
+        // Tenta fechar a aba ao clicar em OK
+        try {
+            // Este comando é o mais robusto, mas pode ser bloqueado
+            window.open('', '_self', ''); 
+            window.close();
+        } catch (e) {
+            // Se o navegador bloquear o window.close(), tenta uma alternativa para abas abertas por script
+            // Nota: Se a aba não foi aberta por script, a maioria dos navegadores bloqueará isso.
+            // Outra alternativa que pode funcionar:
+            // window.close(); 
+        }
+    }
+    
+    // Limpa a URL para remover a mensagem após a exibição (opcional)
+    if (window.history.replaceState) {
+        var urlSemMensagem = window.location.pathname;
+        window.history.replaceState({path:urlSemMensagem},'',urlSemMensagem);
+    }
+</script>
+<%
+    End If
+%>
+
+
+
     <div class="app-container">
         <!-- Header -->
         <div class="app-header">
