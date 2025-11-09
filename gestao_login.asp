@@ -139,7 +139,7 @@ End Sub
     :root {
         --bordo-principal: #D9B1AC;
         --bordo-hover: #300909;
-        --fundo-claro: #E0CCC9;
+        --fundo-claro: #DE9B91;
         --texto-principal: #2c1e1e;
     }
 

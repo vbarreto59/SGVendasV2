@@ -1,7 +1,7 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conSunSales.asp"-->
 
-<% ' melhoria na aparencia
+<% ' botao detalhes'
 ' Primeiro, vamos verificar se a tabela existe e tem dados
 Set conn = Server.CreateObject("ADODB.Connection")
 conn.Open StrConnSales
@@ -406,4 +406,3 @@ Set conn = Nothing
 <!--#include file="footer.inc"-->
 </body>
 </html>
-<!-- final codigo  -->

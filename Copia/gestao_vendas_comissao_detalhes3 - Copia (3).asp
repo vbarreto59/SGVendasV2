@@ -1,7 +1,6 @@
-detalhes com premio sem a segunda tabela
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 
-<% 'Nova estratégia - Array de premiações - 09/11/2025'
+<% 'funcional com problema na coluna premiacao 09 11 25'
     If Len(StrConn) = 0 Then %>
     <!--#include file="conexao.asp"-->
 <% End If %>
@@ -52,6 +51,40 @@ Select Case CInt(mesDetalhe)
     Case 12: nomeMesDetalhe = "Dezembro"
 End Select
 
+' Primeiro, verificar se existe alguma coluna de premiação
+Dim colunaPremiacao, premiacaoDisponivel
+colunaPremiacao = ""
+premiacaoDisponivel = False
+
+On Error Resume Next
+' Testar colunas possíveis
+Dim colunasTeste
+colunasTeste = Array("Premio", "Premiacao", "ValorPremiacao", "Premiação", "Premiacão", "Bonus", "ValorBonus")
+
+For Each coluna In colunasTeste
+    sqlTest = "SELECT TOP 1 " & coluna & " FROM Vendas"
+    Set rsTest = connSales.Execute(sqlTest)
+    If Err.Number = 0 Then
+        colunaPremiacao = coluna
+        premiacaoDisponivel = True
+        Exit For
+    Else
+        Err.Clear
+    End If
+Next
+
+' Se não encontrou na tabela Vendas, verificar em tabela de premiações separada
+If Not premiacaoDisponivel Then
+    On Error Resume Next
+    sqlTest = "SELECT TOP 1 ID FROM Premiacoes"
+    Set rsTest = connSales.Execute(sqlTest)
+    If Err.Number = 0 Then
+        premiacaoDisponivel = True
+    End If
+    Err.Clear
+End If
+On Error GoTo 0
+
 ' Calcular totais ANTES de exibir os cards
 Dim totalVGV, totalComissaoBruta, totalDesconto, totalComissaoLiquida
 Dim totalComissaoPaga, totalPremiacaoPaga, totalPremiacao, totalPremiacaoAPagar
@@ -69,88 +102,10 @@ totalComissaoAPagar = 0
 totalPago = 0
 totalAPagar = 0
 
-' =============================================
-' NOVA ESTRATÉGIA: ARRAY DE PREMIAÇÕES
-' =============================================
-
-' Criar Dictionary para armazenar premiações por ID da venda
-Set premiacoesDict = Server.CreateObject("Scripting.Dictionary")
-
-' Buscar premiações de TODAS as fontes possíveis
-On Error Resume Next
-
-' 1. Buscar de tabela separada Premiacoes (se existir)
-sqlPremiacoes = "SELECT ID_Venda, ValorPremiacao FROM Premiacoes WHERE ID_Venda IN (SELECT ID FROM Vendas WHERE AnoVenda = " & anoDetalhe & " AND MesVenda = " & mesDetalhe & ")"
-Set rsPremiacoes = connSales.Execute(sqlPremiacoes)
-If Err.Number = 0 Then
-    Do While Not rsPremiacoes.EOF
-        Dim idVendaPrem, valorPrem
-        idVendaPrem = CStr(rsPremiacoes("ID_Venda"))
-        valorPrem = CDbl(rsPremiacoes("ValorPremiacao"))
-        
-        If valorPrem > 0 Then
-            premiacoesDict.Add idVendaPrem, valorPrem
-        End If
-        rsPremiacoes.MoveNext
-    Loop
-    rsPremiacoes.Close
-End If
-Err.Clear
-
-' 2. Buscar da própria tabela Vendas em diferentes colunas
-Dim colunasPremiacao
-colunasPremiacao = Array("Premio", "Premiacao", "ValorPremiacao", "Premiação", "Premiacão", "Bonus", "ValorBonus")
-
-For Each coluna In colunasPremiacao
-    sqlTest = "SELECT ID, " & coluna & " FROM Vendas WHERE AnoVenda = " & anoDetalhe & " AND MesVenda = " & mesDetalhe & " AND " & coluna & " > 0"
-    Set rsTest = connSales.Execute(sqlTest)
-    If Err.Number = 0 Then
-        Do While Not rsTest.EOF
-            idVendaPrem = CStr(rsTest("ID"))
-            valorPrem = CDbl(rsTest(coluna))
-            
-            If Not premiacoesDict.Exists(idVendaPrem) Then
-                premiacoesDict.Add idVendaPrem, valorPrem
-            End If
-            rsTest.MoveNext
-        Loop
-        rsTest.Close
-    End If
-    Err.Clear
-Next
-
-' 3. Buscar de pagamentos de premiação
-sqlPagamentosPremiacao = "SELECT PC.ID_Venda, SUM(PC.ValorPago) as TotalPremiacao " & _
-                         "FROM PAGAMENTOS_COMISSOES PC " & _
-                         "INNER JOIN Vendas V ON PC.ID_Venda = V.ID " & _
-                         "WHERE V.AnoVenda = " & anoDetalhe & " AND V.MesVenda = " & mesDetalhe & " " & _
-                         "AND (PC.TipoPagamento = 'PREMIACAO' OR PC.TipoPagamento = 'PREMIAÇÃO') " & _
-                         "GROUP BY PC.ID_Venda"
-Set rsPagPrem = connSales.Execute(sqlPagamentosPremiacao)
-If Err.Number = 0 Then
-    Do While Not rsPagPrem.EOF
-        idVendaPrem = CStr(rsPagPrem("ID_Venda"))
-        valorPrem = CDbl(rsPagPrem("TotalPremiacao"))
-        
-        If Not premiacoesDict.Exists(idVendaPrem) Then
-            premiacoesDict.Add idVendaPrem, valorPrem
-        End If
-        rsPagPrem.MoveNext
-    Loop
-    rsPagPrem.Close
-End If
-Err.Clear
-
-On Error GoTo 0
-
-' =============================================
-' FIM DA NOVA ESTRATÉGIA
-' =============================================
-
-' Buscar vendas do mês
+' Buscar vendas do mês e calcular totais
 Set rsVendasMes = Server.CreateObject("ADODB.Recordset")
 
-' SQL SIMPLES apenas com colunas básicas
+' Construir SQL dinamicamente incluindo premiação
 sqlVendasMes = "SELECT " & _
                "V.ID, " & _
                "V.Empreend_ID, " & _
@@ -170,12 +125,61 @@ sqlVendasMes = "SELECT " & _
                "V.NomeGerente, " & _
                "V.DescontoBruto, " & _
                "V.ValorLiqGeral, " & _
-               "(V.ValorDiretoria + V.ValorGerencia + V.ValorCorretor) as ComissaoBruta " & _
+               "(V.ValorDiretoria + V.ValorGerencia + V.ValorCorretor) as ComissaoBruta "
+
+' Adicionar coluna de premiação se disponível na tabela Vendas
+If premiacaoDisponivel And colunaPremiacao <> "" Then
+    sqlVendasMes = sqlVendasMes & ", ISNULL(V." & colunaPremiacao & ", 0) as Premio "
+Else
+    ' Tentar buscar de tabela separada de premiações
+    On Error Resume Next
+    sqlTest = "SELECT TOP 1 P.ValorPremiacao FROM Premiacoes P INNER JOIN Vendas V ON P.ID_Venda = V.ID"
+    Set rsTest = connSales.Execute(sqlTest)
+    If Err.Number = 0 Then
+        sqlVendasMes = "SELECT " & _
+               "V.ID, " & _
+               "V.Empreend_ID, " & _
+               "V.NomeEmpreendimento, " & _
+               "V.Unidade, " & _
+               "V.ValorUnidade, " & _
+               "V.DataVenda, " & _
+               "V.Corretor, " & _
+               "V.Diretoria, " & _
+               "V.Gerencia, " & _
+               "V.ComissaoPercentual, " & _
+               "V.ValorComissaoGeral, " & _
+               "V.ValorDiretoria, " & _
+               "V.ValorGerencia, " & _
+               "V.ValorCorretor, " & _
+               "V.NomeDiretor, " & _
+               "V.NomeGerente, " & _
+               "V.DescontoBruto, " & _
+               "V.ValorLiqGeral, " & _
+               "(V.ValorDiretoria + V.ValorGerencia + V.ValorCorretor) as ComissaoBruta, " & _
+               "ISNULL(P.ValorPremiacao, 0) as Premio " & _
                "FROM Vendas V " & _
+               "LEFT JOIN Premiacoes P ON V.ID = P.ID_Venda " & _
                vWhere & " V.AnoVenda = " & anoDetalhe & " " & _
                "AND V.MesVenda = " & mesDetalhe & " " & _
                "AND (V.Excluido <> -1 OR V.Excluido IS NULL) " & _
                "ORDER BY V.DataVenda DESC, V.ID DESC"
+        premiacaoDisponivel = True
+    Else
+        sqlVendasMes = sqlVendasMes & ", 0 as Premio "
+        premiacaoDisponivel = False
+    End If
+    Err.Clear
+    On Error GoTo 0
+End If
+
+' Se não foi modificada acima, completar a SQL original
+If InStr(sqlVendasMes, "FROM Vendas V") = 0 Then
+    sqlVendasMes = sqlVendasMes & "FROM Vendas V " & _
+                    vWhere & " V.AnoVenda = " & anoDetalhe & " " & _
+                   "AND V.MesVenda = " & mesDetalhe & " " & _
+                   "AND (V.Excluido <> -1 OR V.Excluido IS NULL) " & _
+                   "ORDER BY V.DataVenda DESC, V.ID DESC"
+End If
 
 rsVendasMes.Open sqlVendasMes, connSales
 
@@ -187,34 +191,8 @@ If Not rsVendasMes.EOF Then
         totalDesconto = totalDesconto + CDbl(rsVendasMes("DescontoBruto"))
         totalComissaoLiquida = totalComissaoLiquida + CDbl(rsVendasMes("ValorLiqGeral"))
         
-        ' Buscar premiação do array/dictionary
-        Dim idVendaAtual, premiacaoVenda
-        idVendaAtual = CStr(rsVendasMes("ID"))
-        
-        If premiacoesDict.Exists(idVendaAtual) Then
-            premiacaoVenda = premiacoesDict(idVendaAtual)
-        Else
-            ' Se não encontrou premiação específica, verificar se há valores iguais de comissão
-            Dim valDir, valGer, valCor
-            valDir = CDbl(rsVendasMes("ValorDiretoria"))
-            valGer = CDbl(rsVendasMes("ValorGerencia"))
-            valCor = CDbl(rsVendasMes("ValorCorretor"))
-            
-            ' Se todos têm o mesmo valor (ex: R$ 500,00 cada), considerar como premiação
-            If valDir > 0 And valGer > 0 And valCor > 0 Then
-                If valDir = valGer And valGer = valCor Then
-                    premiacaoVenda = valDir + valGer + valCor
-                    ' Armazenar no dictionary para uso futuro
-                    premiacoesDict.Add idVendaAtual, premiacaoVenda
-                Else
-                    premiacaoVenda = 0
-                End If
-            Else
-                premiacaoVenda = 0
-            End If
-        End If
-        
-        totalPremiacao = totalPremiacao + premiacaoVenda
+        ' Acumular premiação
+        totalPremiacao = totalPremiacao + CDbl(rsVendasMes("Premio"))
         
         rsVendasMes.MoveNext
     Loop
@@ -361,20 +339,6 @@ totalAPagar = totalComissaoAPagar + totalPremiacaoAPagar
             font-weight: 600;
         }
         
-        .valor-premiacao-positivo {
-            color: #9b59b6;
-            font-weight: 700;
-            background-color: #f8f9fa;
-            border: 1px solid #9b59b6;
-            border-radius: 4px;
-            padding: 2px 6px;
-        }
-        
-        .premiacao-zero {
-            color: #6c757d;
-            font-style: italic;
-        }
-        
         .badge-pago {
             background-color: #28a745;
             color: white;
@@ -497,11 +461,6 @@ totalAPagar = totalComissaoAPagar + totalPremiacaoAPagar
             font-family: monospace;
             word-break: break-all;
         }
-        
-        .detalhes-premiacao {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
     </style>
 </head>
 <body>
@@ -529,10 +488,16 @@ totalAPagar = totalComissaoAPagar + totalPremiacaoAPagar
         <!-- Debug Info -->
         <div class="debug-info">
             <strong>Debug Info:</strong> 
-            Premiações encontradas: <strong><%= premiacoesDict.Count %></strong> | 
+            Premiação disponível: <strong><%= premiacaoDisponivel %></strong> | 
+            Coluna: <strong><%= colunaPremiacao %></strong> | 
             Premiação Total: <strong>R$ <%= FormatNumber(totalPremiacao, 2) %></strong> | 
             Premiações Pagas: <strong>R$ <%= FormatNumber(totalPremiacaoPaga, 2) %></strong> |
             Comissões Pagas: <strong>R$ <%= FormatNumber(totalComissaoPaga, 2) %></strong>
+        </div>
+
+        <!-- SQL Debug -->
+        <div class="sql-debug">
+            <strong>SQL Vendas:</strong> <%= Replace(sqlVendasMes, "FROM", "<br>FROM") %>
         </div>
 
         <!-- Cards de Resumo -->
@@ -604,39 +569,6 @@ totalAPagar = totalComissaoAPagar + totalPremiacaoAPagar
                             <%
                             If Not rsVendasMes.EOF Then
                                 Do While Not rsVendasMes.EOF
-                                    Dim classePremiacao, valorPremio, detalhesPremiacao
-                                    idVendaAtual = CStr(rsVendasMes("ID"))
-                                    
-                                    ' Buscar premiação do array/dictionary
-                                    If premiacoesDict.Exists(idVendaAtual) Then
-                                        valorPremio = premiacoesDict(idVendaAtual)
-                                        detalhesPremiacao = "Prêmio"
-                                    Else
-                                        ' Verificar se há valores iguais de comissão
-                                       '' Dim valDir, valGer, valCor
-                                        valDir = CDbl(rsVendasMes("ValorDiretoria"))
-                                        valGer = CDbl(rsVendasMes("ValorGerencia"))
-                                        valCor = CDbl(rsVendasMes("ValorCorretor"))
-                                        
-                                        If valDir > 0 And valGer > 0 And valCor > 0 Then
-                                            If valDir = valGer And valGer = valCor Then
-                                                valorPremio = valDir + valGer + valCor
-                                                detalhesPremiacao = "Premiação Distribuída"
-                                            Else
-                                                valorPremio = 0
-                                                detalhesPremiacao = ""
-                                            End If
-                                        Else
-                                            valorPremio = 0
-                                            detalhesPremiacao = ""
-                                        End If
-                                    End If
-                                    
-                                    If valorPremio > 0 Then
-                                        classePremiacao = "valor-premiacao-positivo"
-                                    Else
-                                        classePremiacao = "premiacao-zero"
-                                    End If
                             %>
                             <tr>
                                 <td><strong><%= rsVendasMes("ID") %></strong></td>
@@ -660,14 +592,11 @@ totalAPagar = totalComissaoAPagar + totalPremiacaoAPagar
                                     <% End If %>
                                 </td>
                                 <td class="valor-liquido">R$ <%= FormatNumber(rsVendasMes("ValorLiqGeral"), 2) %></td>
-                                <td class="<%= classePremiacao %>">
-                                    <% If valorPremio > 0 Then %>
-                                        <strong>R$ <%= FormatNumber(valorPremio, 2) %></strong>
-                                        <% If detalhesPremiacao <> "" Then %>
-                                        <br><small class="detalhes-premiacao"><%= detalhesPremiacao %></small>
-                                        <% End If %>
+                                <td class="valor-premiacao">
+                                    <% If CDbl(rsVendasMes("Premio")) > 0 Then %>
+                                        <strong>R$ <%= FormatNumber(rsVendasMes("Premio"), 2) %></strong>
                                     <% Else %>
-                                        R$ <%= FormatNumber(valorPremio, 2) %>
+                                        R$ <%= FormatNumber(rsVendasMes("Premio"), 2) %>
                                     <% End If %>
                                 </td>
                                 <td><span class="badge bg-info"><%= rsVendasMes("ComissaoPercentual") %>%</span></td>
@@ -703,9 +632,6 @@ totalAPagar = totalComissaoAPagar + totalPremiacaoAPagar
                 </div>
             </div>
         </div>
-
-        <!-- Resto do código permanece igual -->
-        <!-- ... -->
 
         <!-- Tabela de Pagamentos -->
         <div class="card">
@@ -940,4 +866,3 @@ If Not connSales Is Nothing Then
     Set connSales = Nothing
 End If
 %>
-'final orinal'
