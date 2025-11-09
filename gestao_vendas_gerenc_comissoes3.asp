@@ -116,7 +116,7 @@ Do While Not rsCheckStatus.EOF
     
     ' --- Verificar pagamentos para Diretoria (agora na conexão 'connSales') ---
     sqlGetPaid = "SELECT SUM(ValorPago) as TotalPago FROM PAGAMENTOS_COMISSOES " & _
-                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'diretoria' AND TipoPagamento = 'Comissão'"
+                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'diretoria' AND Left(TipoPagamento,4) = 'Comi'"
     Set rsGetPaid = connSales.Execute(sqlGetPaid)
     If Err.Number <> 0 Then
         Response.Write "Erro na consulta de diretoria: " & Err.Description & "<br>"
@@ -128,7 +128,7 @@ Do While Not rsCheckStatus.EOF
 
     ' --- Verificar pagamentos para Gerência ---
     sqlGetPaid = "SELECT SUM(ValorPago) as TotalPago FROM PAGAMENTOS_COMISSOES " & _
-                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Comissão'"
+                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'gerencia' AND Left(TipoPagamento,4) = 'Comi'"
     Set rsGetPaid = connSales.Execute(sqlGetPaid)
     If Err.Number <> 0 Then
         Response.Write "Erro na consulta de gerencia: " & Err.Description & "<br>"
@@ -140,7 +140,7 @@ Do While Not rsCheckStatus.EOF
 
     ' --- Verificar pagamentos para Corretor ---
     sqlGetPaid = "SELECT SUM(ValorPago) as TotalPago FROM PAGAMENTOS_COMISSOES " & _
-                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Comissão'"
+                 "WHERE ID_Venda = " & vendaIdCheck & " AND TipoRecebedor = 'corretor' AND Left(TipoPagamento,4) = 'Comi'"
     Set rsGetPaid = connSales.Execute(sqlGetPaid)
     If Err.Number <> 0 Then
         Response.Write "Erro na consulta de corretor: " & Err.Description & "<br>"
@@ -519,7 +519,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
                 '============================================================='
                 sqlPagamentos = "SELECT SUM(ValorPago) as ValorTotalPago, MAX(DataPagamento) as DataPag " & _
                                 "FROM PAGAMENTOS_COMISSOES " & _
-                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdGerencia & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Comissão'"
+                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdGerencia & " AND TipoRecebedor = 'gerencia' AND Left(TipoPagamento,4) = 'Comi'"
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 Dim dataPagamentoGerencia
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
@@ -537,7 +537,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
                 '============================================================='
                 sqlPagamentos = "SELECT SUM(ValorPago) as ValorTotalPago, MAX(DataPagamento) as DataPag " & _
                                 "FROM PAGAMENTOS_COMISSOES " & _
-                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdCorretor & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Comissão'"
+                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdCorretor & " AND TipoRecebedor = 'corretor' AND Left(TipoPagamento,4) = 'Comi'"
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 Dim dataPagamentoCorretor
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
@@ -572,7 +572,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
                 ' #### Pagamentos para Gerência (Prêmio)
                 sqlPagamentos = "SELECT SUM(ValorPago) as ValorTotalPago " & _
                                 "FROM PAGAMENTOS_COMISSOES " & _
-                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdGerencia & " AND TipoRecebedor = 'gerencia' AND TipoPagamento = 'Premiação'"
+                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdGerencia & " AND TipoRecebedor = 'gerencia' AND Left(TipoPagamento,3) = 'Pre'"
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
                     totalPremioPagoGerencia = rsPagamentos("ValorTotalPago")
@@ -584,7 +584,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
                 ' #### Pagamentos para Corretor (Prêmio)
                 sqlPagamentos = "SELECT SUM(ValorPago) as ValorTotalPago " & _
                                 "FROM PAGAMENTOS_COMISSOES " & _
-                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdCorretor & " AND TipoRecebedor = 'corretor' AND TipoPagamento = 'Premiação'"
+                                "WHERE ID_Venda = " & vendaId & " AND UsuariosUserId = " & userIdCorretor & " AND TipoRecebedor = 'corretor' AND Left(TipoPagamento,3) = 'Pre'"
                 Set rsPagamentos = connSales.Execute(sqlPagamentos)
                 If Not rsPagamentos.EOF And Not IsNull(rsPagamentos("ValorTotalPago")) Then
                     totalPremioPagoCorretor = rsPagamentos("ValorTotalPago")

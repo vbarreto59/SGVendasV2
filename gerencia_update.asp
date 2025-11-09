@@ -3,6 +3,7 @@
 <!--#include file="usr_acoes.inc"-->
 <!--#include file="gestao_header.inc"-->
 
+<% Response.Charset = "UTF-8" %>
 <%
 Dim id, conn, rs, rs2, sql, sqlUsuario, rsUsuario
 id = Request.QueryString("id")
@@ -31,6 +32,8 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
         Set rsUsuario = conn.Execute(sqlUsuario)
 
         If Not rsUsuario.EOF Then
+            ' Para garantir que as variáveis Usuario e NomeUsuario estão declaradas
+            Dim Usuario, NomeUsuario
             Usuario = rsUsuario("Usuario")
             NomeUsuario = rsUsuario("Nome")
             sUserId = UserId
@@ -60,6 +63,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
             .Parameters.Append .CreateParameter(, 200, 1, 100, Empty)
         Else
             .Parameters.Append .CreateParameter(, 3, 1, , sUserId)
+            ' As variáveis 'Usuario' e 'NomeUsuario' precisam estar definidas aqui
             .Parameters.Append .CreateParameter(, 200, 1, 100, Replace(Usuario, "'", "''"))
             .Parameters.Append .CreateParameter(, 200, 1, 100, Replace(NomeUsuario, "'", "''"))
         End If
@@ -251,6 +255,12 @@ If Not rs.EOF Then
 </html>
 <%
 End If
-rs.Close
-conn.Close
+If Not rs Is Nothing Then
+    If rs.State = 1 Then rs.Close
+    Set rs = Nothing
+End If
+If Not conn Is Nothing Then
+    If conn.State = 1 Then conn.Close
+    Set conn = Nothing
+End If
 %>

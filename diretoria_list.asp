@@ -3,7 +3,7 @@
 <!--#include file="usr_acoes.inc"-->
 <!--#include file="gestao_header.inc"-->
 
-
+<% Response.Charset = "UTF-8" %>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>

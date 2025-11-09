@@ -3,7 +3,7 @@
 <!--#include file="usr_acoes.inc"-->
 <!--#include file="gestao_header.inc"-->
 
-
+<% Response.Charset = "UTF-8" %>
 <%
 If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     Set conn = Server.CreateObject("ADODB.Connection")

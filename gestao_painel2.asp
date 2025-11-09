@@ -8,10 +8,14 @@
 <!--#include file="usr_acoes_v4GVendas.inc"-->
 <!--#include file="atualizarVendas.asp"-->
 <!--#include file="atualizarVendas2.asp"-->
+<!--#include file="manutencao_config.asp"-->
+
 <%
 if Session("Usuario") = "" then
    Response.redirect "gestao_login.asp"
 end if   
+Dim mostrarAlertaManutencao
+mostrarAlertaManutencao = EstaEmManutencao()
 %>
 
 <%
@@ -124,8 +128,32 @@ On Error GoTo 0
             opacity: 0.6;
         }
     </style>
+
+<style>
+/* ================================================== */
+/* COMPONENTE: ALERTA DE MANUTENÇÃO */
+/* ================================================== */
+.alert-manutencao {
+    /* Removendo position: fixed; e top: 0; para que ele fique
+       apenas no topo do fluxo do documento, acima do nav, e não flutuante. */
+    z-index: 1000; /* Manter se quiser que ele sobreponha algo em seu fluxo normal */
+    border-radius: 0;
+    text-align: center;
+    padding: 15px;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+    /* Adicionando margem na parte inferior para separar do nav */
+    margin-bottom: 0 !important; /* Certifica que a margem do alerta anule qualquer margem superior do próximo elemento */
+}
+</style>  
 </head>
 <body>
+<% If mostrarAlertaManutencao Then %>
+<div class="alert alert-danger alert-manutencao">
+    <i class="fas fa-exclamation-triangle"></i> ATENÇÃO: SISTEMA EM MANUTENÇÃO - Algumas funcionalidades podem estar indisponíveis
+</div>
+<% End If %>    
+
 
 <%
 if not UsuarioGestor() and not UsuarioAdmin() then
@@ -331,7 +359,28 @@ End if
                 </div>
             </div>
         </div>
+         <!-- LINHA DIVISÓRIA -->
+        <div class="divider-line"></div>  
+
+        <% if Session("Usuario") = "BARRETO" then %>
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Manutenção</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Cadastro de Metas da Tocca.</p>
+                        <a href="manut_menu.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>        
+        <%end if%>            
+
+
     </div>
+
 
     <footer class="text-center mt-auto">
         <div class="container">

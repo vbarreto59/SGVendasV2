@@ -2,7 +2,7 @@
 <!--#include file="conexao.asp"-->
 <!--#include file="usr_acoes.inc"-->
 <!--#include file="gestao_header.inc"-->
-
+<% Response.Charset = "UTF-8" %>
 <%
 Dim conn, rs, sql, DiretoriaId
 Set conn = Server.CreateObject("ADODB.Connection")
