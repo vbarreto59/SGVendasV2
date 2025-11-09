@@ -64,7 +64,8 @@ sqlComissoesPagas = "SELECT " & _
                    "FROM Vendas V " & _
                    "INNER JOIN PAGAMENTOS_COMISSOES PC ON V.ID = PC.ID_Venda " & _
                    "WHERE (V.Excluido <> -1 OR V.Excluido IS NULL) " & _
-                   "AND V.AnoVenda = " & anoSelecionado
+                   "AND V.AnoVenda = " & anoSelecionado & _
+                   " AND PC.TipoPagamento = 'Comissão'"
 
 If mesSelecionado <> "0" Then
     sqlComissoesPagas = sqlComissoesPagas & " AND V.MesVenda = " & mesSelecionado
@@ -74,10 +75,117 @@ sqlComissoesPagas = sqlComissoesPagas & " GROUP BY V.AnoVenda, V.MesVenda"
 
 rsComissoesPagas.Open sqlComissoesPagas, connSales
 
-' Criar array para comissões pagas
-Dim comissoesPagas(12)
+' Buscar premiações pagas separadamente
+Set rsPremiacoesPagas = Server.CreateObject("ADODB.Recordset")
+sqlPremiacoesPagas = "SELECT " & _
+                    "V.AnoVenda, " & _
+                    "V.MesVenda, " & _
+                    "SUM(PC.ValorPago) as PremiacaoPaga " & _
+                    "FROM Vendas V " & _
+                    "INNER JOIN PAGAMENTOS_COMISSOES PC ON V.ID = PC.ID_Venda " & _
+                    "WHERE (V.Excluido <> -1 OR V.Excluido IS NULL) " & _
+                    "AND V.AnoVenda = " & anoSelecionado & _
+                    " AND PC.TipoPagamento = 'Premiação'"
+
+If mesSelecionado <> "0" Then
+    sqlPremiacoesPagas = sqlPremiacoesPagas & " AND V.MesVenda = " & mesSelecionado
+End If
+
+sqlPremiacoesPagas = sqlPremiacoesPagas & " GROUP BY V.AnoVenda, V.MesVenda"
+
+rsPremiacoesPagas.Open sqlPremiacoesPagas, connSales
+
+' DEBUG: Verificar estrutura da tabela Vendas
+Response.Write "<!-- DEBUG: Verificando estrutura da tabela Vendas -->"
+On Error Resume Next
+Set rsTest = connSales.Execute("SELECT TOP 1 * FROM Vendas")
+If Err.Number = 0 Then
+    For i = 0 To rsTest.Fields.Count - 1
+        Response.Write "<!-- Campo: " & rsTest.Fields(i).Name & " -->"
+    Next
+Else
+    Response.Write "<!-- Erro ao acessar tabela Vendas: " & Err.Description & " -->"
+End If
+On Error GoTo 0
+
+' Buscar premiação total - CORREÇÃO APLICADA AQUI
+Set rsPremiacaoTotal = Server.CreateObject("ADODB.Recordset")
+
+' Verificar quais colunas de premiação existem na tabela
+Dim sqlPremiacaoTotal
+On Error Resume Next
+
+' Tentativa 1: Verificar se existe coluna Premio
+sqlTest = "SELECT TOP 1 Premio FROM Vendas"
+Set rsTest = connSales.Execute(sqlTest)
+If Err.Number = 0 Then
+    sqlPremiacaoTotal = "SELECT " & _
+                       "AnoVenda, " & _
+                       "MesVenda, " & _
+                       "SUM(Premio) as PremiacaoTotal " & _
+                       "FROM Vendas " & _
+                       sqlWhere & " " & _
+                       "GROUP BY AnoVenda, MesVenda"
+    Response.Write "<!-- Usando coluna: Premio -->"
+Else
+    Err.Clear
+    ' Tentativa 2: Verificar se existe coluna Premiacao
+    sqlTest = "SELECT TOP 1 Premiacao FROM Vendas"
+    Set rsTest = connSales.Execute(sqlTest)
+    If Err.Number = 0 Then
+        sqlPremiacaoTotal = "SELECT " & _
+                           "AnoVenda, " & _
+                           "MesVenda, " & _
+                           "SUM(Premiacao) as PremiacaoTotal " & _
+                           "FROM Vendas " & _
+                           sqlWhere & " " & _
+                           "GROUP BY AnoVenda, MesVenda"
+        Response.Write "<!-- Usando coluna: Premiacao -->"
+    Else
+        Err.Clear
+        ' Tentativa 3: Verificar se existe coluna ValorPremiacao
+        sqlTest = "SELECT TOP 1 ValorPremiacao FROM Vendas"
+        Set rsTest = connSales.Execute(sqlTest)
+        If Err.Number = 0 Then
+            sqlPremiacaoTotal = "SELECT " & _
+                               "AnoVenda, " & _
+                               "MesVenda, " & _
+                               "SUM(ValorPremiacao) as PremiacaoTotal " & _
+                               "FROM Vendas " & _
+                               sqlWhere & " " & _
+                               "GROUP BY AnoVenda, MesVenda"
+            Response.Write "<!-- Usando coluna: ValorPremiacao -->"
+        Else
+            ' Se nenhuma coluna de premiação for encontrada, usar valor fixo baseado nas premiações pagas
+            sqlPremiacaoTotal = "SELECT " & _
+                               "V.AnoVenda, " & _
+                               "V.MesVenda, " & _
+                               "SUM(PC.ValorPago) as PremiacaoTotal " & _
+                               "FROM Vendas V " & _
+                               "INNER JOIN PAGAMENTOS_COMISSOES PC ON V.ID = PC.ID_Venda " & _
+                               "WHERE (V.Excluido <> -1 OR V.Excluido IS NULL) " & _
+                               "AND V.AnoVenda = " & anoSelecionado & _
+                               " AND PC.TipoPagamento = 'Premiação'"
+            If mesSelecionado <> "0" Then
+                sqlPremiacaoTotal = sqlPremiacaoTotal & " AND V.MesVenda = " & mesSelecionado
+            End If
+            sqlPremiacaoTotal = sqlPremiacaoTotal & " GROUP BY V.AnoVenda, V.MesVenda"
+            Response.Write "<!-- Usando premiações pagas como total (fallback) -->"
+        End If
+    End If
+End If
+On Error GoTo 0
+
+Response.Write "<!-- SQL PremiacaoTotal: " & sqlPremiacaoTotal & " -->"
+
+rsPremiacaoTotal.Open sqlPremiacaoTotal, connSales
+
+' Criar arrays para comissões e premiações
+Dim comissoesPagas(12), premiacoesPagas(12), premiacaoTotal(12)
 For i = 1 To 12
     comissoesPagas(i) = 0
+    premiacoesPagas(i) = 0
+    premiacaoTotal(i) = 0
 Next
 
 Do While Not rsComissoesPagas.EOF
@@ -88,13 +196,51 @@ Loop
 rsComissoesPagas.Close
 Set rsComissoesPagas = Nothing
 
+Do While Not rsPremiacoesPagas.EOF
+    mes = CInt(rsPremiacoesPagas("MesVenda"))
+    premiacoesPagas(mes) = CDbl(rsPremiacoesPagas("PremiacaoPaga"))
+    rsPremiacoesPagas.MoveNext
+Loop
+rsPremiacoesPagas.Close
+Set rsPremiacoesPagas = Nothing
+
+' DEBUG: Verificar dados da premiação total
+Response.Write "<!-- DEBUG: Dados da premiação total -->"
+Do While Not rsPremiacaoTotal.EOF
+    mes = CInt(rsPremiacaoTotal("MesVenda"))
+    premiacaoTotal(mes) = CDbl(rsPremiacaoTotal("PremiacaoTotal"))
+    Response.Write "<!-- Mes " & mes & ": " & premiacaoTotal(mes) & " -->"
+    rsPremiacaoTotal.MoveNext
+Loop
+rsPremiacaoTotal.Close
+Set rsPremiacaoTotal = Nothing
+
+' Se não encontrou dados de premiação total, usar as premiações pagas como base
+If totalPremiacao = 0 Then
+    For i = 1 To 12
+        If premiacoesPagas(i) > 0 Then
+            premiacaoTotal(i) = premiacoesPagas(i)
+            Response.Write "<!-- Usando premiação paga como total para mês " & i & ": " & premiacoesPagas(i) & " -->"
+        End If
+    Next
+End If
+
 ' Calcular totais
-Dim totalVGV, totalComissao, totalDesconto, totalComissaoLiquida, totalPaga, totalAPagar
+Dim totalVGV, totalComissaoBruta, totalDesconto, totalComissaoLiquida
+Dim totalComissaoPaga, totalComissaoAPagar
+Dim totalPremiacao, totalPremiacaoPaga, totalPremiacaoAPagar
+Dim totalPago, totalAPagar
+
 totalVGV = 0
-totalComissao = 0
+totalComissaoBruta = 0
 totalDesconto = 0
 totalComissaoLiquida = 0
-totalPaga = 0
+totalComissaoPaga = 0
+totalComissaoAPagar = 0
+totalPremiacao = 0
+totalPremiacaoPaga = 0
+totalPremiacaoAPagar = 0
+totalPago = 0
 totalAPagar = 0
 %>
 
@@ -188,6 +334,16 @@ totalAPagar = 0
             font-weight: 600;
         }
         
+        .valor-premiacao {
+            color: #9b59b6;
+            font-weight: 600;
+        }
+        
+        .valor-total {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        
         .btn-refresh {
             background-color: #fd7e14;
             border-color: #fd7e14;
@@ -202,42 +358,73 @@ totalAPagar = 0
             padding: 0.25rem 0.5rem;
         }
         
-        .badge-pago {
-            background-color: #28a745;
+        .section-comissao {
+            border-left: 4px solid #3498db;
+            background: linear-gradient(to right, #3498db, #2980b9);
             color: white;
-        }
-        
-        .badge-pendente {
-            background-color: #fd7e14;
-            color: white;
-        }
-        
-        .table-warning {
-            background-color: #fff3cd !important;
-        }
-        
-        .table-success {
-            background-color: #d1e7dd !important;
-        }
-        
-        .mes-header {
-            background-color: #e9ecef !important;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
             font-weight: bold;
-            font-size: 1.1em;
         }
         
-        .filter-row {
-            margin-bottom: 1rem;
+        .section-premiacao {
+            border-left: 4px solid #9b59b6;
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-weight: bold;
         }
         
-        .info-badge {
-            font-size: 0.75rem;
-            padding: 0.2rem 0.4rem;
+        .section-total {
+            border-left: 4px solid #2c3e50;
+            background: linear-gradient(to right, #2c3e50, #34495e);
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-weight: bold;
         }
-        
-        .desconto-info {
-            font-size: 0.8rem;
+
+        .info-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+            height: 100%;
+        }
+
+        .info-card-premiacao {
+            border-left: 4px solid #9b59b6;
+        }
+
+        .info-card-total {
+            border-left: 4px solid #2c3e50;
+        }
+
+        .info-card h6 {
             color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card h4 {
+            color: #2c3e50;
+            margin-bottom: 0;
+            font-weight: 700;
+        }
+        
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #856404;
         }
     </style>
 </head>
@@ -247,7 +434,7 @@ totalAPagar = 0
             <div class="row align-items-center">
                 <div class="col-md-6">
                     <h1 style="color: #ffffff !important; margin: 0; font-size: 20px;">
-                        <i class="fas fa-money-bill-wave me-2"></i> Resumo de Comissões
+                        <i class="fas fa-money-bill-wave me-2"></i> Resumo de Comissões e Premiações
                     </h1>
                 </div>
                 <div class="col-md-6 text-end">
@@ -332,6 +519,34 @@ totalAPagar = 0
             </div>
         </div>
 
+        <!-- Cards de Resumo Rápido -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="info-card">
+                    <h6><i class="fas fa-chart-line me-2"></i>VGV Total</h6>
+                    <h4 class="valor-positivo"><%= FormatNumber(totalVGV, 2) %></h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-card">
+                    <h6><i class="fas fa-money-bill-wave me-2"></i>Comissão Líquida</h6>
+                    <h4 class="valor-liquido"><%= FormatNumber(totalComissaoLiquida, 2) %></h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-card info-card-premiacao">
+                    <h6><i class="fas fa-trophy me-2"></i>Premiação Total</h6>
+                    <h4 class="valor-premiacao"><%= FormatNumber(totalPremiacao, 2) %></h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-card info-card-total">
+                    <h6><i class="fas fa-hand-holding-usd me-2"></i>Total a Pagar</h6>
+                    <h4 class="valor-pendente"><%= FormatNumber(totalAPagar, 2) %></h4>
+                </div>
+            </div>
+        </div>
+
         <!-- Primeira Tabela - Resumo por Mês -->
         <div class="card">
             <div class="card-header">
@@ -344,48 +559,98 @@ totalAPagar = 0
                             <tr>
                                 <th>Ano</th>
                                 <th>Mês</th>
-                                <th>VGV (R$)</th>
-                                <th>Comissão Bruta (R$)</th>
-                                <th>Desconto Trib. (R$)</th>
-                                <th>Comissão Líquida (R$)</th>
-                                <th>Comissão Paga (R$)</th>
-                                <th>Comissão a Pagar (R$)</th>
-                                <th>Status</th>
+                                <th>VGV</th>
+                                
+                                <!-- Seção Comissão -->
+                                <th colspan="5" class="text-center section-comissao">
+                                    <i class="fas fa-money-bill-wave me-2"></i>COMISSÃO
+                                </th>
+                                
+                                <!-- Seção Premiação -->
+                                <th colspan="3" class="text-center section-premiacao">
+                                    <i class="fas fa-trophy me-2"></i>PREMAIAÇÃO
+                                </th>
+                                
+                                <!-- Seção Total -->
+                                <th colspan="2" class="text-center section-total">
+                                    <i class="fas fa-calculator me-2"></i>TOTAL
+                                </th>
+                                
                                 <th>Ações</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                
+                                <!-- Subheaders Comissão -->
+                                <th>Bruta</th>
+                                <th>Desc. Trib.</th>
+                                <th>Líquida</th>
+                                <th>Paga</th>
+                                <th>a Pagar</th>
+                                
+                                <!-- Subheaders Premiação -->
+                                <th>Total</th>
+                                <th>Paga</th>
+                                <th>a Pagar</th>
+                                
+                                <!-- Subheaders Total -->
+                                <th>Pago</th>
+                                <th>a Pagar</th>
+                                
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             <%
                             If Not rsResumo.EOF Then
                                 Do While Not rsResumo.EOF
-                                    Dim comissaoPagaMes, comissaoAPagarMes, comissaoLiquidaMes
+                                    Dim comissaoPagaMes, premiacaoPagaMes, premiacaoTotalMes
+                                    Dim totalPagoMes, comissaoAPagarMes, premiacaoAPagarMes, totalAPagarMes
+                                    Dim comissaoLiquidaMes
+                                    
                                     mes = CInt(rsResumo("MesVenda"))
                                     
                                     ' Verificar se existe valor pago para este mês
                                     comissaoPagaMes = comissoesPagas(mes)
+                                    premiacaoPagaMes = premiacoesPagas(mes)
+                                    premiacaoTotalMes = premiacaoTotal(mes)
+                                    
+                                    ' CORREÇÃO: Se premiação total for 0 mas tem premiação paga, usar premiação paga como total
+                                    If premiacaoTotalMes = 0 And premiacaoPagaMes > 0 Then
+                                        premiacaoTotalMes = premiacaoPagaMes
+                                    End If
+                                    
+                                    totalPagoMes = comissaoPagaMes + premiacaoPagaMes
                                     comissaoLiquidaMes = CDbl(rsResumo("ComissaoLiquida"))
                                     comissaoAPagarMes = comissaoLiquidaMes - comissaoPagaMes
+                                    premiacaoAPagarMes = premiacaoTotalMes - premiacaoPagaMes
+                                    totalAPagarMes = comissaoAPagarMes + premiacaoAPagarMes
                                     
                                     ' Garantir que valores não fiquem negativos
                                     If comissaoAPagarMes < 0 Then comissaoAPagarMes = 0
+                                    If premiacaoAPagarMes < 0 Then premiacaoAPagarMes = 0
+                                    If totalAPagarMes < 0 Then totalAPagarMes = 0
                                     
+                                    ' Acumular totais
                                     totalVGV = totalVGV + CDbl(rsResumo("VGV"))
-                                    totalComissao = totalComissao + CDbl(rsResumo("ComissaoTotal"))
+                                    totalComissaoBruta = totalComissaoBruta + CDbl(rsResumo("ComissaoTotal"))
                                     totalDesconto = totalDesconto + CDbl(rsResumo("TotalDesconto"))
                                     totalComissaoLiquida = totalComissaoLiquida + comissaoLiquidaMes
-                                    totalPaga = totalPaga + comissaoPagaMes
-                                    totalAPagar = totalAPagar + comissaoAPagarMes
+                                    totalComissaoPaga = totalComissaoPaga + comissaoPagaMes
+                                    totalComissaoAPagar = totalComissaoAPagar + comissaoAPagarMes
                                     
-                                    Dim nomeMes, statusComissao, badgeStatus
+                                    ' CORREÇÃO: Acumular corretamente a premiação total
+                                    totalPremiacao = totalPremiacao + premiacaoTotalMes
+                                    totalPremiacaoPaga = totalPremiacaoPaga + premiacaoPagaMes
+                                    totalPremiacaoAPagar = totalPremiacaoAPagar + premiacaoAPagarMes
+                                    
+                                    totalPago = totalPago + totalPagoMes
+                                    totalAPagar = totalAPagar + totalAPagarMes
+                                    
+                                    Dim nomeMes
                                     nomeMes = GetNomeMes(mes)
-                                    
-                                    If comissaoAPagarMes <= 0 Then
-                                        statusComissao = "PAGA"
-                                        badgeStatus = "badge-pago"
-                                    Else
-                                        statusComissao = "PENDENTE"
-                                        badgeStatus = "badge-pendente"
-                                    End If
                             %>
                             <tr>
                                 <td><strong><%= rsResumo("AnoVenda") %></strong></td>
@@ -393,22 +658,26 @@ totalAPagar = 0
                                     <strong><%= nomeMes %></strong>
                                     <br><small class="text-muted">(<%= Right("0" & rsResumo("MesVenda"), 2) %>)</small>
                                 </td>
-                                <td class="valor-positivo" data-order="<%= rsResumo("VGV") %>">R$ <%= FormatNumber(rsResumo("VGV"), 2) %></td>
-                                <td class="valor-positivo" data-order="<%= rsResumo("ComissaoTotal") %>">R$ <%= FormatNumber(rsResumo("ComissaoTotal"), 2) %></td>
+                                <td class="valor-positivo" data-order="<%= rsResumo("VGV") %>"><%= FormatNumber(rsResumo("VGV"), 2) %></td>
+                                
+                                <!-- Dados Comissão -->
+                                <td class="valor-positivo" data-order="<%= rsResumo("ComissaoTotal") %>"><%= FormatNumber(rsResumo("ComissaoTotal"), 2) %></td>
                                 <td class="valor-desconto" data-order="<%= rsResumo("TotalDesconto") %>">
-                                    R$ <%= FormatNumber(rsResumo("TotalDesconto"), 2) %>
-                                    <% If CDbl(rsResumo("TotalDesconto")) > 0 Then %>
-                                    <br><small class="desconto-info"><i class="fas fa-info-circle"></i> <%= FormatNumber((rsResumo("TotalDesconto")/rsResumo("ComissaoTotal"))*100, 1) %>%</small>
-                                    <% End If %>
+                                    <%= FormatNumber(rsResumo("TotalDesconto"), 2) %>
                                 </td>
-                                <td class="valor-liquido" data-order="<%= comissaoLiquidaMes %>">R$ <%= FormatNumber(comissaoLiquidaMes, 2) %></td>
-                                <td class="valor-positivo" data-order="<%= comissaoPagaMes %>">R$ <%= FormatNumber(comissaoPagaMes, 2) %></td>
-                                <td class="valor-pendente" data-order="<%= comissaoAPagarMes %>">R$ <%= FormatNumber(comissaoAPagarMes, 2) %></td>
-                                <td data-order="<%= statusComissao %>">
-                                    <span class="badge <%= badgeStatus %>">
-                                        <%= statusComissao %>
-                                    </span>
-                                </td>
+                                <td class="valor-liquido" data-order="<%= comissaoLiquidaMes %>"><%= FormatNumber(comissaoLiquidaMes, 2) %></td>
+                                <td class="valor-positivo" data-order="<%= comissaoPagaMes %>"><%= FormatNumber(comissaoPagaMes, 2) %></td>
+                                <td class="valor-pendente" data-order="<%= comissaoAPagarMes %>"><%= FormatNumber(comissaoAPagarMes, 2) %></td>
+                                
+                                <!-- Dados Premiação -->
+                                <td class="valor-premiacao" data-order="<%= premiacaoTotalMes %>"><%= FormatNumber(premiacaoTotalMes, 2) %></td>
+                                <td class="valor-premiacao" data-order="<%= premiacaoPagaMes %>"><%= FormatNumber(premiacaoPagaMes, 2) %></td>
+                                <td class="valor-pendente" data-order="<%= premiacaoAPagarMes %>"><%= FormatNumber(premiacaoAPagarMes, 2) %></td>
+                                
+                                <!-- Dados Total -->
+                                <td class="valor-positivo" data-order="<%= totalPagoMes %>"><%= FormatNumber(totalPagoMes, 2) %></td>
+                                <td class="valor-pendente" data-order="<%= totalAPagarMes %>"><%= FormatNumber(totalAPagarMes, 2) %></td>
+                                
                                 <td>
                                     <a href="gestao_vendas_comissao_detalhes3.asp?ano=<%= rsResumo("AnoVenda") %>&mes=<%= rsResumo("MesVenda") %>" 
                                        class="btn btn-detalhes" 
@@ -423,7 +692,7 @@ totalAPagar = 0
                             Else
                             %>
                             <tr>
-                                <td colspan="10" class="text-center py-4">
+                                <td colspan="15" class="text-center py-4">
                                     <div class="alert alert-info mb-0">
                                         <i class="fas fa-info-circle me-2"></i>Nenhum dado encontrado para o filtro aplicado.
                                     </div>
@@ -431,313 +700,29 @@ totalAPagar = 0
                             </tr>
                             <%
                             End If
-                            rsResumo.Close
-                            Set rsResumo = Nothing
                             %>
                         </tbody>
                         <tfoot>
                             <tr class="table-light">
                                 <th colspan="2" class="text-end">Totais:</th>
-                                <th class="valor-positivo">R$ <%= FormatNumber(totalVGV, 2) %></th>
-                                <th class="valor-positivo">R$ <%= FormatNumber(totalComissao, 2) %></th>
-                                <th class="valor-desconto">R$ <%= FormatNumber(totalDesconto, 2) %></th>
-                                <th class="valor-liquido">R$ <%= FormatNumber(totalComissaoLiquida, 2) %></th>
-                                <th class="valor-positivo">R$ <%= FormatNumber(totalPaga, 2) %></th>
-                                <th class="valor-pendente">R$ <%= FormatNumber(totalAPagar, 2) %></th>
-                                <th>
-                                    <span class="badge <% If totalAPagar = 0 Then Response.Write "badge-pago" Else Response.Write "badge-pendente" End If %>">
-                                        <% If totalAPagar = 0 Then Response.Write "PAGA" Else Response.Write "PENDENTE" End If %>
-                                    </span>
-                                </th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Segunda Tabela - Resumo por Diretoria e Mês -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-building me-2"></i>Resumo por Diretoria e Mês - <%= tituloFiltro %></h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table id="tabelaDiretoria" class="table table-hover" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th>Ano</th>
-                                <th>Mês</th>
-                                <th>Diretoria</th>
-                                <th>VGV (R$)</th>
-                                <th>Comissão Bruta (R$)</th>
-                                <th>Desconto Trib. (R$)</th>
-                                <th>Comissão Líquida (R$)</th>
-                                <th>Comissão Paga (R$)</th>
-                                <th>Comissão a Pagar (R$)</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <%
-                            ' Buscar dados por mês e diretoria
-                            Set rsDiretoria = Server.CreateObject("ADODB.Recordset")
-                            
-                            sqlDiretoria = "SELECT " & _
-                                          "AnoVenda, " & _
-                                          "MesVenda, " & _
-                                          "Diretoria, " & _
-                                          "SUM(ValorUnidade) as VGV, " & _
-                                          "SUM(ValorDiretoria + ValorGerencia + ValorCorretor) as ComissaoTotal, " & _
-                                          "SUM(DescontoBruto) as TotalDesconto, " & _
-                                          "SUM(ValorLiqGeral) as ComissaoLiquida " & _
-                                          "FROM Vendas " & _
-                                          sqlWhere & " " & _
-                                          "GROUP BY AnoVenda, MesVenda, Diretoria " & _
-                                          "ORDER BY AnoVenda DESC, MesVenda DESC, Diretoria"
-                            
-                            rsDiretoria.Open sqlDiretoria, connSales
-                            
-                            ' Buscar comissões pagas por mês e diretoria
-                            Set rsComissoesPagasDiretoria = Server.CreateObject("ADODB.Recordset")
-                            sqlComissoesPagasDiretoria = "SELECT " & _
-                                                       "V.AnoVenda, " & _
-                                                       "V.MesVenda, " & _
-                                                       "V.Diretoria, " & _
-                                                       "SUM(PC.ValorPago) as ComissaoPaga " & _
-                                                       "FROM Vendas V " & _
-                                                       "INNER JOIN PAGAMENTOS_COMISSOES PC ON V.ID = PC.ID_Venda " & _
-                                                       "WHERE (V.Excluido <> -1 OR V.Excluido IS NULL) " & _
-                                                       "AND V.AnoVenda = " & anoSelecionado
-
-                            If mesSelecionado <> "0" Then
-                                sqlComissoesPagasDiretoria = sqlComissoesPagasDiretoria & " AND V.MesVenda = " & mesSelecionado
-                            End If
-
-                            sqlComissoesPagasDiretoria = sqlComissoesPagasDiretoria & " GROUP BY V.AnoVenda, V.MesVenda, V.Diretoria"
-                            
-                            rsComissoesPagasDiretoria.Open sqlComissoesPagasDiretoria, connSales
-                            
-                            ' Criar array para comissões pagas por mês e diretoria
-                            Dim comissoesPagasDiretoria()
-                            ReDim comissoesPagasDiretoria(12, 10) ' meses x diretorias
-                            
-                            ' Inicializar array
-                            For i = 1 To 12
-                                For j = 1 To 10
-                                    comissoesPagasDiretoria(i, j) = 0
-                                Next
-                            Next
-                            
-                            ' Mapear diretorias para índices
-                            Dim diretorias, diretoriaIndex
-                            Set diretorias = Server.CreateObject("Scripting.Dictionary")
-                            diretoriaIndex = 1
-                            
-                            Do While Not rsComissoesPagasDiretoria.EOF
-                                mes = CInt(rsComissoesPagasDiretoria("MesVenda"))
-                                diretoria = rsComissoesPagasDiretoria("Diretoria")
+                                <th class="valor-positivo"><%= FormatNumber(totalVGV, 2) %></th>
                                 
-                                If Not diretorias.Exists(diretoria) Then
-                                    diretorias.Add diretoria, diretoriaIndex
-                                    diretoriaIndex = diretoriaIndex + 1
-                                End If
+                                <!-- Totais Comissão -->
+                                <th class="valor-positivo"><%= FormatNumber(totalComissaoBruta, 2) %></th>
+                                <th class="valor-desconto"><%= FormatNumber(totalDesconto, 2) %></th>
+                                <th class="valor-liquido"><%= FormatNumber(totalComissaoLiquida, 2) %></th>
+                                <th class="valor-positivo"><%= FormatNumber(totalComissaoPaga, 2) %></th>
+                                <th class="valor-pendente"><%= FormatNumber(totalComissaoAPagar, 2) %></th>
                                 
-                                idx = diretorias(diretoria)
-                                comissoesPagasDiretoria(mes, idx) = CDbl(rsComissoesPagasDiretoria("ComissaoPaga"))
-                                rsComissoesPagasDiretoria.MoveNext
-                            Loop
-                            rsComissoesPagasDiretoria.Close
-                            Set rsComissoesPagasDiretoria = Nothing
-                            
-                            ' Variáveis para totais
-                            Dim totalGeralVGV, totalGeralComissao, totalGeralDesconto, totalGeralLiquida, totalGeralPaga, totalGeralAPagar
-                            Dim totalMesVGV, totalMesComissao, totalMesDesconto, totalMesLiquida, totalMesPaga, totalMesAPagar
-                            Dim mesAnterior, primeiroRegistro
-                            
-                            totalGeralVGV = 0
-                            totalGeralComissao = 0
-                            totalGeralDesconto = 0
-                            totalGeralLiquida = 0
-                            totalGeralPaga = 0
-                            totalGeralAPagar = 0
-                            
-                            If Not rsDiretoria.EOF Then
-                                mesAnterior = rsDiretoria("MesVenda")
-                                primeiroRegistro = True
-                                totalMesVGV = 0
-                                totalMesComissao = 0
-                                totalMesDesconto = 0
-                                totalMesLiquida = 0
-                                totalMesPaga = 0
-                                totalMesAPagar = 0
+                                <!-- Totais Premiação -->
+                                <th class="valor-premiacao"><%= FormatNumber(totalPremiacao, 2) %></th>
+                                <th class="valor-premiacao"><%= FormatNumber(totalPremiacaoPaga, 2) %></th>
+                                <th class="valor-pendente"><%= FormatNumber(totalPremiacaoAPagar, 2) %></th>
                                 
-                                Do While Not rsDiretoria.EOF
-                                    Dim comissaoPagaDiretoria, comissaoAPagarDiretoria, comissaoLiquidaDiretoria
-                                    mes = CInt(rsDiretoria("MesVenda"))
-                                    diretoria = rsDiretoria("Diretoria")
-                                    
-                                    ' Verificar se é um novo mês
-                                    If mes <> mesAnterior And Not primeiroRegistro Then
-                                        ' Adicionar linha de total do mês anterior
-                            %>
-                            <tr class="table-warning">
-                                <td colspan="3" class="text-end fw-bold">Total <%= GetNomeMes(mesAnterior) %>:</td>
-                                <td class="fw-bold valor-positivo">R$ <%= FormatNumber(totalMesVGV, 2) %></td>
-                                <td class="fw-bold valor-positivo">R$ <%= FormatNumber(totalMesComissao, 2) %></td>
-                                <td class="fw-bold valor-desconto">R$ <%= FormatNumber(totalMesDesconto, 2) %></td>
-                                <td class="fw-bold valor-liquido">R$ <%= FormatNumber(totalMesLiquida, 2) %></td>
-                                <td class="fw-bold valor-positivo">R$ <%= FormatNumber(totalMesPaga, 2) %></td>
-                                <td class="fw-bold valor-pendente">R$ <%= FormatNumber(totalMesAPagar, 2) %></td>
-                                <td>
-                                    <span class="badge <% If totalMesAPagar = 0 Then Response.Write "badge-pago" Else Response.Write "badge-pendente" End If %>">
-                                        <% If totalMesAPagar = 0 Then Response.Write "PAGA" Else Response.Write "PENDENTE" End If %>
-                                    </span>
-                                </td>
-                                <td></td>
-                            </tr>
-                            <%
-                                        ' Reiniciar totais do mês
-                                        totalMesVGV = 0
-                                        totalMesComissao = 0
-                                        totalMesDesconto = 0
-                                        totalMesLiquida = 0
-                                        totalMesPaga = 0
-                                        totalMesAPagar = 0
-                                        mesAnterior = mes
-                                    End If
-                                    
-                                    ' Calcular comissões para esta linha
-                                    If diretorias.Exists(diretoria) Then
-                                        idx = diretorias(diretoria)
-                                        comissaoPagaDiretoria = comissoesPagasDiretoria(mes, idx)
-                                    Else
-                                        comissaoPagaDiretoria = 0
-                                    End If
-                                    
-                                    comissaoLiquidaDiretoria = CDbl(rsDiretoria("ComissaoLiquida"))
-                                    comissaoAPagarDiretoria = comissaoLiquidaDiretoria - comissaoPagaDiretoria
-                                    
-                                    ' Garantir que valores não fiquem negativos
-                                    If comissaoAPagarDiretoria < 0 Then comissaoAPagarDiretoria = 0
-                                    
-                                    ' Acumular totais
-                                    totalMesVGV = totalMesVGV + CDbl(rsDiretoria("VGV"))
-                                    totalMesComissao = totalMesComissao + CDbl(rsDiretoria("ComissaoTotal"))
-                                    totalMesDesconto = totalMesDesconto + CDbl(rsDiretoria("TotalDesconto"))
-                                    totalMesLiquida = totalMesLiquida + comissaoLiquidaDiretoria
-                                    totalMesPaga = totalMesPaga + comissaoPagaDiretoria
-                                    totalMesAPagar = totalMesAPagar + comissaoAPagarDiretoria
-                                    
-                                    totalGeralVGV = totalGeralVGV + CDbl(rsDiretoria("VGV"))
-                                    totalGeralComissao = totalGeralComissao + CDbl(rsDiretoria("ComissaoTotal"))
-                                    totalGeralDesconto = totalGeralDesconto + CDbl(rsDiretoria("TotalDesconto"))
-                                    totalGeralLiquida = totalGeralLiquida + comissaoLiquidaDiretoria
-                                    totalGeralPaga = totalGeralPaga + comissaoPagaDiretoria
-                                    totalGeralAPagar = totalGeralAPagar + comissaoAPagarDiretoria
-                                    
-                                    Dim nomeMesDiretoria, statusComissaoDiretoria, badgeStatusDiretoria
-                                    nomeMesDiretoria = GetNomeMes(mes)
-                                    
-                                    If comissaoAPagarDiretoria <= 0 Then
-                                        statusComissaoDiretoria = "PAGA"
-                                        badgeStatusDiretoria = "badge-pago"
-                                    Else
-                                        statusComissaoDiretoria = "PENDENTE"
-                                        badgeStatusDiretoria = "badge-pendente"
-                                    End If
-                            %>
-                            <tr>
-                                <td><strong><%= rsDiretoria("AnoVenda") %></strong></td>
-                                <td data-order="<%= rsDiretoria("MesVenda") %>">
-                                    <strong><%= nomeMesDiretoria %></strong>
-                                    <br><small class="text-muted">(<%= Right("0" & rsDiretoria("MesVenda"), 2) %>)</small>
-                                </td>
-                                <td class="fw-bold text-primary"><%= diretoria %></td>
-                                <td class="valor-positivo" data-order="<%= rsDiretoria("VGV") %>">R$ <%= FormatNumber(rsDiretoria("VGV"), 2) %></td>
-                                <td class="valor-positivo" data-order="<%= rsDiretoria("ComissaoTotal") %>">R$ <%= FormatNumber(rsDiretoria("ComissaoTotal"), 2) %></td>
-                                <td class="valor-desconto" data-order="<%= rsDiretoria("TotalDesconto") %>">
-                                    R$ <%= FormatNumber(rsDiretoria("TotalDesconto"), 2) %>
-                                    <% If CDbl(rsDiretoria("TotalDesconto")) > 0 Then %>
-                                    <br><small class="desconto-info"><i class="fas fa-info-circle"></i> <%= FormatNumber((rsDiretoria("TotalDesconto")/rsDiretoria("ComissaoTotal"))*100, 1) %>%</small>
-                                    <% End If %>
-                                </td>
-                                <td class="valor-liquido" data-order="<%= comissaoLiquidaDiretoria %>">R$ <%= FormatNumber(comissaoLiquidaDiretoria, 2) %></td>
-                                <td class="valor-positivo" data-order="<%= comissaoPagaDiretoria %>">R$ <%= FormatNumber(comissaoPagaDiretoria, 2) %></td>
-                                <td class="valor-pendente" data-order="<%= comissaoAPagarDiretoria %>">R$ <%= FormatNumber(comissaoAPagarDiretoria, 2) %></td>
-                                <td data-order="<%= statusComissaoDiretoria %>">
-                                    <span class="badge <%= badgeStatusDiretoria %>">
-                                        <%= statusComissaoDiretoria %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="gestao_vendas_comissao_detalhes3.asp?ano=<%= rsDiretoria("AnoVenda") %>&mes=<%= rsDiretoria("MesVenda") %>&diretoria=<%= Server.URLEncode(diretoria) %>" 
-                                       class="btn btn-detalhes" 
-                                       title="Ver detalhes da diretoria" target="_blank">
-                                        <i class="fas fa-search me-1"></i>Detalhes
-                                    </a>
-                                </td>
-                            </tr>
-                            <%
-                                    primeiroRegistro = False
-                                    rsDiretoria.MoveNext
-                                    
-                                    ' Se é o último registro, adicionar o total do último mês
-                                    If rsDiretoria.EOF Then
-                            %>
-                            <tr class="table-warning">
-                                <td colspan="3" class="text-end fw-bold">Total <%= GetNomeMes(mesAnterior) %>:</td>
-                                <td class="fw-bold valor-positivo">R$ <%= FormatNumber(totalMesVGV, 2) %></td>
-                                <td class="fw-bold valor-positivo">R$ <%= FormatNumber(totalMesComissao, 2) %></td>
-                                <td class="fw-bold valor-desconto">R$ <%= FormatNumber(totalMesDesconto, 2) %></td>
-                                <td class="fw-bold valor-liquido">R$ <%= FormatNumber(totalMesLiquida, 2) %></td>
-                                <td class="fw-bold valor-positivo">R$ <%= FormatNumber(totalMesPaga, 2) %></td>
-                                <td class="fw-bold valor-pendente">R$ <%= FormatNumber(totalMesAPagar, 2) %></td>
-                                <td>
-                                    <span class="badge <% If totalMesAPagar = 0 Then Response.Write "badge-pago" Else Response.Write "badge-pendente" End If %>">
-                                        <% If totalMesAPagar = 0 Then Response.Write "PAGA" Else Response.Write "PENDENTE" End If %>
-                                    </span>
-                                </td>
-                                <td></td>
-                            </tr>
-                            <%
-                                    End If
-                                Loop
-                            Else
-                            %>
-                            <tr>
-                                <td colspan="11" class="text-center py-4">
-                                    <div class="alert alert-info mb-0">
-                                        <i class="fas fa-info-circle me-2"></i>Nenhum dado encontrado para o filtro aplicado.
-                                    </div>
-                                </td>
-                            </tr>
-                            <%
-                            End If
-                            
-                            ' Fechar recordset da diretoria
-                            If IsObject(rsDiretoria) Then
-                                If rsDiretoria.State = 1 Then rsDiretoria.Close
-                                Set rsDiretoria = Nothing
-                            End If
-                            %>
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-success">
-                                <th colspan="3" class="text-end fw-bold">Total Geral:</th>
-                                <th class="fw-bold valor-positivo">R$ <%= FormatNumber(totalGeralVGV, 2) %></th>
-                                <th class="fw-bold valor-positivo">R$ <%= FormatNumber(totalGeralComissao, 2) %></th>
-                                <th class="fw-bold valor-desconto">R$ <%= FormatNumber(totalGeralDesconto, 2) %></th>
-                                <th class="fw-bold valor-liquido">R$ <%= FormatNumber(totalGeralLiquida, 2) %></th>
-                                <th class="fw-bold valor-positivo">R$ <%= FormatNumber(totalGeralPaga, 2) %></th>
-                                <th class="fw-bold valor-pendente">R$ <%= FormatNumber(totalGeralAPagar, 2) %></th>
-                                <th>
-                                    <span class="badge <% If totalGeralAPagar = 0 Then Response.Write "badge-pago" Else Response.Write "badge-pendente" End If %>">
-                                        <% If totalGeralAPagar = 0 Then Response.Write "PAGA" Else Response.Write "PENDENTE" End If %>
-                                    </span>
-                                </th>
+                                <!-- Totais Gerais -->
+                                <th class="valor-positivo"><%= FormatNumber(totalPago, 2) %></th>
+                                <th class="valor-pendente"><%= FormatNumber(totalAPagar, 2) %></th>
+                                
                                 <th></th>
                             </tr>
                         </tfoot>
@@ -768,27 +753,7 @@ totalAPagar = 0
                     type: 'num'
                 },
                 { 
-                    targets: [2, 3, 4, 5, 6, 7],
-                    type: 'num'
-                }
-            ]
-        });
-
-        $('#tabelaDiretoria').DataTable({
-            language: {
-                url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
-            },
-            pageLength: 50,
-            order: [[0, 'desc'], [1, 'asc'], [2, 'asc']],
-            responsive: true,
-            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
-            columnDefs: [
-                { 
-                    targets: [1],
-                    type: 'num'
-                },
-                { 
-                    targets: [3, 4, 5, 6, 7, 8],
+                    targets: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                     type: 'num'
                 }
             ]
@@ -818,6 +783,11 @@ Function GetNomeMes(mes)
 End Function
 
 ' Fechar conexões
+If IsObject(rsResumo) Then
+    If rsResumo.State = 1 Then rsResumo.Close
+    Set rsResumo = Nothing
+End If
+
 If Not connSales Is Nothing Then
     connSales.Close
     Set connSales = Nothing

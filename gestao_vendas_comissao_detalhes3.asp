@@ -8,7 +8,7 @@
     <!--#include file="conSunSales.asp"-->
 <%End If%>
 
-<% ' funcional tentando incluir premiacao'
+<%
 Response.Buffer = True
 Response.Expires = -1
 Response.CodePage = 65001
@@ -18,16 +18,17 @@ Response.Charset = "utf-8"
 Dim anoDetalhe, mesDetalhe
 anoDetalhe = Request.QueryString("ano")
 mesDetalhe = Request.QueryString("mes")
-diretoriaDetalhe =Request.QueryString("diretoria")
-if diretoriaDetalhe = "" then
-    vWhere = " WHERE 1=1 AND "
-else
-    vWhere = " WHERE V.diretoria = '" & diretoriaDetalhe & "' AND "   
-end if    
+diretoriaDetalhe = Request.QueryString("diretoria")
 
 If anoDetalhe = "" Or mesDetalhe = "" Then
     Response.Redirect "gestao_vendas_comissao_saldo2.asp"
 End If
+
+If diretoriaDetalhe = "" Then
+    vWhere = " WHERE 1=1 AND "
+Else
+    vWhere = " WHERE V.diretoria = '" & diretoriaDetalhe & "' AND "   
+End If    
 
 Set connSales = Server.CreateObject("ADODB.Connection")
 connSales.Open StrConnSales
@@ -49,9 +50,61 @@ Select Case CInt(mesDetalhe)
     Case 12: nomeMesDetalhe = "Dezembro"
 End Select
 
-' Buscar vendas do mês
+' Primeiro, verificar se existe alguma coluna de premiação
+Dim colunaPremiacao, premiacaoDisponivel
+colunaPremiacao = ""
+premiacaoDisponivel = False
+
+On Error Resume Next
+' Testar colunas possíveis
+Dim colunasTeste
+colunasTeste = Array("Premio", "Premiacao", "ValorPremiacao", "Premiação", "Premiacão", "Bonus", "ValorBonus")
+
+For Each coluna In colunasTeste
+    sqlTest = "SELECT TOP 1 " & coluna & " FROM Vendas"
+    Set rsTest = connSales.Execute(sqlTest)
+    If Err.Number = 0 Then
+        colunaPremiacao = coluna
+        premiacaoDisponivel = True
+        Exit For
+    Else
+        Err.Clear
+    End If
+Next
+
+' Se não encontrou na tabela Vendas, verificar em tabela de premiações separada
+If Not premiacaoDisponivel Then
+    On Error Resume Next
+    sqlTest = "SELECT TOP 1 ID FROM Premiacoes"
+    Set rsTest = connSales.Execute(sqlTest)
+    If Err.Number = 0 Then
+        premiacaoDisponivel = True
+    End If
+    Err.Clear
+End If
+On Error GoTo 0
+
+' Calcular totais ANTES de exibir os cards
+Dim totalVGV, totalComissaoBruta, totalDesconto, totalComissaoLiquida
+Dim totalComissaoPaga, totalPremiacaoPaga, totalPremiacao, totalPremiacaoAPagar
+Dim totalComissaoAPagar, totalPago, totalAPagar
+
+totalVGV = 0
+totalComissaoBruta = 0
+totalDesconto = 0
+totalComissaoLiquida = 0
+totalComissaoPaga = 0
+totalPremiacaoPaga = 0
+totalPremiacao = 0
+totalPremiacaoAPagar = 0
+totalComissaoAPagar = 0
+totalPago = 0
+totalAPagar = 0
+
+' Buscar vendas do mês e calcular totais
 Set rsVendasMes = Server.CreateObject("ADODB.Recordset")
 
+' Construir SQL dinamicamente incluindo premiação
 sqlVendasMes = "SELECT " & _
                "V.ID, " & _
                "V.Empreend_ID, " & _
@@ -71,18 +124,81 @@ sqlVendasMes = "SELECT " & _
                "V.NomeGerente, " & _
                "V.DescontoBruto, " & _
                "V.ValorLiqGeral, " & _
-               "(V.ValorDiretoria + V.ValorGerencia + V.ValorCorretor) as ComissaoBruta " & _
+               "(V.ValorDiretoria + V.ValorGerencia + V.ValorCorretor) as ComissaoBruta "
+
+' Adicionar coluna de premiação se disponível na tabela Vendas
+If premiacaoDisponivel And colunaPremiacao <> "" Then
+    sqlVendasMes = sqlVendasMes & ", ISNULL(V." & colunaPremiacao & ", 0) as Premio "
+Else
+    ' Tentar buscar de tabela separada de premiações
+    On Error Resume Next
+    sqlTest = "SELECT TOP 1 P.ValorPremiacao FROM Premiacoes P INNER JOIN Vendas V ON P.ID_Venda = V.ID"
+    Set rsTest = connSales.Execute(sqlTest)
+    If Err.Number = 0 Then
+        sqlVendasMes = "SELECT " & _
+               "V.ID, " & _
+               "V.Empreend_ID, " & _
+               "V.NomeEmpreendimento, " & _
+               "V.Unidade, " & _
+               "V.ValorUnidade, " & _
+               "V.DataVenda, " & _
+               "V.Corretor, " & _
+               "V.Diretoria, " & _
+               "V.Gerencia, " & _
+               "V.ComissaoPercentual, " & _
+               "V.ValorComissaoGeral, " & _
+               "V.ValorDiretoria, " & _
+               "V.ValorGerencia, " & _
+               "V.ValorCorretor, " & _
+               "V.NomeDiretor, " & _
+               "V.NomeGerente, " & _
+               "V.DescontoBruto, " & _
+               "V.ValorLiqGeral, " & _
+               "(V.ValorDiretoria + V.ValorGerencia + V.ValorCorretor) as ComissaoBruta, " & _
+               "ISNULL(P.ValorPremiacao, 0) as Premio " & _
                "FROM Vendas V " & _
-                vWhere & " V.AnoVenda = " & anoDetalhe & " " & _
+               "LEFT JOIN Premiacoes P ON V.ID = P.ID_Venda " & _
+               vWhere & " V.AnoVenda = " & anoDetalhe & " " & _
                "AND V.MesVenda = " & mesDetalhe & " " & _
                "AND (V.Excluido <> -1 OR V.Excluido IS NULL) " & _
                "ORDER BY V.DataVenda DESC, V.ID DESC"
-               'Response.Write sqlVendasMes
-               'Response.end 
+        premiacaoDisponivel = True
+    Else
+        sqlVendasMes = sqlVendasMes & ", 0 as Premio "
+        premiacaoDisponivel = False
+    End If
+    Err.Clear
+    On Error GoTo 0
+End If
+
+' Se não foi modificada acima, completar a SQL original
+If InStr(sqlVendasMes, "FROM Vendas V") = 0 Then
+    sqlVendasMes = sqlVendasMes & "FROM Vendas V " & _
+                    vWhere & " V.AnoVenda = " & anoDetalhe & " " & _
+                   "AND V.MesVenda = " & mesDetalhe & " " & _
+                   "AND (V.Excluido <> -1 OR V.Excluido IS NULL) " & _
+                   "ORDER BY V.DataVenda DESC, V.ID DESC"
+End If
 
 rsVendasMes.Open sqlVendasMes, connSales
 
-' Buscar pagamentos de comissões do mês
+' Calcular totais das vendas
+If Not rsVendasMes.EOF Then
+    Do While Not rsVendasMes.EOF
+        totalVGV = totalVGV + CDbl(rsVendasMes("ValorUnidade"))
+        totalComissaoBruta = totalComissaoBruta + CDbl(rsVendasMes("ComissaoBruta"))
+        totalDesconto = totalDesconto + CDbl(rsVendasMes("DescontoBruto"))
+        totalComissaoLiquida = totalComissaoLiquida + CDbl(rsVendasMes("ValorLiqGeral"))
+        
+        ' Acumular premiação
+        totalPremiacao = totalPremiacao + CDbl(rsVendasMes("Premio"))
+        
+        rsVendasMes.MoveNext
+    Loop
+    rsVendasMes.MoveFirst
+End If
+
+' Buscar pagamentos e calcular totais pagos
 Set rsPagamentosMes = Server.CreateObject("ADODB.Recordset")
 sqlPagamentosMes = "SELECT " & _
                    "PC.ID_Venda, " & _
@@ -103,15 +219,35 @@ sqlPagamentosMes = "SELECT " & _
 
 rsPagamentosMes.Open sqlPagamentosMes, connSales
 
-' Calcular totais
-Dim totalVGV, totalComissaoBruta, totalDesconto, totalComissaoLiquida, totalPago, totalComissaoPaga, totalPremiacaoPaga
-totalVGV = 0
-totalComissaoBruta = 0
-totalDesconto = 0
-totalComissaoLiquida = 0
-totalPago = 0
-totalComissaoPaga = 0
-totalPremiacaoPaga = 0
+' Calcular totais dos pagamentos
+If Not rsPagamentosMes.EOF Then
+    Do While Not rsPagamentosMes.EOF
+        totalPago = totalPago + CDbl(rsPagamentosMes("ValorPago"))
+        
+        ' Acumular totais por tipo de pagamento
+        If UCase(rsPagamentosMes("TipoPagamento")) = "COMISSÃO" Or UCase(rsPagamentosMes("TipoPagamento")) = "COMISSAO" Then
+            totalComissaoPaga = totalComissaoPaga + CDbl(rsPagamentosMes("ValorPago"))
+        ElseIf UCase(rsPagamentosMes("TipoPagamento")) = "PREMIACAO" Or UCase(rsPagamentosMes("TipoPagamento")) = "PREMIAÇÃO" Then
+            totalPremiacaoPaga = totalPremiacaoPaga + CDbl(rsPagamentosMes("ValorPago"))
+        End If
+        rsPagamentosMes.MoveNext
+    Loop
+    rsPagamentosMes.MoveFirst
+End If
+
+' Se premiação total for 0 mas tem premiações pagas, usar como base
+If totalPremiacao = 0 And totalPremiacaoPaga > 0 Then
+    totalPremiacao = totalPremiacaoPaga
+End If
+
+' Calcular totais pendentes
+totalComissaoAPagar = totalComissaoLiquida - totalComissaoPaga
+If totalComissaoAPagar < 0 Then totalComissaoAPagar = 0
+
+totalPremiacaoAPagar = totalPremiacao - totalPremiacaoPaga
+If totalPremiacaoAPagar < 0 Then totalPremiacaoAPagar = 0
+
+totalAPagar = totalComissaoAPagar + totalPremiacaoAPagar
 %>
 
 <!DOCTYPE html>
@@ -182,6 +318,11 @@ totalPremiacaoPaga = 0
             font-weight: 600;
         }
         
+        .valor-pendente {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
         .valor-desconto {
             color: #fd7e14;
             font-weight: 600;
@@ -189,6 +330,11 @@ totalPremiacaoPaga = 0
         
         .valor-liquido {
             color: #17a2b8;
+            font-weight: 600;
+        }
+        
+        .valor-premiacao {
+            color: #9b59b6;
             font-weight: 600;
         }
         
@@ -218,6 +364,7 @@ totalPremiacaoPaga = 0
             padding: 1rem;
             margin-bottom: 1rem;
             border-left: 4px solid #3498db;
+            height: 100%;
         }
         
         .info-card-comissao {
@@ -236,6 +383,10 @@ totalPremiacaoPaga = 0
             border-left: 4px solid #17a2b8;
         }
         
+        .info-card-total {
+            border-left: 4px solid #2c3e50;
+        }
+        
         .nome-recebedor {
             font-weight: 600;
             color: #2c3e50;
@@ -244,6 +395,70 @@ totalPremiacaoPaga = 0
         .desconto-info {
             font-size: 0.8rem;
             color: #6c757d;
+        }
+        
+        .section-comissao {
+            border-left: 4px solid #3498db;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .section-premiacao {
+            border-left: 4px solid #9b59b6;
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .section-total {
+            border-left: 4px solid #2c3e50;
+            background: linear-gradient(to right, #2c3e50, #34495e);
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .info-card h6 {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-card h4 {
+            color: #2c3e50;
+            margin-bottom: 0;
+            font-weight: 700;
+        }
+        
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #856404;
+        }
+        
+        .sql-debug {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 11px;
+            color: #155724;
+            font-family: monospace;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -269,48 +484,39 @@ totalPremiacaoPaga = 0
     </header>
 
     <div class="container-fluid main-content">
+        <!-- Debug Info -->
+        <div class="debug-info">
+            <strong>Debug Info:</strong> 
+            Premiação disponível: <strong><%= premiacaoDisponivel %></strong> | 
+            Coluna: <strong><%= colunaPremiacao %></strong> | 
+            Premiação Total: <strong>R$ <%= FormatNumber(totalPremiacao, 2) %></strong> | 
+            Premiações Pagas: <strong>R$ <%= FormatNumber(totalPremiacaoPaga, 2) %></strong> |
+            Comissões Pagas: <strong>R$ <%= FormatNumber(totalComissaoPaga, 2) %></strong>
+        </div>
+
+        <!-- SQL Debug -->
+        <div class="sql-debug">
+            <strong>SQL Vendas:</strong> <%= Replace(sqlVendasMes, "FROM", "<br>FROM") %>
+        </div>
+
         <!-- Cards de Resumo -->
         <div class="row mb-4">
             <div class="col-md-2">
                 <div class="info-card">
                     <h6><i class="fas fa-chart-line me-2"></i>VGV Total</h6>
-                    <h4 class="valor-positivo">
-                        <%
-                        If Not rsVendasMes.EOF Then
-                            rsVendasMes.MoveFirst
-                            Do While Not rsVendasMes.EOF
-                                totalVGV = totalVGV + CDbl(rsVendasMes("ValorUnidade"))
-                                totalComissaoBruta = totalComissaoBruta + CDbl(rsVendasMes("ComissaoBruta"))
-                                totalDesconto = totalDesconto + CDbl(rsVendasMes("DescontoBruto"))
-                                totalComissaoLiquida = totalComissaoLiquida + CDbl(rsVendasMes("ValorLiqGeral"))
-                                rsVendasMes.MoveNext
-                            Loop
-                            rsVendasMes.MoveFirst
-                        End If
-                        %>
-                        R$ <%= FormatNumber(totalVGV, 2) %>
-                    </h4>
+                    <h4 class="valor-positivo">R$ <%= FormatNumber(totalVGV, 2) %></h4>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="info-card">
-                    <h6><i class="fas fa-money-bill-wave me-2"></i>Comissão Bruta</h6>
-                    <h4 class="valor-positivo">R$ <%= FormatNumber(totalComissaoBruta, 2) %></h4>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="info-card info-card-desconto">
-                    <h6><i class="fas fa-percentage me-2"></i>Desconto Trib.</h6>
-                    <h4 class="valor-desconto">R$ <%= FormatNumber(totalDesconto, 2) %></h4>
-                    <% If totalComissaoBruta > 0 Then %>
-                    <small class="desconto-info"><%= FormatNumber((totalDesconto/totalComissaoBruta)*100, 1) %>%</small>
-                    <% End If %>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="info-card info-card-liquido">
-                    <h6><i class="fas fa-hand-holding-usd me-2"></i>Comissão Líquida</h6>
+                <div class="info-card info-card-comissao">
+                    <h6><i class="fas fa-money-bill-wave me-2"></i>Comissão Líquida</h6>
                     <h4 class="valor-liquido">R$ <%= FormatNumber(totalComissaoLiquida, 2) %></h4>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="info-card info-card-premiacao">
+                    <h6><i class="fas fa-trophy me-2"></i>Premiação Total</h6>
+                    <h4 class="valor-premiacao">R$ <%= FormatNumber(totalPremiacao, 2) %></h4>
                 </div>
             </div>
             <div class="col-md-2">
@@ -323,6 +529,12 @@ totalPremiacaoPaga = 0
                 <div class="info-card info-card-premiacao">
                     <h6><i class="fas fa-trophy me-2"></i>Premiações Pagas</h6>
                     <h4 class="valor-positivo">R$ <%= FormatNumber(totalPremiacaoPaga, 2) %></h4>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="info-card info-card-total">
+                    <h6><i class="fas fa-calculator me-2"></i>Total a Pagar</h6>
+                    <h4 class="valor-pendente">R$ <%= FormatNumber(totalAPagar, 2) %></h4>
                 </div>
             </div>
         </div>
@@ -348,6 +560,7 @@ totalPremiacaoPaga = 0
                                 <th>Comissão Bruta (R$)</th>
                                 <th>Desconto (R$)</th>
                                 <th>Comissão Líquida (R$)</th>
+                                <th>Premiação (R$)</th>
                                 <th>%</th>
                             </tr>
                         </thead>
@@ -378,6 +591,13 @@ totalPremiacaoPaga = 0
                                     <% End If %>
                                 </td>
                                 <td class="valor-liquido">R$ <%= FormatNumber(rsVendasMes("ValorLiqGeral"), 2) %></td>
+                                <td class="valor-premiacao">
+                                    <% If CDbl(rsVendasMes("Premio")) > 0 Then %>
+                                        <strong>R$ <%= FormatNumber(rsVendasMes("Premio"), 2) %></strong>
+                                    <% Else %>
+                                        R$ <%= FormatNumber(rsVendasMes("Premio"), 2) %>
+                                    <% End If %>
+                                </td>
                                 <td><span class="badge bg-info"><%= rsVendasMes("ComissaoPercentual") %>%</span></td>
                             </tr>
                             <%
@@ -386,7 +606,7 @@ totalPremiacaoPaga = 0
                             Else
                             %>
                             <tr>
-                                <td colspan="12" class="text-center py-4">
+                                <td colspan="13" class="text-center py-4">
                                     <div class="alert alert-info mb-0">
                                         <i class="fas fa-info-circle me-2"></i>Nenhuma venda encontrada para <%= nomeMesDetalhe %>/<%= anoDetalhe %>.
                                     </div>
@@ -403,6 +623,7 @@ totalPremiacaoPaga = 0
                                 <th class="valor-positivo">R$ <%= FormatNumber(totalComissaoBruta, 2) %></th>
                                 <th class="valor-desconto">R$ <%= FormatNumber(totalDesconto, 2) %></th>
                                 <th class="valor-liquido">R$ <%= FormatNumber(totalComissaoLiquida, 2) %></th>
+                                <th class="valor-premiacao">R$ <%= FormatNumber(totalPremiacao, 2) %></th>
                                 <th></th>
                             </tr>
                         </tfoot>
@@ -434,15 +655,6 @@ totalPremiacaoPaga = 0
                             <%
                             If Not rsPagamentosMes.EOF Then
                                 Do While Not rsPagamentosMes.EOF
-                                    totalPago = totalPago + CDbl(rsPagamentosMes("ValorPago"))
-                                    
-                                    ' Acumular totais por tipo de pagamento
-                                    If UCase(rsPagamentosMes("TipoPagamento")) = "COMISSÃO" Or UCase(rsPagamentosMes("TipoPagamento")) = "COMISSAO" Then
-                                        totalComissaoPaga = totalComissaoPaga + CDbl(rsPagamentosMes("ValorPago"))
-                                    ElseIf UCase(rsPagamentosMes("TipoPagamento")) = "PREMIACAO" Or UCase(rsPagamentosMes("TipoPagamento")) = "PREMIAÇÃO" Then
-                                        totalPremiacaoPaga = totalPremiacaoPaga + CDbl(rsPagamentosMes("ValorPago"))
-                                    End If
-                                    
                                     Dim badgeClass, statusClass, tipoPagamentoClass, tipoPagamentoTexto, iconClass, nomeRecebedor
                                     
                                     ' Definir classe do badge para TipoRecebedor
@@ -536,6 +748,75 @@ totalPremiacaoPaga = 0
                 </div>
             </div>
         </div>
+
+        <!-- Resumo de Comissões e Premiações -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Resumo de Comissões e Premiações</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                
+                                <!-- Seção Comissão -->
+                                <th colspan="3" class="text-center section-comissao">
+                                    <i class="fas fa-money-bill-wave me-2"></i>COMISSÃO
+                                </th>
+                                
+                                <!-- Seção Premiação -->
+                                <th colspan="3" class="text-center section-premiacao">
+                                    <i class="fas fa-trophy me-2"></i>PREMAIAÇÃO
+                                </th>
+                                
+                                <!-- Seção Total -->
+                                <th colspan="2" class="text-center section-total">
+                                    <i class="fas fa-calculator me-2"></i>TOTAL
+                                </th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                
+                                <!-- Subheaders Comissão -->
+                                <th>Líquida</th>
+                                <th>Paga</th>
+                                <th>a Pagar</th>
+                                
+                                <!-- Subheaders Premiação -->
+                                <th>Total</th>
+                                <th>Paga</th>
+                                <th>a Pagar</th>
+                                
+                                <!-- Subheaders Total -->
+                                <th>Pago</th>
+                                <th>a Pagar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Totais</strong></td>
+                                
+                                <!-- Dados Comissão -->
+                                <td class="valor-liquido">R$ <%= FormatNumber(totalComissaoLiquida, 2) %></td>
+                                <td class="valor-positivo">R$ <%= FormatNumber(totalComissaoPaga, 2) %></td>
+                                <td class="valor-pendente">R$ <%= FormatNumber(totalComissaoAPagar, 2) %></td>
+                                
+                                <!-- Dados Premiação -->
+                                <td class="valor-premiacao">R$ <%= FormatNumber(totalPremiacao, 2) %></td>
+                                <td class="valor-premiacao">R$ <%= FormatNumber(totalPremiacaoPaga, 2) %></td>
+                                <td class="valor-pendente">R$ <%= FormatNumber(totalPremiacaoAPagar, 2) %></td>
+                                
+                                <!-- Dados Total -->
+                                <td class="valor-positivo">R$ <%= FormatNumber(totalPago, 2) %></td>
+                                <td class="valor-pendente">R$ <%= FormatNumber(totalAPagar, 2) %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -559,7 +840,7 @@ totalPremiacaoPaga = 0
                 url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
             },
             pageLength: 25,
-            order: [[5, 'desc']], // Ordena por DataPagamento
+            order: [[5, 'desc']],
             responsive: true
         });
     });

@@ -182,7 +182,7 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Saldos Comissões 1</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Comissões Individuais</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Visualize os saldos das comissões.</p>
@@ -196,7 +196,7 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Saldos Comissões</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Comissões Mensais</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Visualize os saldos das comissões.</p>
