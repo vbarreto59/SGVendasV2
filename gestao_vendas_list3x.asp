@@ -874,7 +874,8 @@ End If
                                     
                                     <td>
                                         <strong><%= rs("Empreend_ID") %>-<%= RemoverNumeros(rs("NomeEmpreendimento")) %></strong>
-                                        <br><small class="text-muted"><%= RemoverNumeros(rs("Localidade")) %></small>
+                                        <br><small class="text-muted"><%= RemoverNumeros(rs("Localidade")) %></small><br>Cliente:
+                                        <small class="text-muted"><strong><%= UCase(rs("NomeCliente")) %></strong></small>
                                     </td>
                                     <td><%= rs("Unidade") %></td>
                                     <!-- ############################ -->

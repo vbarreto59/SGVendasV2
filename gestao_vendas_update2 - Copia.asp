@@ -62,7 +62,6 @@ connSales.Open StrConnSales
 Dim rsVenda
 Set rsVenda = Server.CreateObject("ADODB.Recordset")
 rsVenda.Open "SELECT * FROM Vendas WHERE ID = " & vendaId, connSales
-nomeCliente = rsVenda("NomeCliente")
 
 If rsVenda.EOF Then
     Response.Redirect "gestao_vendas_list3x.asp"
@@ -93,7 +92,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     trimestre = Request.Form("trimestre")
     dataVenda = Request.Form("dataVenda")
     obs = Server.HTMLEncode(Request.Form("obs"))
-    nomeCliente = Request.Form("NomeCliente")
     
     ' Função para converter valores monetários corretamente
     Function ParseCurrency(value)
@@ -200,7 +198,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
         ' Atualização segura da tabela Vendas incluindo os nomes E PREMIAÇÕES
         sql = "UPDATE Vendas SET " & _
               "Empreend_ID = " & empreend_id & ", " & _
-              "NomeCliente = '" & Replace(nomeCliente, "'", "''") & "', " & _
               "NomeEmpreendimento = '" & Replace(nomeEmpreend, "'", "''") & "', " & _
               "Unidade = '" & Replace(unidade, "'", "''") & "', " & _
               "UnidadeM2 = " & m2 & ", " & _
@@ -229,8 +226,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
               "PremioCorretor = " & premioCorretor & ", " & _
               "Usuario = '" & Session("Usuario") & "' " & _
               "WHERE ID = " & CInt(vendaId)
-              'Response.Write sql
-              'Response.end 
 
         On Error Resume Next
         connSales.Execute(sql)
@@ -505,26 +500,7 @@ rsCorretores.Open "SELECT UserId, Nome FROM Usuarios WHERE Funcao = 'Corretor' A
             <input type="hidden" id="mesVenda" name="mesVenda">
             <input type="hidden" id="anoVenda" name="anoVenda">
             <input type="hidden" id="vendaId" name="vendaId" value="<%=vendaId%>">
-            <!-- Nome do cliente -->
-            <!-- Card Cliente -->
-            <div class="card">
-                <div class="card-header">Dados do Cliente</div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label for="NomeCliente" class="form-label">Nome do Cliente</label>
-                            <input type="text" class="form-control" id="NomeCliente" name="NomeCliente" 
-                                value="<%= nomeCliente %>" 
-                                placeholder="Informe o nome completo do cliente" required>
-                        </div>
-                    </div>
-                </div>
-            </div>            
-
-
-
-
-
+            
             <!-- Card Empreendimento -->
             <div class="card">
                 <div class="card-header">Empreendimento</div>
