@@ -23,6 +23,21 @@ Response.CodePage = 65001
 Response.Charset = "utf-8"    
 %>
 
+<%
+'============================= LOG ============================================'
+if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+    set objMail = server.createobject("CDONTS.NewMail")
+        objMail.From = "sendmail@gabnetweb.com.br"
+        objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+    objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+    objMail.MailFormat = 0
+    objMail.Body = "Página de Vendas (Gestão Vendas)"
+    objMail.Send
+    set objMail = Nothing
+end if 
+'============================= ATUALIZANDO O BANCO DE DADOS ==================='
+%>
+
 <% 
 'Modificação para separar banco de dados em 08 08 2025'
 dbSunnyPath = Split(StrConn, "Data Source=")(1)
@@ -644,7 +659,6 @@ End If
                                     <i class="fas fa-tools me-1"></i>Utilitários
                                 </button>
                                 <ul class="dropdown-menu">
-
                                     <li><a class="dropdown-item" href="inserirVendasTeste2.asp" target="_blank"><i class="fas fa-plus me-1"></i>Inserir Testes</a></li>
                                     <li><a class="dropdown-item" href="excluir_testes.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Testes</a></li>
                                     <li><a class="dropdown-item" href="tool_excluir_tudo.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Vendas</a></li>   
@@ -1050,15 +1064,6 @@ End If
                                             <a href="gestao_vendas_update2.asp?id=<%= rs("id") %>" class="btn btn-warning btn-sm" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-
-
-                                           <!-- ------------------------ -->
-
-
-                                            <a href="gestao_vendas_ver_pagamentos.asp?id=<%= rs("id") %>" class="btn btn-primary btn-sm" title="Ver Pagamentos">
-                                                    <i class="fas fa-eye"></i>
-                                            </a>
-
                                             <% If Not comissaoExiste Then %>
                                                 <a href="gestao_vendas_inserir_comissao1.asp?id=<%= rs("id") %>" class="btn btn-primary btn-sm" title="Inserir Comissão">
                                                     <i class="fas fa-hand-holding-usd"></i>

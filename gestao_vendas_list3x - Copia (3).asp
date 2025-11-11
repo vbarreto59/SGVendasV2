@@ -644,7 +644,6 @@ End If
                                     <i class="fas fa-tools me-1"></i>Utilitários
                                 </button>
                                 <ul class="dropdown-menu">
-
                                     <li><a class="dropdown-item" href="inserirVendasTeste2.asp" target="_blank"><i class="fas fa-plus me-1"></i>Inserir Testes</a></li>
                                     <li><a class="dropdown-item" href="excluir_testes.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Testes</a></li>
                                     <li><a class="dropdown-item" href="tool_excluir_tudo.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Vendas</a></li>   
@@ -1053,12 +1052,6 @@ End If
 
 
                                            <!-- ------------------------ -->
-
-
-                                            <a href="gestao_vendas_ver_pagamentos.asp?id=<%= rs("id") %>" class="btn btn-primary btn-sm" title="Ver Pagamentos">
-                                                    <i class="fas fa-eye"></i>
-                                            </a>
-
                                             <% If Not comissaoExiste Then %>
                                                 <a href="gestao_vendas_inserir_comissao1.asp?id=<%= rs("id") %>" class="btn btn-primary btn-sm" title="Inserir Comissão">
                                                     <i class="fas fa-hand-holding-usd"></i>

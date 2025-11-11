@@ -42,6 +42,25 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     sql = "UPDATE PAGAMENTOS_COMISSOES SET Excluido = -1 WHERE ID_Venda = " & vendaId
     conn.Execute(sql)
 
+
+'============================= LOG ============================================'
+if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+    set objMail = server.createobject("CDONTS.NewMail")
+        objMail.From = "sendmail@gabnetweb.com.br"
+        objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+    objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+    objMail.MailFormat = 0
+    objMail.Body = "Exclusão lógica de Venda. ID: " & vendaId
+    objMail.Send
+    set objMail = Nothing
+end if 
+'============================= ATUALIZANDO O BANCO DE DADOS ==================='
+
+
+
+
+
+
     ' Redireciona para a página de listagem com mensagem de sucesso
     conn.Close
     Set conn = Nothing

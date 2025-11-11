@@ -1,11 +1,16 @@
 <%
 on error resume next
 
+' Verifica se as connection strings já foram definidas.
+' Se não, inclui os arquivos para defini-las.
 If Len(StrConn) = 0 Then
+    ' ATENÇÃO: A sintaxe de inclusão correta é esta, sem o ' na frente
+    ' A linha abaixo inclui o arquivo "conexao.asp"
     <!--#include file="conexao.asp"-->
 End If
 
 If Len(StrConnSales) = 0 Then
+    ' A linha abaixo inclui o arquivo "conSunSales.asp"
     <!--#include file="conSunSales.asp"-->
 End If
 
@@ -66,11 +71,7 @@ rsAjustaData.CommandText = "qryAtuComissAPagarVendasID"
 rsAjustaData.Execute()
 
 
-' Atualiza o Empreend_ID na tabela COMISSOES_A_PAGAR com base em Vendas 11 11 25
-rsAjustaData.CommandType = 1 'adCmdText (Para executar SQL direto)
-rsAjustaData.CommandText = "UPDATE Vendas INNER JOIN COMISSOES_A_PAGAR ON Vendas.Id = COMISSOES_A_PAGAR.ID_Venda SET COMISSOES_A_PAGAR.Empreend_ID = [Vendas].[Empreend_Id];"
-rsAjustaData.Execute()
-rsAjustaData.CommandType = 4 'Retorna ao padrão adCmdStoredProc (Embora seja o último comando de execução)
+
 
 '================================================================'
 ' Fecha ambas as conexões
@@ -82,3 +83,4 @@ Set connSales = Nothing
 
 'Response.Write " Atulizado!"
 %>
+

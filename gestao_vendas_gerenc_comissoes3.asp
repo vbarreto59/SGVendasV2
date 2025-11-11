@@ -63,7 +63,7 @@ conn.Open StrConn
 Set connSales = Server.CreateObject("ADODB.Connection")
 connSales.Open StrConnSales
 
-sqlComissoes = "SELECT c.ID_Comissoes, c.ID_Venda, v.NomeEmpreendimento, v.Unidade, v.DataVenda, v.ValorComissaoGeral, " & _
+sqlComissoes = "SELECT c.ID_Comissoes, c.ID_Venda, v.Empreend_ID, v.NomeEmpreendimento, v.Unidade, v.DataVenda, v.ValorComissaoGeral, " & _
                "c.UserIdDiretoria, c.NomeDiretor, v.ComissaoDIretoria, v.ValorDiretoria, v.PremioDiretoria, " & _
                "c.UserIdGerencia, c.NomeGerente, v.ComissaoGerencia, v.ValorGerencia, v.PremioGerencia, " & _
                "c.UserIdCorretor, c.NomeCorretor, v.ComissaoCorretor, v.ValorCorretor, v.PremioCorretor, v.ID, v.Diretoria, v.Gerencia," & _
@@ -667,7 +667,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
              <%end if%>   
             </td>
             <td class="text-center">
-                <small class="text-muted"><b><%= rsComissoes("NomeEmpreendimento") %></b></small><br>
+                <small class="text-muted"><b><%= rsComissoes("Empreend_ID") %>-<%= rsComissoes("NomeEmpreendimento") %></b></small><br>
                 <%= rsComissoes("Unidade") %> <br>
 
                 <!-- somando as comissoes brutas 07 11 2025 -->
