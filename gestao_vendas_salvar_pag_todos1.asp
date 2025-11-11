@@ -2,7 +2,7 @@
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
 
-<%
+<% 'funcional mas salvando 500 como 50k'
 ' ====================================================================
 ' Script para Salvar TODOS os Pagamentos de uma Venda - Versão 1
 ' ====================================================================
@@ -255,6 +255,7 @@ Function InserirPagamento(idVenda, userId, nomeUsuario, valor, tipoRecebedor, ti
     End If
     
     ' Formatar valor corretamente para SQL
+    valor = valor/100
     valorFormatado = FormatNumberForSQLString(valor)
     
     ' Preparar valores para SQL
@@ -392,13 +393,13 @@ If Err.Number = 0 Then
     adodb_path = "[;DATABASE=" & dbSunnyPath & "]"
 
     sqlUpdate = "UPDATE PAGAMENTOS_COMISSOES INNER JOIN " & adodb_path & ".Diretorias ON PAGAMENTOS_COMISSOES.UsuariosUserId = Diretorias.UserId SET PAGAMENTOS_COMISSOES.UsuariosNome = [Diretorias].[Nome] WHERE PAGAMENTOS_COMISSOES.TipoRecebedor='diretoria' AND PAGAMENTOS_COMISSOES.ID_Venda=" & idVenda
-    connSales.Execute sqlUpdate
+    'connSales.Execute sqlUpdate
 
     sqlUpdate = "UPDATE PAGAMENTOS_COMISSOES INNER JOIN " & adodb_path & ".Gerencias ON PAGAMENTOS_COMISSOES.UsuariosUserId = Gerencias.UserId SET PAGAMENTOS_COMISSOES.UsuariosNome = [Gerencias].[Nome] WHERE PAGAMENTOS_COMISSOES.TipoRecebedor='gerencia' AND PAGAMENTOS_COMISSOES.ID_Venda=" & idVenda
-    connSales.Execute sqlUpdate
+    'connSales.Execute sqlUpdate
 
     sqlUpdate = "UPDATE PAGAMENTOS_COMISSOES INNER JOIN " & adodb_path & ".Usuarios ON PAGAMENTOS_COMISSOES.UsuariosUserId = Usuarios.UserId SET PAGAMENTOS_COMISSOES.UsuariosNome = [Usuarios].[Nome] WHERE PAGAMENTOS_COMISSOES.TipoRecebedor='corretor' AND PAGAMENTOS_COMISSOES.ID_Venda=" & idVenda
-    connSales.Execute sqlUpdate
+    'connSales.Execute sqlUpdate
     
     ' Redirecionamento de sucesso
     Response.Redirect "gestao_vendas_comissoes_pag_todos.asp?mensagem=Sucesso: " & pagamentosRealizados & " pagamentos realizados para a venda " & idVenda & "!"

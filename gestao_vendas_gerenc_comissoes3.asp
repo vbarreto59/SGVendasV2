@@ -1,8 +1,8 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
-<!--#include file="AtualizarVendas.asp"-->
-<!--#include file="AtualizarVendas2.asp"-->
+<!--#include file="atualizarVendas.asp"-->
+<!--#include file="atualizarVendas2.asp"-->
 
 <% 'funcional - ajuste a esquerda colunas diretoria, gerencia e corretor'
 

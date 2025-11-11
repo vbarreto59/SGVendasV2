@@ -174,7 +174,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     dataVendaSQL & ", " & diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
     "'" & SanitizeSQL(gerenciaNome) & "', " & corretorId & ", '" & SanitizeSQL(corretorNome) & "', " & _
     comissaoDiretoria & ", " & valorComissaoDiretoria & ", " & comissaoGerencia & ", " & valorComissaoGerencia & ", " & _
-    comissaoCorretor & ", " & valorComissaoCorretor & ", " & valorComissaoGeral & ", 'Pendente', '" & SanitizeSQL(usuario) & "', " & _
+    comissaoCorretor & ", " & valorComissaoCorretor & ", " & valorComissaoGeral & ", 'PENDENTE', '" & SanitizeSQL(usuario) & "', " & _
     premioDiretoria & ", " & premioGerencia & ", " & premioCorretor & ")"    
 
     connSales.Execute(sqlComissoes)
@@ -900,7 +900,7 @@ End Function
                     // Validação do total distribuído
                     var diferenca = Math.abs(comissaoTotal - totalDistribuido);
                     if (diferenca > 0.01) {
-                        $('#comissaoError').text('Atenção: A soma das comissões não corresponde ao total');
+                        $('#comissaoError').text('');
                     } else {
                         $('#comissaoError').text('');
                     }

@@ -67,7 +67,8 @@ rsAjustaData.CommandText = "qryAddGerenciaVTemp"
 rsAjustaData.CommandText = "qryAddCorretorVTemp"
 'rsAjustaData.Execute()
 
-
+rsAjustaData.CommandText = "qryAtuComissAPagarVendasID"
+rsAjustaData.Execute()
 
 
 

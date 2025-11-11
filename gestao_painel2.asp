@@ -8,6 +8,7 @@
 <!--#include file="usr_acoes_v4GVendas.inc"-->
 <!--#include file="atualizarVendas.asp"-->
 <!--#include file="atualizarVendas2.asp"-->
+<!--#include file="atualizarVendasTemp.asp"-->
 <!--#include file="manutencao_config.asp"-->
 
 <%
@@ -72,18 +73,19 @@ connSales.Open StrConnSales
 
 ' Primeiro UPDATE: Associar Vendas.DiretoriaId com Diretorias.DiretoriaId e atualizar campos
 sqlUpdate1 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Diretorias INNER JOIN Vendas ON Diretorias.DiretoriaId = Vendas.DiretoriaId) SET Vendas.NomeDiretor = [Diretorias].[Nome], Vendas.UserIdDiretoria = [Diretorias].[UserId];"
-connSales.Execute(sqlUpdate1)
+'removido em 10 11 2025 para mudar a forma de associar a diretoria com uma pessoa do cadastro de usuário'
+'connSales.Execute(sqlUpdate1)
 
 ' UPDATE Gerencias -> Vendas
 sqlUpdate2 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Gerencias INNER JOIN Vendas ON Gerencias.GerenciaId = Vendas.GerenciaId) SET [Vendas].[NomeGerente] = [Gerencias].[Nome], [Vendas].[UserIdGerencia] = [Gerencias].[UserId];"
-connSales.Execute(sqlUpdate2)
+'connSales.Execute(sqlUpdate2)
 
 'Atualizar Nome do Corretor-----------------------------'
 sqlUpdateCorretor = "UPDATE (Vendas INNER JOIN [;DATABASE=" & dbSunnyPath & "].Usuarios ON Vendas.CorretorId = Usuarios.UserId) " & _
                    "SET Vendas.Corretor = Usuarios.Nome;"
-connSales.Execute(sqlUpdateCorretor)
+'connSales.Execute(sqlUpdateCorretor)
 
-' Esta é a instrução SQL para atualizar o campo Semestre.
+'=========== Esta é a instrução SQL para atualizar o campo Semestre. ======='
 sql = "UPDATE Vendas " & _
       "SET Semestre = SWITCH(" & _
       "    Trimestre IN (1, 2), 1, " & _

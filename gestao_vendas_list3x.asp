@@ -9,13 +9,13 @@
     <!--#include file="conSunSales.asp"-->
 <%End If%>
 
-<!--#include file="AtualizarVendas.asp"-->
 <!--#include file="gestao_atu_localizacao.asp"-->
 <!--#include file="gestao_header.inc"-->
 
 <!--#include file="usr_acoes_v4GVendas.inc"-->
 <!--#include file="atualizarVendas.asp"-->
 <!--#include file="atualizarVendas2.asp"-->
+
 <%
 Response.Buffer = True
 Response.Expires = -1
@@ -642,15 +642,13 @@ End If
                             <i class="fas fa-plus me-1"></i>Nova Venda
                         </a>
                         <a href="gestao_vendas_gerenc_comissoes3.asp" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fas fa-money-bill-wave me-1"></i>Comissões 1
+                            <i class="fas fa-money-bill-wave me-1"></i>Pagar Individual
                         </a>
                         <a href="gestao_vendas_comissoes_pag_todos.asp" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fas fa-money-bill-wave me-1"></i>Comissões 2
+                            <i class="fas fa-money-bill-wave me-1"></i>Pagar Todos
                         </a>       
 
-                        <a href="gestao_vendas_inserir_comissao_todos1.asp" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fas fa-money-bill-wave me-1"></i>Inserir Todas
-                        </a>  
+
 
                         <a href="gestao_vendas_list_excluidos.asp" class="btn btn-warning btn-sm" target="_blank">
                             <i class="fas fa-trash-restore me-1"></i>Excluídos
@@ -667,6 +665,7 @@ End If
 
                                     <li><a class="dropdown-item" href="tool_visualizar_log.asp" target="_blank"><i class="fas fa-trash me-1"></i>Log Sistema</a></li>  
                                      <li><a class="dropdown-item" href="tool_venda_criar_json.asp" target="_blank"><i class="fas fa-trash me-1"></i>Gerar Json</a></li> 
+                                     <li><a class="dropdown-item" href="gestao_vendas_inserir_comissao_todos1.asp" target="_blank"><i class="fas fa-trash me-1"></i>Inserir Todos</a></li> 
 
                                     
                                 </ul>
@@ -865,7 +864,7 @@ End If
                                         Set rsComissaoCheck = Nothing
                                         
                                         Dim linhaClasse
-                                        If pagoDiretoria And pagoGerencia And pagoCorretor Then
+                                        If totalPagoDiretoria>0 And totalPagoGerencia>0 And totalPagoCorretor>0 Then
                                             linhaClasse = "linha-paga"
                                         Else
                                             linhaClasse = "linha-pendente"
@@ -877,7 +876,7 @@ End If
                                         <br><span class="fw-bold"><%= rs("ID") %></span>
                                     </td>
                                     <td>
-                                        <% If pagoDiretoria And pagoGerencia And pagoCorretor Then %>
+                                        <% If totalPagoDiretoria>0  And totalPagoGerencia > 0 And totalPagoCorretor >0Then %>
                                             <span class="badge status-pago" title="Comissões pagas">PAGA</span>
                                         <% Else %>  
                                             <span class="badge status-pendente" title="Comissões pendentes">PENDENTE</span>
@@ -898,6 +897,7 @@ End If
 <% ' --------------------------------------- %>
 <td>
     <div class="fw-bold"><%= rs("Diretoria") %></div>
+    <div class="fw-bold"><%= rs("NomeDiretor") %></div>
     <small class="comissao-info">
         <!-- Valor Bruto com badge PAGA se pago -->
         <div class="valor-pago d-flex align-items-center gap-2 mb-1">
@@ -913,7 +913,7 @@ End If
         
         <!-- Valor Líquido -->
         <div class="valor-liquido d-flex align-items-center gap-2">
-            <% If pagoDiretoria Then %>
+            <% If pagoDiretoria AND totalPagoDiretoria >0 Then %>
                 <span class="badge bg-success badge-sm">PAGA</span>
             <% End If %>
             <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqDiretoria, 2) %>
@@ -940,6 +940,7 @@ End If
 <% ' --------------------------------------- %>
 <td>
     <div class="fw-bold"><%= rs("Gerencia") %></div>
+    <div class="fw-bold"><%= rs("NomeGerente") %></div>
     <small class="comissao-info">
         <!-- Valor Bruto com badge PAGA se pago -->
         <div class="valor-pago d-flex align-items-center gap-2 mb-1">
@@ -960,7 +961,7 @@ End If
         </div>
 
         <div class="valor-liquido d-flex align-items-center gap-2">
-            <% If pagoGerencia Then %>
+            <% If pagoGerencia AND totalPagoGerencia >0 Then %>
            <span class="badge bg-success badge-sm">PAGA</span>
             <% End If %>
            <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqGerencia, 2) %>
@@ -971,7 +972,7 @@ End If
             <% If IsNumeric(rs("premioGerencia")) And CDbl(rs("premioGerencia")) > 0 Then %>
                 <div class="text-primary fw-bold mt-1">
                     <div class="valor-pago d-flex align-items-center gap-2">
-                        <% If premioPagoGerencia Then %>
+                        <% If premioPagoGerencia > 0 Then  %>
                             <span class="badge bg-success badge-sm">PAGA</span>
                         <% End If %>
                         <i class="fas fa-trophy"></i> R$ <%= FormatNumber(rs("premioGerencia"), 2) %>
@@ -1003,7 +1004,7 @@ End If
         
         <!-- Valor Líquido -->
         <div class="valor-liquido d-flex align-items-center gap-2">
-            <% If pagoCorretor Then %>
+            <% If pagoCorretor AND totalPagoCorretor > 0 Then %>
                 <span class="badge bg-success badge-sm">PAGA</span>
             <% End If %>
             <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqCorretor, 2) %>

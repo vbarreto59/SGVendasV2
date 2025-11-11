@@ -50,7 +50,6 @@ If Err.Number <> 0 Then
     Response.End
 End If
 
-
 ' --- 2. Excluir TODOS os registros de COMISSOES_A_PAGAR ---
 sql = "DELETE FROM COMISSOES_A_PAGAR"
 
@@ -76,6 +75,19 @@ If Err.Number <> 0 Then
     Response.End
 End If
 
+
+
+' --- 4. Excluir VENDAS_TEMP ---
+sql = "DELETE FROM VENDA_TEMP"
+
+cmd.CommandText = sql
+cmd.Execute affectedPagamentos
+
+If Err.Number <> 0 Then
+    conn.RollbackTrans
+    Response.Write "<p style='color: red;'>Erro ao excluir registros de VENDA_TEMP: " & Err.Description & "</p>"
+    Response.End
+End If
 
 ' Commit da transação se todas as exclusões foram bem-sucedidas
 conn.CommitTrans

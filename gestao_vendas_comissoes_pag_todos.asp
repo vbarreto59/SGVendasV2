@@ -49,6 +49,7 @@ sqlVendas = "SELECT " & _
            "v.ID, v.NomeEmpreendimento, v.Unidade, v.ValorUnidade, v.DataVenda, v.ValorComissaoGeral, " & _
            "v.Diretoria, v.Gerencia, v.Corretor, " & _
            "v.ValorDiretoria, v.PremioDiretoria, v.ValorLiqDiretoria, v.DescontoDiretoria, " & _
+           "v.NomeDiretor, v.NomeGerente, v.Corretor " & _
            "v.ValorGerencia, v.PremioGerencia, v.ValorLiqGerencia, v.DescontoGerencia, " & _
            "v.ValorCorretor, v.PremioCorretor, v.ValorLiqCorretor, v.DescontoCorretor, " & _
            "v.DescontoPerc, v.DescontoBruto, v.DescontoDescricao, " & _
@@ -57,6 +58,13 @@ sqlVendas = "SELECT " & _
            "LEFT JOIN COMISSOES_A_PAGAR AS c ON v.ID = c.ID_Venda " & _
            "WHERE v.excluido = 0 " & _
            "ORDER BY v.DataVenda DESC, v.ID DESC"
+
+sqlVendas = "SELECT " & _
+           "v.* " & _
+           "FROM Vendas AS v " & _
+           "LEFT JOIN COMISSOES_A_PAGAR AS c ON v.ID = c.ID_Venda " & _
+           "WHERE v.excluido = 0 " & _
+           "ORDER BY v.DataVenda DESC, v.ID DESC"           
 
 Set rsVendas = connSales.Execute(sqlVendas)
 %>
@@ -422,7 +430,7 @@ Set rsVendas = connSales.Execute(sqlVendas)
                             <span class="status-badge <%= statusClass %>"><%= status %></span>
                         </td>
                         <td>
-                            <strong><%= rsVendas("NomeEmpreendimento") %></strong><br>
+                            <strong><%= rsVendas("Empreend_ID")%>-<%= rsVendas("NomeEmpreendimento") %></strong><br>
 
                             <small class="text-muted"><%= "Unid.: " & rsVendas("Unidade") %></small><br>
                             <small class="text-muted"><%= "R$ " & FormatNumber(rsVendas("ValorUnidade"),2) %></small><br>
@@ -455,7 +463,7 @@ Set rsVendas = connSales.Execute(sqlVendas)
                         <!-- COLUNA DIRETORIA COM VALORES LÍQUIDOS -->
                         <td class="text-center">
                             <div class="comissao-info">
-                                <strong><%= rsVendas("Diretoria") %></strong><br>
+                                <strong><%= rsVendas("Diretoria") %><BR><%= rsVendas("NomeDiretor") %></strong><br>
                                 
                                 <!-- COMISSÃO DIRETORIA -->
                                 <div class="valor-bruto">
@@ -512,7 +520,7 @@ Set rsVendas = connSales.Execute(sqlVendas)
                         <!-- COLUNA GERÊNCIA COM VALORES LÍQUIDOS -->
                         <td class="text-center">
                             <div class="comissao-info">
-                                <strong><%= rsVendas("Gerencia") %></strong><br>
+                                <strong><%= rsVendas("Gerencia") %><BR><%= rsVendas("NomeGerente") %></strong><br>
                                 
                                 <!-- COMISSÃO GERÊNCIA -->
                                 <div class="valor-bruto">
