@@ -158,7 +158,6 @@ vFator = 100
 
 ' Formata as demais variáveis para SQL
 valorComissaoGeral = valorUnidade * (comissaoPercentual / vFator)
-valorComissaoGeral = GetFormattedNumber(valorComissaoGeral)
 m2 = GetFormattedNumber(m2)
 valorUnidade = GetFormattedNumber(valorUnidade)
 
@@ -219,8 +218,8 @@ valorLiqGeral = GetFormattedNumber(valorLiqGeral)
     descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
     valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ", " & valorLiqGeral & ")"
 
-    'response.Write sqlVendas
-    'Response.end 
+   '' response.Write sqlVendas
+   '' Response.end 
 
 ' -------------------------Tratamento de erro -11 11 25 ------------------------------------------------
 ' Inicia o tratamento de erro para capturar falhas na execução SQL
