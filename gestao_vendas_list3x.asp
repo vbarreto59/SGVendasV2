@@ -629,9 +629,7 @@ End If
                         <a href="gestao_vendas_gerenc_comissoes3.asp" class="btn btn-primary btn-sm" target="_blank">
                             <i class="fas fa-money-bill-wave me-1"></i>Pagar Individual
                         </a>
-                        <a href="gestao_vendas_comissoes_pag_todos.asp" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fas fa-money-bill-wave me-1"></i>Pagar Todos
-                        </a>       
+   
 
 
 
@@ -942,11 +940,7 @@ End If
             </div>
         <% End If %>
         
-        <!-- Valor Líquido -->
-        <div class="valor-liquido">
-            <i class="fas fa-hand-holding-usd"></i> R$ <%= FormatNumber(dblValorLiqGerencia, 2) %>
-        </div>
-
+        <!-- Valor Líquido Gerência-->
         <div class="valor-liquido d-flex align-items-center gap-2">
             <% If pagoGerencia AND totalPagoGerencia >0 Then %>
            <span class="badge bg-success badge-sm">PAGA</span>
@@ -1048,15 +1042,17 @@ End If
                                     </td>
                                     <td class="text-center">
                                         <div class="action-buttons">
-                                            <a href="gestao_vendas_update2.asp?id=<%= rs("id") %>" class="btn btn-warning btn-sm" title="Editar">
+                                            <a href="gestao_vendas_update3.asp?id=<%= rs("id") %>" class="btn btn-warning btn-sm" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
 
 
                                            <!-- ------------------------ -->
+                                            <a href="gestao_vendas_pagar_todos3.asp?id=<%= rs("id") %>" class="btn btn-success btn-sm" title="Pagar" target="_blank">
+                                                    <i class="fas fa-dollar"></i>
+                                            </a>
 
-
-                                            <a href="gestao_vendas_ver_pagamentos.asp?id=<%= rs("id") %>" class="btn btn-primary btn-sm" title="Ver Pagamentos">
+                                            <a href="gestao_vendas_ver_pagamentos.asp?id=<%= rs("id") %>" class="btn btn-primary btn-sm" title="Ver Pagamentos" target="_blank">
                                                     <i class="fas fa-eye"></i>
                                             </a>
 

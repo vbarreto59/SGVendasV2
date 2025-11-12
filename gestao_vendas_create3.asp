@@ -4,6 +4,14 @@
 <!--#include file="registra_log.asp"-->
 
 <% ' funcional - incluir desconto em 06 11 2025
+Function GetFormattedNumber(sValue)
+    If sValue = "" Then
+        GetFormattedNumber = "0"   
+    Else
+        GetFormattedNumber = Replace(Replace(sValue, ".", ""), ",", ".")
+    End If
+End Function
+
     Function RemoverNumeros(texto)
         Dim regex
         Set regex = New RegExp
@@ -19,12 +27,17 @@
     End Function    
 
 Function FormatNumberForSQL(sValue)
-    ' Remove o separador de milhares (o ponto)
+    If sValue = "" Then
+        GetFormattedNumber = "0"
+    End if
+
+    'sValue = CStr(sValue)
     sValue = Replace(sValue, ".", "")
-    ' Substitui o separador decimal (a vírgula) por um ponto
     sValue = Replace(sValue, ",", ".")
+
     FormatNumberForSQL = sValue
-End Function    
+End Function 
+
 %>
 
 <%
@@ -48,21 +61,7 @@ connSales.Open StrConnSales
 ' PROCESSAMENTO DO FORMULÁRIO (MÉTODO POST)
 ' -----------------------------------------------------------------------------------
 If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
-    ' Declaração das variáveis.
-    Dim empreend_id, unidade, corretorId, valorUnidade, comissaoPercentual
-    Dim dataVenda, obs, usuario, m2, diretoriaId, gerenciaId
-    Dim comissaoDiretoria, comissaoGerencia, comissaoCorretor, trimestre
-    Dim nomeEmpreendimento, corretorNome, diretoriaNome, gerenciaNome
-    Dim valorComissaoGeral, valorComissaoDiretoria, valorComissaoGerencia, valorComissaoCorretor
-    Dim sqlVendas, sqlComissoes, vendaId
-    
-    ' CAMPOS DE PREMIAÇÃO ADICIONADOS
-    Dim premioDiretoria, premioGerencia, premioCorretor
-    
-    ' CAMPOS DE DESCONTO TRIBUTÁRIO ADICIONADOS
-    Dim descontoPerc, descontoBruto, descontoDescricao
-    Dim descontoDiretoria, descontoGerencia, descontoCorretor
-    Dim valorLiqDiretoria, valorLiqGerencia, valorLiqCorretor
+
     
     ' Coleta e formatação dos dados do formulário.
     ' A função `GetFormattedNumber` centraliza a lógica de formatação.
@@ -75,34 +74,6 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     trimestre = Request.Form("trimestre")
     dataVenda = Request.Form("dataVenda")
     obs = Request.Form("obs")
-    m2 = GetFormattedNumber(Request.Form("m2"))
-    valorUnidade = GetFormattedNumber(Request.Form("valorUnidade"))
-    comissaoPercentual = GetFormattedNumber(Request.Form("comissaoPercentual"))
-    comissaoDiretoria = GetFormattedNumber(Request.Form("comissaoDiretoria"))
-    comissaoGerencia = GetFormattedNumber(Request.Form("comissaoGerencia"))
-    comissaoCorretor = GetFormattedNumber(Request.Form("comissaoCorretor"))
-
-    ' Premiação em 04 11 2025 -----------------------------
-    premioDiretoria = GetFormattedNumber(Request.Form("premioDiretoria"))    
-    premioGerencia  = GetFormattedNumber(Request.Form("premioGerencia"))    
-    premioCorretor  = GetFormattedNumber(Request.Form("premioCorretor"))    
-    '----------------------'
-
-    ' Desconto Tributário em 06 11 2025 -------------------
-    descontoPerc = GetFormattedNumber(Request.Form("descontoPerc"))
-    descontoBruto = GetFormattedNumber(Request.Form("descontoBruto"))/100
-    descontoDescricao = Request.Form("descontoDescricao")
-    descontoDiretoria = GetFormattedNumber(Request.Form("descontoDiretoria"))/100
-    descontoGerencia = GetFormattedNumber(Request.Form("descontoGerencia"))/100
-    descontoCorretor = GetFormattedNumber(Request.Form("descontoCorretor"))/100
-    valorLiqDiretoria = GetFormattedNumber(Request.Form("valorLiqDiretoria"))/100
-    valorLiqGerencia = GetFormattedNumber(Request.Form("valorLiqGerencia"))/100
-    valorLiqCorretor = GetFormattedNumber(Request.Form("valorLiqCorretor"))/100
-
-    'Valor Liq'
-
-    valorLiqGeral = valorLiqDiretoria + valorLiqGerencia+valorLiqCorretor
-    '----------------------'
 
     usuario = Session("Usuario")
     
@@ -142,22 +113,85 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
         trimestre = Int((mesVenda - 1) / 3) + 1
     End If
 
-    ' Formatação da data para o SQL.
-    dataVendaSQL = FormatDateTimeForSQL(dataVenda)
-    dataRegistroSQL = FormatDateTimeForSQL(Now())
+    '===== Capturar valores'
+' -----------------------------------------------------------------------------------
+' 1. CAPTURA DE VARIÁVEIS (REQUEST.FORM)
+' -----------------------------------------------------------------------------------
 
-    ' Cálculo das comissões.
-    vFatorDivisao = 10000
-    valorComissaoGeral = valorUnidade * (comissaoPercentual / vFatorDivisao)
-    valorComissaoDiretoria = valorComissaoGeral * (comissaoDiretoria / vFatorDivisao)
-    valorComissaoGerencia = valorComissaoGeral * (comissaoGerencia / vFatorDivisao)
-    valorComissaoCorretor = valorComissaoGeral * (comissaoCorretor / vFatorDivisao)
+' Variáveis que serão usadas no cálculo líquido (Armazenamos em variáveis _Original primeiro)
+Dim valorLiqDiretoria_Original : valorLiqDiretoria_Original = Request.Form("valorLiqDiretoria")
+Dim valorLiqGerencia_Original : valorLiqGerencia_Original = Request.Form("valorLiqGerencia")
+Dim valorLiqCorretor_Original : valorLiqCorretor_Original = Request.Form("valorLiqCorretor")
+
+' Outras variáveis numéricas/monetárias do formulário
+Dim m2 : m2 = Request.Form("m2")
+Dim valorUnidade : valorUnidade = Request.Form("valorUnidade")
+Dim valorComissaoGeral : valorComissaoGeral = Request.Form("valorComissaoGeral")
+Dim valorComissaoDiretoria : valorComissaoDiretoria = Request.Form("valorComissaoDiretoria")
+Dim valorComissaoGerencia : valorComissaoGerencia = Request.Form("valorComissaoGerencia")
+Dim valorComissaoCorretor : valorComissaoCorretor = Request.Form("valorComissaoCorretor")
+Dim comissaoPercentual : comissaoPercentual = Request.Form("comissaoPercentual")
+Dim comissaoDiretoria : comissaoDiretoria = Request.Form("comissaoDiretoria")
+Dim comissaoGerencia : comissaoGerencia = Request.Form("comissaoGerencia")
+Dim comissaoCorretor : comissaoCorretor = Request.Form("comissaoCorretor")
+Dim premioDiretoria : premioDiretoria = Request.Form("premioDiretoria")
+Dim premioGerencia : premioGerencia = Request.Form("premioGerencia")
+Dim premioCorretor : premioCorretor = Request.Form("premioCorretor")
+Dim descontoPerc : descontoPerc = Request.Form("descontoPerc")
+Dim descontoBruto : descontoBruto = Request.Form("descontoBruto")
+Dim descontoDiretoria : descontoDiretoria = Request.Form("descontoDiretoria")
+Dim descontoGerencia : descontoGerencia = Request.Form("descontoGerencia")
+Dim descontoCorretor : descontoCorretor = Request.Form("descontoCorretor")
+Dim descontoDescricao : descontoDescricao = Request.Form("descontoDescricao")
+
+
+' -----------------------------------------------------------------------------------
+' 2. CÁLCULO E FORMATAÇÃO
+' -----------------------------------------------------------------------------------
+
+' Calcula o valor líquido geral USANDO as variáveis originais (numéricas)
+Dim valorLiqGeral_Calculado : valorLiqGeral_Calculado = CDbl(valorLiqDiretoria_Original) + CDbl(valorLiqGerencia_Original) + CDbl(valorLiqCorretor_Original)
+
+vFator = 100
+
+
+
+' Formata as demais variáveis para SQL
+valorComissaoGeral = valorUnidade * (comissaoPercentual / vFator)
+m2 = GetFormattedNumber(m2)
+valorUnidade = GetFormattedNumber(valorUnidade)
+
+comissaoPercentual = GetFormattedNumber(comissaoPercentual)
+comissaoDiretoria = GetFormattedNumber(comissaoDiretoria)
+comissaoGerencia = GetFormattedNumber(comissaoGerencia)
+comissaoCorretor = GetFormattedNumber(comissaoCorretor)
+
+premioDiretoria = GetFormattedNumber(premioDiretoria)
+premioGerencia = GetFormattedNumber(premioGerencia)
+premioCorretor = GetFormattedNumber(premioCorretor)
+
+descontoPerc = GetFormattedNumber(descontoPerc)
+descontoBruto = GetFormattedNumber(cdbl(descontoBruto)/vFator)
+descontoDiretoria = GetFormattedNumber(descontoDiretoria/vFator)
+descontoGerencia = GetFormattedNumber(descontoGerencia/vFator)
+descontoCorretor = GetFormattedNumber(descontoCorretor/vFator)
+
+' Formata os componentes líquidos (substituindo as variáveis originais)
+valorLiqDiretoria = GetFormattedNumber(valorLiqDiretoria_Original/vFator)
+valorLiqGerencia = GetFormattedNumber(valorLiqGerencia_Original/vFator)
+valorLiqCorretor = GetFormattedNumber(valorLiqCorretor_Original/vFator)
+
+valorLiqGeral = valorLiqGeral_Calculado/100
+valorLiqGeral = GetFormattedNumber(valorLiqGeral)
+
+'response.Write dataVenda
+'response.end 
 
     ' -----------------------------------------------------------------------------------
     ' INSERÇÃO NO BANCO DE DADOS
     ' -----------------------------------------------------------------------------------
     ' Inserção na tabela Vendas.
-    valorLiqGeral = valorLiqDiretoria + valorLiqGerencia + valorLiqCorretor
+    
     sqlVendas = "INSERT INTO Vendas (" & _
     "Empreend_ID, NomeCliente, NomeEmpreendimento, Unidade, UnidadeM2, Corretor, CorretorId, " & _
     "ValorUnidade, ComissaoPercentual, ValorComissaoGeral, DataVenda, " & _
@@ -173,7 +207,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     "VALUES (" & empreend_id & ", '" & SanitizeSQL(nomeCliente) & "', '" & SanitizeSQL(nomeEmpreendimento) & "', " & _
     "'" & SanitizeSQL(unidade) & "', " & m2 & ", " & _
     "'" & SanitizeSQL(corretorNome) & "', " & corretorId & ", " & _
-    valorUnidade & ", " & comissaoPercentual & ", " & valorComissaoGeral & ", " & dataVendaSQL & ", " & _
+    valorUnidade & ", " & comissaoPercentual & ", " & valorComissaoGeral & ", " & dataVenda & ", " & _
     diaVenda & ", " & mesVenda & ", " & anoVenda & ", " & trimestre & ", " & _
     "'" & SanitizeSQL(obs) & "', '" & SanitizeSQL(usuario) & "', " & _
     diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
@@ -184,11 +218,71 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
     valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ", " & valorLiqGeral & ")"
 
-    'Response.Write sqlVendas
-    'Response.end 
+   '' response.Write sqlVendas
+   '' Response.end 
 
+' -------------------------Tratamento de erro -11 11 25 ------------------------------------------------
+' Inicia o tratamento de erro para capturar falhas na execução SQL
+    On Error Resume Next
+    
+    ' Executa a consulta de Vendas
     connSales.Execute(sqlVendas)
 
+    ' Verifica se ocorreu um erro SQL
+    If Err.Number <> 0 Then
+    
+        Dim errorNumber : errorNumber = Err.Number
+        Dim errorDescription : errorDescription = Err.Description
+        
+        '============================= LOG DE ERRO ============================================'
+        If (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") Then
+        
+            ' Usando os emails e remetentes solicitados
+            Set objMail = Server.CreateObject("CDONTS.NewMail")
+            objMail.From = "sendmail@gabnetweb.com.br"
+            objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+            
+            ' Adiciona "ERRO SQL" no Subject para alertar sobre a falha
+            objMail.Subject = "**ERRO SQL** SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+            
+            objMail.MailFormat = 0 ' Texto Simples
+            
+            ' Corpo do email detalhando o erro
+            Dim emailBody
+            emailBody = "Ocorreu um erro na execução do SQL de Vendas." & vbCrLf & vbCrLf
+            emailBody = emailBody & "Número do Erro: " & errorNumber & vbCrLf
+            emailBody = emailBody & "Descrição: " & errorDescription & vbCrLf & vbCrLf
+            emailBody = emailBody & "SQL Executado: " & vbCrLf & sqlVendas
+            
+            objMail.Body = emailBody
+            
+            ' Tenta enviar o email de alerta de erro
+            objMail.Send
+            Set objMail = Nothing
+        
+        End If 
+        Response.Write "Um erro ocorreu ao tentar inserir a venda. Um email foi enviado para análise do desenvolvedor."
+        Response.end 
+    Else
+        '============================= LOG DE SUCESSO ============================================'
+        If (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") Then
+            Set objMail = Server.CreateObject("CDONTS.NewMail")
+            objMail.From = "sendmail@gabnetweb.com.br"
+            objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+            
+            ' Assunto original para sucesso
+            objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+            
+            objMail.MailFormat = 0
+            objMail.Body = "Nova venda. " & sqlVendas
+            objMail.Send
+            Set objMail = Nothing
+        End If 
+        '----------- fim envio de email de sucesso'
+    End If
+    
+    On Error GoTo 0 ' Desliga o tratamento de erro
+' -------------------------------------------------------------------------------------
     ' Obtém o ID da venda recém-inserida.
     Set rsLastID = connSales.Execute("SELECT MAX(ID) AS NewID FROM Vendas")
     If Not rsLastID.EOF Then vendaId = rsLastID("NewID")
@@ -204,7 +298,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     "DescontoDiretoria, DescontoGerencia, DescontoCorretor, " & _
     "ValorLiqDiretoria, ValorLiqGerencia, ValorLiqCorretor) " & _
     "VALUES (" & vendaId & ", '" & SanitizeSQL(nomeEmpreendimento) & "', '" & SanitizeSQL(unidade) & "', " & _
-    dataVendaSQL & ", " & diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
+    dataVenda & ", " & diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
     "'" & SanitizeSQL(gerenciaNome) & "', " & corretorId & ", '" & SanitizeSQL(corretorNome) & "', " & _
     comissaoDiretoria & ", " & valorComissaoDiretoria & ", " & comissaoGerencia & ", " & valorComissaoGerencia & ", " & _
     comissaoCorretor & ", " & valorComissaoCorretor & ", " & valorComissaoGeral & ", 'Pendente', '" & SanitizeSQL(usuario) & "', " & _
@@ -212,27 +306,18 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     descontoPerc & ", " & descontoBruto & ", '" & SanitizeSQL(descontoDescricao) & "', " & _
     descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
     valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ")"    
-
-    connSales.Execute(sqlComissoes)
-    
-    '============================= LOG ============================================'
-    if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
-        set objMail = server.createobject("CDONTS.NewMail")
-            objMail.From = "sendmail@gabnetweb.com.br"
-            objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
-        objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
-        objMail.MailFormat = 0
-        objMail.Body = "Nova venda. " & sqlVendas
-        objMail.Send
-        set objMail = Nothing
-    end if 
-    '----------- fim envio de email'
+' =============================================================
     ' registrar log'
     Call InserirLog ("VENDAS", "INSERT", "Nova venda inserida ID: " & vendaId )
-    
+    ' Executar a consulta
+    'response.Write sqlComissoes
+    'Response.end 
+    connSales.Execute(sqlComissoes)
+' =============================================================
     ' Redireciona para a página de sucesso após a inserção.
     Response.Redirect "gestao_vendas_list3x.asp?mensagem=Venda cadastrada com sucesso!"
 End If
+
 
 
 ' -----------------------------------------------------------------------------------
@@ -249,13 +334,7 @@ Set rsCorretores = conn.Execute("SELECT UserId, Nome FROM Usuarios WHERE Funcao 
 ' ----------------------------------------------------------------------------------- %>
 <%
 ' Função para formatar números, removendo pontos e substituindo vírgulas por pontos.
-Function GetFormattedNumber(sValue)
-    If sValue = "" Then
-        GetFormattedNumber = "0"
-    Else
-        GetFormattedNumber = Replace(Replace(sValue, ".", ""), ",", ".")
-    End If
-End Function
+
 
 ' Função para buscar dados de uma tabela com base em um critério.
 Function GetDataFromDB(oConn, sTable, sField, sWhereField, sWhereValue)
@@ -285,7 +364,7 @@ Function SanitizeSQL(sValue)
     SanitizeSQL = Replace(sValue, "'", "''")
 End Function
 %>
-
+<!-- ######################################################################## -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>

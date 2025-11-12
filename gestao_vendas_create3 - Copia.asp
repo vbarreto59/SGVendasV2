@@ -1,45 +1,30 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
-
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
 <!--#include file="registra_log.asp"-->
 
 <% ' funcional - incluir desconto em 06 11 2025
-Function GetFormattedNumber(sValue)
-    If sValue = "" Then
-        GetFormattedNumber = "0"   
-    Else
-        GetFormattedNumber = Replace(Replace(sValue, ".", ""), ",", ".")
-    End If
-End Function
-
-Function RemoverNumeros(texto)
-    Dim regex, textoLimpo
-    Set regex = New RegExp
-    
-    regex.Pattern = "[0-9*-]"
-    regex.Global = True
-    
-    ' Remove números e asteriscos
-    textoLimpo = regex.Replace(texto, "")
-    
-    ' Remove espaços extras
-    textoLimpo = Trim(Replace(textoLimpo, "  ", " "))
-    
-    RemoverNumeros = textoLimpo
-End Function  
+    Function RemoverNumeros(texto)
+        Dim regex
+        Set regex = New RegExp
+        
+        ' Remove números (0-9) e asteriscos (*)
+        regex.Pattern = "[0-9*-]"
+        regex.Global = True
+        
+        RemoverNumerosEAsteriscos = regex.Replace(texto, "")
+        
+        ' Remove espaços extras (opcional)
+        RemoverNumeros = Trim(Replace(RemoverNumerosEAsteriscos, "  ", " "))
+    End Function    
 
 Function FormatNumberForSQL(sValue)
-    If sValue = "" Then
-        FormatNumberForSQL = "0"
-    Else
-        'sValue = CStr(sValue)
-        sValue = Replace(sValue, ".", "")
-        sValue = Replace(sValue, ",", ".")
-        FormatNumberForSQL = sValue
-    End If
-End Function 
-
+    ' Remove o separador de milhares (o ponto)
+    sValue = Replace(sValue, ".", "")
+    ' Substitui o separador decimal (a vírgula) por um ponto
+    sValue = Replace(sValue, ",", ".")
+    FormatNumberForSQL = sValue
+End Function    
 %>
 
 <%
@@ -60,17 +45,27 @@ Set connSales = Server.CreateObject("ADODB.Connection")
 connSales.Open StrConnSales
 
 ' -----------------------------------------------------------------------------------
-' VARIÁVEIS GLOBAIS
-' -----------------------------------------------------------------------------------
-Dim vendaId
-vendaId = Request.QueryString("id")
-
-' -----------------------------------------------------------------------------------
 ' PROCESSAMENTO DO FORMULÁRIO (MÉTODO POST)
 ' -----------------------------------------------------------------------------------
 If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
+    ' Declaração das variáveis.
+    Dim empreend_id, unidade, corretorId, valorUnidade, comissaoPercentual
+    Dim dataVenda, obs, usuario, m2, diretoriaId, gerenciaId
+    Dim comissaoDiretoria, comissaoGerencia, comissaoCorretor, trimestre
+    Dim nomeEmpreendimento, corretorNome, diretoriaNome, gerenciaNome
+    Dim valorComissaoGeral, valorComissaoDiretoria, valorComissaoGerencia, valorComissaoCorretor
+    Dim sqlVendas, sqlComissoes, vendaId
+    
+    ' CAMPOS DE PREMIAÇÃO ADICIONADOS
+    Dim premioDiretoria, premioGerencia, premioCorretor
+    
+    ' CAMPOS DE DESCONTO TRIBUTÁRIO ADICIONADOS
+    Dim descontoPerc, descontoBruto, descontoDescricao
+    Dim descontoDiretoria, descontoGerencia, descontoCorretor
+    Dim valorLiqDiretoria, valorLiqGerencia, valorLiqCorretor
     
     ' Coleta e formatação dos dados do formulário.
+    ' A função `GetFormattedNumber` centraliza a lógica de formatação.
     nomeCliente = Request.Form("NomeCliente")
     empreend_id = Request.Form("empreend_id")
     unidade = Request.Form("unidade")
@@ -80,15 +75,36 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     trimestre = Request.Form("trimestre")
     dataVenda = Request.Form("dataVenda")
     obs = Request.Form("obs")
+    m2 = GetFormattedNumber(Request.Form("m2"))
+    valorUnidade = GetFormattedNumber(Request.Form("valorUnidade"))
+    comissaoPercentual = GetFormattedNumber(Request.Form("comissaoPercentual"))
+    comissaoDiretoria = GetFormattedNumber(Request.Form("comissaoDiretoria"))
+    comissaoGerencia = GetFormattedNumber(Request.Form("comissaoGerencia"))
+    comissaoCorretor = GetFormattedNumber(Request.Form("comissaoCorretor"))
+
+    ' Premiação em 04 11 2025 -----------------------------
+    premioDiretoria = GetFormattedNumber(Request.Form("premioDiretoria"))    
+    premioGerencia  = GetFormattedNumber(Request.Form("premioGerencia"))    
+    premioCorretor  = GetFormattedNumber(Request.Form("premioCorretor"))    
+    '----------------------'
+
+    ' Desconto Tributário em 06 11 2025 -------------------
+    descontoPerc = GetFormattedNumber(Request.Form("descontoPerc"))
+    descontoBruto = GetFormattedNumber(Request.Form("descontoBruto"))/100
+    descontoDescricao = Request.Form("descontoDescricao")
+    descontoDiretoria = GetFormattedNumber(Request.Form("descontoDiretoria"))/100
+    descontoGerencia = GetFormattedNumber(Request.Form("descontoGerencia"))/100
+    descontoCorretor = GetFormattedNumber(Request.Form("descontoCorretor"))/100
+    valorLiqDiretoria = GetFormattedNumber(Request.Form("valorLiqDiretoria"))/100
+    valorLiqGerencia = GetFormattedNumber(Request.Form("valorLiqGerencia"))/100
+    valorLiqCorretor = GetFormattedNumber(Request.Form("valorLiqCorretor"))/100
+
+    'Valor Liq'
+
+    valorLiqGeral = valorLiqDiretoria + valorLiqGerencia+valorLiqCorretor
+    '----------------------'
+
     usuario = Session("Usuario")
-    
-    ' Valida se é edição (tem ID) ou nova venda
-    Dim isEdit
-    isEdit = (Request.Form("vendaId") <> "" And IsNumeric(Request.Form("vendaId")))
-    
-    If isEdit Then
-        vendaId = Request.Form("vendaId")
-    End If
     
     ' Validação de dados numéricos essenciais.
     If Not IsNumeric(valorUnidade) Or Not IsNumeric(comissaoPercentual) Then
@@ -126,220 +142,22 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
         trimestre = Int((mesVenda - 1) / 3) + 1
     End If
 
-    '===== Capturar valores'
-' -----------------------------------------------------------------------------------
-' 1. CAPTURA DE VARIÁVEIS (REQUEST.FORM)
-' -----------------------------------------------------------------------------------
+    ' Formatação da data para o SQL.
+    dataVendaSQL = FormatDateTimeForSQL(dataVenda)
+    dataRegistroSQL = FormatDateTimeForSQL(Now())
 
-' Variáveis que serão usadas no cálculo líquido (Armazenamos em variáveis _Original primeiro)
-Dim valorLiqDiretoria_Original : valorLiqDiretoria_Original = Request.Form("valorLiqDiretoria")
-Dim valorLiqGerencia_Original : valorLiqGerencia_Original = Request.Form("valorLiqGerencia")
-Dim valorLiqCorretor_Original : valorLiqCorretor_Original = Request.Form("valorLiqCorretor")
+    ' Cálculo das comissões.
+    vFatorDivisao = 10000
+    valorComissaoGeral = valorUnidade * (comissaoPercentual / vFatorDivisao)
+    valorComissaoDiretoria = valorComissaoGeral * (comissaoDiretoria / vFatorDivisao)
+    valorComissaoGerencia = valorComissaoGeral * (comissaoGerencia / vFatorDivisao)
+    valorComissaoCorretor = valorComissaoGeral * (comissaoCorretor / vFatorDivisao)
 
-' Outras variáveis numéricas/monetárias do formulário
-Dim m2 : m2 = Request.Form("m2")
-Dim valorUnidade : valorUnidade = Request.Form("valorUnidade")
-Dim valorComissaoGeral : valorComissaoGeral = Request.Form("valorComissaoGeral")
-Dim valorComissaoDiretoria : valorComissaoDiretoria = Request.Form("valorComissaoDiretoria")
-Dim valorComissaoGerencia : valorComissaoGerencia = Request.Form("valorComissaoGerencia")
-Dim valorComissaoCorretor : valorComissaoCorretor = Request.Form("valorComissaoCorretor")
-Dim comissaoPercentual : comissaoPercentual = Request.Form("comissaoPercentual")
-Dim comissaoDiretoria : comissaoDiretoria = Request.Form("comissaoDiretoria")
-Dim comissaoGerencia : comissaoGerencia = Request.Form("comissaoGerencia")
-Dim comissaoCorretor : comissaoCorretor = Request.Form("comissaoCorretor")
-Dim premioDiretoria : premioDiretoria = Request.Form("premioDiretoria")
-Dim premioGerencia : premioGerencia = Request.Form("premioGerencia")
-Dim premioCorretor : premioCorretor = Request.Form("premioCorretor")
-Dim descontoPerc : descontoPerc = Request.Form("descontoPerc")
-Dim descontoBruto : descontoBruto = Request.Form("descontoBruto")
-Dim descontoDiretoria : descontoDiretoria = Request.Form("descontoDiretoria")
-Dim descontoGerencia : descontoGerencia = Request.Form("descontoGerencia")
-Dim descontoCorretor : descontoCorretor = Request.Form("descontoCorretor")
-Dim descontoDescricao : descontoDescricao = Request.Form("descontoDescricao")
-
-
-' -----------------------------------------------------------------------------------
-' 2. CÁLCULO E FORMATAÇÃO
-' -----------------------------------------------------------------------------------
-
-' Calcula o valor líquido geral USANDO as variáveis originais (numéricas)
-Dim valorLiqGeral_Calculado : valorLiqGeral_Calculado = CDbl(valorLiqDiretoria_Original) + CDbl(valorLiqGerencia_Original) + CDbl(valorLiqCorretor_Original)
-
-vFator = 100
-
-' Formata as demais variáveis para SQL
-valorComissaoGeral = valorUnidade * (comissaoPercentual / vFator)
-m2 = GetFormattedNumber(m2)
-valorUnidade = GetFormattedNumber(valorUnidade)
-
-comissaoPercentual = GetFormattedNumber(comissaoPercentual)
-comissaoDiretoria = GetFormattedNumber(comissaoDiretoria)
-comissaoGerencia = GetFormattedNumber(comissaoGerencia)
-comissaoCorretor = GetFormattedNumber(comissaoCorretor)
-
-premioDiretoria = GetFormattedNumber(premioDiretoria)
-premioGerencia = GetFormattedNumber(premioGerencia)
-premioCorretor = GetFormattedNumber(premioCorretor)
-
-
-descontoPerc = GetFormattedNumber(descontoPerc)
-descontoBruto = GetFormattedNumber(cdbl(descontoBruto)/vFator)
-descontoDiretoria = GetFormattedNumber(descontoDiretoria/vFator)
-descontoGerencia = GetFormattedNumber(descontoGerencia/vFator)
-descontoCorretor = GetFormattedNumber(descontoCorretor/vFator)
-
-' Formata os componentes líquidos (substituindo as variáveis originais)
-valorLiqDiretoria = GetFormattedNumber(valorLiqDiretoria_Original/vFator)
-valorLiqGerencia = GetFormattedNumber(valorLiqGerencia_Original/vFator)
-valorLiqCorretor = GetFormattedNumber(valorLiqCorretor_Original/vFator)
-
-valorLiqGeral = valorLiqGeral_Calculado/100
-valorLiqGeral = GetFormattedNumber(valorLiqGeral)
-
-' -----------------------------------------------------------------------------------
-' ATUALIZAÇÃO NO BANCO DE DADOS
-' -----------------------------------------------------------------------------------
-
-On Error Resume Next
-
-'=================================================================================='
-If isEdit Then
-    ' ============ EDIÇÃO DA VENDA EXISTENTE ============
-    
-    ' Atualização na tabela Vendas
-    sqlVendas = "UPDATE Vendas SET " & _
-    "Empreend_ID = " & empreend_id & ", " & _
-    "NomeCliente = '" & SanitizeSQL(nomeCliente) & "', " & _
-    "NomeEmpreendimento = '" & SanitizeSQL(nomeEmpreendimento) & "', " & _
-    "Unidade = '" & SanitizeSQL(unidade) & "', " & _
-    "UnidadeM2 = " & m2 & ", " & _
-    "Corretor = '" & SanitizeSQL(corretorNome) & "', " & _
-    "CorretorId = " & corretorId & ", " & _
-    "ValorUnidade = " & valorUnidade & ", " & _
-    "ComissaoPercentual = " & comissaoPercentual & ", " & _
-    "ValorComissaoGeral = " & valorComissaoGeral & ", " & _
-    "DataVenda = " & dataVenda & ", " & _
-    "DiaVenda = " & diaVenda & ", " & _
-    "MesVenda = " & mesVenda & ", " & _
-    "AnoVenda = " & anoVenda & ", " & _
-    "Trimestre = " & trimestre & ", " & _
-    "Obs = '" & SanitizeSQL(obs) & "', " & _
-    "Usuario = '" & SanitizeSQL(usuario) & "', " & _
-    "DiretoriaId = " & diretoriaId & ", " & _
-    "Diretoria = '" & SanitizeSQL(diretoriaNome) & "', " & _
-    "GerenciaId = " & gerenciaId & ", " & _
-    "Gerencia = '" & SanitizeSQL(gerenciaNome) & "', " & _
-    "ComissaoDiretoria = " & comissaoDiretoria & ", " & _
-    "ValorDiretoria = " & valorComissaoDiretoria & ", " & _
-    "ComissaoGerencia = " & comissaoGerencia & ", " & _
-    "ValorGerencia = " & valorComissaoGerencia & ", " & _
-    "ComissaoCorretor = " & comissaoCorretor & ", " & _
-    "ValorCorretor = " & valorComissaoCorretor & ", " & _
-    "PremioDiretoria = " & premioDiretoria & ", " & _
-    "PremioGerencia = " & premioGerencia & ", " & _
-    "PremioCorretor = " & premioCorretor & ", " & _
-    "DescontoPerc = " & descontoPerc & ", " & _
-    "DescontoBruto = " & descontoBruto & ", " & _
-    "DescontoDescricao = '" & SanitizeSQL(descontoDescricao) & "', " & _
-    "DescontoDiretoria = " & descontoDiretoria & ", " & _
-    "DescontoGerencia = " & descontoGerencia & ", " & _
-    "DescontoCorretor = " & descontoCorretor & ", " & _
-    "ValorLiqDiretoria = " & valorLiqDiretoria & ", " & _
-    "ValorLiqGerencia = " & valorLiqGerencia & ", " & _
-    "ValorLiqCorretor = " & valorLiqCorretor & ", " & _
-    "ValorLiqGeral = " & valorLiqGeral & " " & _
-    "WHERE ID = " & vendaId
-
-    'Response.Write sqlVendas
-    'Response.end 
-    connSales.Execute(sqlVendas)
-    
-    ' Verifica se ocorreu erro na atualização
-    'If Err.Number <> 0 Then
-    ''    Response.Write "<script>alert('Erro ao atualizar venda: " & Err.Description & "');history.back();</script>"
-        'Response.End
-    'End If
-    
-    ' ============ ATUALIZAÇÃO NA TABELA COMISSOES_A_PAGAR ============
-    
-    ' Primeiro verifica se existe registro na COMISSOES_A_PAGAR
-    Set rsCheck = connSales.Execute("SELECT ID FROM COMISSOES_A_PAGAR WHERE ID_Venda = " & vendaId)
-    
-    If Not rsCheck.EOF Then
-        ' Atualiza registro existente
-        sqlComissoes = "UPDATE COMISSOES_A_PAGAR SET " & _
-        "Empreendimento = '" & SanitizeSQL(nomeEmpreendimento) & "', " & _
-        "Unidade = '" & SanitizeSQL(unidade) & "', " & _
-        "DataVenda = " & dataVenda & ", " & _
-        "UserIdDiretoria = " & diretoriaId & ", " & _
-        "NomeDiretor = '" & SanitizeSQL(diretoriaNome) & "', " & _
-        "UserIdGerencia = " & gerenciaId & ", " & _
-        "NomeGerente = '" & SanitizeSQL(gerenciaNome) & "', " & _
-        "UserIdCorretor = " & corretorId & ", " & _
-        "NomeCorretor = '" & SanitizeSQL(corretorNome) & "', " & _
-        "PercDiretoria = " & comissaoDiretoria & ", " & _
-        "ValorDiretoria = " & valorComissaoDiretoria & ", " & _
-        "PercGerencia = " & comissaoGerencia & ", " & _
-        "ValorGerencia = " & valorComissaoGerencia & ", " & _
-        "PercCorretor = " & comissaoCorretor & ", " & _
-        "ValorCorretor = " & valorComissaoCorretor & ", " & _
-        "TotalComissao = " & valorComissaoGeral & ", " & _
-        "Usuario = '" & SanitizeSQL(usuario) & "', " & _
-        "PremioDiretoria = " & premioDiretoria & ", " & _
-        "PremioGerencia = " & premioGerencia & ", " & _
-        "PremioCorretor = " & premioCorretor & ", " & _
-        "DescontoPerc = " & descontoPerc & ", " & _
-        "DescontoBruto = " & descontoBruto & ", " & _
-        "DescontoDescricao = '" & SanitizeSQL(descontoDescricao) & "', " & _
-        "DescontoDiretoria = " & descontoDiretoria & ", " & _
-        "DescontoGerencia = " & descontoGerencia & ", " & _
-        "DescontoCorretor = " & descontoCorretor & ", " & _
-        "ValorLiqDiretoria = " & valorLiqDiretoria & ", " & _
-        "ValorLiqGerencia = " & valorLiqGerencia & ", " & _
-        "ValorLiqCorretor = " & valorLiqCorretor & " " & _
-        "WHERE ID_Venda = " & vendaId
-    Else
-        ' Insere novo registro
-        sqlComissoes = "INSERT INTO COMISSOES_A_PAGAR (" & _
-        "ID_Venda, Empreendimento, Unidade, DataVenda, UserIdDiretoria, NomeDiretor, " & _
-        "UserIdGerencia, NomeGerente, UserIdCorretor, NomeCorretor, PercDiretoria, ValorDiretoria, " & _
-        "PercGerencia, ValorGerencia, PercCorretor, ValorCorretor, TotalComissao, StatusPagamento, Usuario, " & _
-        "PremioDiretoria, PremioGerencia, PremioCorretor, " & _
-        "DescontoPerc, DescontoBruto, DescontoDescricao, " & _
-        "DescontoDiretoria, DescontoGerencia, DescontoCorretor, " & _
-        "ValorLiqDiretoria, ValorLiqGerencia, ValorLiqCorretor) " & _
-        "VALUES (" & vendaId & ", '" & SanitizeSQL(nomeEmpreendimento) & "', '" & SanitizeSQL(unidade) & "', " & _
-        dataVenda & ", " & diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
-        "'" & SanitizeSQL(gerenciaNome) & "', " & corretorId & ", '" & SanitizeSQL(corretorNome) & "', " & _
-        comissaoDiretoria & ", " & valorComissaoDiretoria & ", " & comissaoGerencia & ", " & valorComissaoGerencia & ", " & _
-        comissaoCorretor & ", " & valorComissaoCorretor & ", " & valorComissaoGeral & ", 'Pendente', '" & SanitizeSQL(usuario) & "', " & _
-        premioDiretoria & ", " & premioGerencia & ", " & premioCorretor & ", " & _
-        descontoPerc & ", " & descontoBruto & ", '" & SanitizeSQL(descontoDescricao) & "', " & _
-        descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
-        valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ")"
-    End If
-    rsCheck.Close
-    Set rsCheck = Nothing
-    
-    ' Executa a atualização/inserção na COMISSOES_A_PAGAR
-    connSales.Execute(sqlComissoes)
-    
-    ' Verifica se ocorreu erro
-    'If Err.Number <> 0 Then
-    ''    Response.Write "<script>alert('Erro ao atualizar comissões: " & Err.Description & "');history.back();</script>"
-     ''   Response.End
-    'End If
-    
-    ' Registrar log de edição
-    Call InserirLog("VENDAS", "UPDATE", "Venda editada ID: " & vendaId)
-    
-    ' Redireciona para a página de sucesso
-    Response.Redirect "gestao_vendas_list3x.asp?mensagem=Venda atualizada com sucesso!"
-    
-Else
-    ' ============ NOVA VENDA (CÓDIGO ORIGINAL) ============
-    
-    ' Inserção na tabela Vendas
+    ' -----------------------------------------------------------------------------------
+    ' INSERÇÃO NO BANCO DE DADOS
+    ' -----------------------------------------------------------------------------------
+    ' Inserção na tabela Vendas.
+    valorLiqGeral = valorLiqDiretoria + valorLiqGerencia + valorLiqCorretor
     sqlVendas = "INSERT INTO Vendas (" & _
     "Empreend_ID, NomeCliente, NomeEmpreendimento, Unidade, UnidadeM2, Corretor, CorretorId, " & _
     "ValorUnidade, ComissaoPercentual, ValorComissaoGeral, DataVenda, " & _
@@ -355,7 +173,7 @@ Else
     "VALUES (" & empreend_id & ", '" & SanitizeSQL(nomeCliente) & "', '" & SanitizeSQL(nomeEmpreendimento) & "', " & _
     "'" & SanitizeSQL(unidade) & "', " & m2 & ", " & _
     "'" & SanitizeSQL(corretorNome) & "', " & corretorId & ", " & _
-    valorUnidade & ", " & comissaoPercentual & ", " & valorComissaoGeral & ", " & dataVenda & ", " & _
+    valorUnidade & ", " & comissaoPercentual & ", " & valorComissaoGeral & ", " & dataVendaSQL & ", " & _
     diaVenda & ", " & mesVenda & ", " & anoVenda & ", " & trimestre & ", " & _
     "'" & SanitizeSQL(obs) & "', '" & SanitizeSQL(usuario) & "', " & _
     diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
@@ -366,19 +184,17 @@ Else
     descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
     valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ", " & valorLiqGeral & ")"
 
+    'Response.Write sqlVendas
+    'Response.end 
+
     connSales.Execute(sqlVendas)
-    
-    If Err.Number <> 0 Then
-        Response.Write "<script>alert('Erro ao inserir venda: " & Err.Description & "');history.back();</script>"
-        Response.End
-    End If
-    
+
     ' Obtém o ID da venda recém-inserida.
     Set rsLastID = connSales.Execute("SELECT MAX(ID) AS NewID FROM Vendas")
     If Not rsLastID.EOF Then vendaId = rsLastID("NewID")
     rsLastID.Close
     
-    ' Inserção na tabela COMISSOES_A_PAGAR
+    '-------- Inserção na tabela COMISSOES_A_PAGAR. (COM PRÊMIOS E DESCONTOS INCLUÍDOS)
     sqlComissoes = "INSERT INTO COMISSOES_A_PAGAR (" & _
     "ID_Venda, Empreendimento, Unidade, DataVenda, UserIdDiretoria, NomeDiretor, " & _
     "UserIdGerencia, NomeGerente, UserIdCorretor, NomeCorretor, PercDiretoria, ValorDiretoria, " & _
@@ -388,7 +204,7 @@ Else
     "DescontoDiretoria, DescontoGerencia, DescontoCorretor, " & _
     "ValorLiqDiretoria, ValorLiqGerencia, ValorLiqCorretor) " & _
     "VALUES (" & vendaId & ", '" & SanitizeSQL(nomeEmpreendimento) & "', '" & SanitizeSQL(unidade) & "', " & _
-    dataVenda & ", " & diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
+    dataVendaSQL & ", " & diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _
     "'" & SanitizeSQL(gerenciaNome) & "', " & corretorId & ", '" & SanitizeSQL(corretorNome) & "', " & _
     comissaoDiretoria & ", " & valorComissaoDiretoria & ", " & comissaoGerencia & ", " & valorComissaoGerencia & ", " & _
     comissaoCorretor & ", " & valorComissaoCorretor & ", " & valorComissaoGeral & ", 'Pendente', '" & SanitizeSQL(usuario) & "', " & _
@@ -396,49 +212,54 @@ Else
     descontoPerc & ", " & descontoBruto & ", '" & SanitizeSQL(descontoDescricao) & "', " & _
     descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
     valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ")"    
+
+
     
-    Call InserirLog("VENDAS", "INSERT", "Nova venda inserida ID: " & vendaId)
-    connSales.Execute(sqlComissoes)
+    '============================= LOG ============================================'
+    if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+        set objMail = server.createobject("CDONTS.NewMail")
+            objMail.From = "sendmail@gabnetweb.com.br"
+            objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+        objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+        objMail.MailFormat = 0
+        objMail.Body = "Nova venda. " & sqlVendas
+        objMail.Send
+        set objMail = Nothing
+    end if 
+    '----------- fim envio de email'
+    ' registrar log'
+    Call InserirLog ("VENDAS", "INSERT", "Nova venda inserida ID: " & vendaId )
     
+    ' Redireciona para a página de sucesso após a inserção.
     Response.Redirect "gestao_vendas_list3x.asp?mensagem=Venda cadastrada com sucesso!"
 End If
-End if
-' =============================================================
-On Error GoTo 0
-%>
 
-<%
+    ' Executar a consulta
+    connSales.Execute(sqlComissoes)
+
 ' -----------------------------------------------------------------------------------
-' CARREGAR DADOS EXISTENTES PARA EDIÇÃO (MÉTODO GET)
+' BUSCA DE DADOS PARA DROPDOWNS (MÉTODO GET)
 ' -----------------------------------------------------------------------------------
-Dim editData
-Set editData = Nothing
-
-If vendaId <> "" And IsNumeric(vendaId) Then
-    Set editData = connSales.Execute("SELECT * FROM Vendas WHERE ID = " & vendaId)
-    If editData.EOF Then
-        Set editData = Nothing
-        Response.Redirect "gestao_vendas_list3x.asp?mensagem=Venda não encontrada!"
-    End If
-End If
-
 ' Busca e popula os recordsets para os dropdowns na página.
 Set rsEmpreend = conn.Execute("SELECT Empreend_ID, NomeEmpreendimento, ComissaoVenda FROM Empreendimento ORDER BY NomeEmpreendimento")
 Set rsDiretorias = conn.Execute("SELECT DiretoriaID, NomeDiretoria FROM Diretorias ORDER BY NomeDiretoria")
 Set rsCorretores = conn.Execute("SELECT UserId, Nome FROM Usuarios WHERE Funcao = 'Corretor' AND Nome <> '' ORDER BY Nome")
-
-' Carrega gerencias se estiver editando e tem diretoria
-If Not editData Is Nothing Then
-    If editData("DiretoriaId") <> "" Then
-        Set rsGerencias = conn.Execute("SELECT GerenciaID, NomeGerencia FROM Gerencias WHERE DiretoriaID = " & editData("DiretoriaId") & " ORDER BY NomeGerencia")
-    End If
-End If
 %>
 
 <% ' -----------------------------------------------------------------------------------
 ' FUNÇÕES AUXILIARES
 ' ----------------------------------------------------------------------------------- %>
 <%
+' Função para formatar números, removendo pontos e substituindo vírgulas por pontos.
+Function GetFormattedNumber(sValue)
+    If sValue = "" Then
+        GetFormattedNumber = "0"
+    Else
+        GetFormattedNumber = Replace(Replace(sValue, ".", ""), ",", ".")
+    End If
+End Function
+
+' Função para buscar dados de uma tabela com base em um critério.
 Function GetDataFromDB(oConn, sTable, sField, sWhereField, sWhereValue)
     Dim sResult
     Set rs = oConn.Execute("SELECT " & sField & " FROM " & sTable & " WHERE " & sWhereField & " = " & sWhereValue)
@@ -452,6 +273,7 @@ Function GetDataFromDB(oConn, sTable, sField, sWhereField, sWhereValue)
     GetDataFromDB = sResult
 End Function
 
+' Função para formatar a data para o formato SQL.
 Function FormatDateTimeForSQL(dDate)
     If Trim(dDate & "") = "" Then
         FormatDateTimeForSQL = "NULL"
@@ -460,41 +282,19 @@ Function FormatDateTimeForSQL(dDate)
     End If
 End Function
 
+' Função para sanitizar strings, escapando aspas simples.
 Function SanitizeSQL(sValue)
     SanitizeSQL = Replace(sValue, "'", "''")
 End Function
-
-' Função para formatar valor para exibição
-Function FormatForDisplay(sValue)
-    If IsNumeric(sValue) Then
-        'FormatForDisplay = Replace(FormatNumber(sValue, 2), ".", ",")
-        FormatForDisplay = FormatNumber(sValue, 2)
-    Else
-        FormatForDisplay = "0,00"
-    End If
-End Function
-
-' Função para obter valor do campo com fallback
-Function GetFieldValue(fieldName, defaultValue)
-    If Not editData Is Nothing Then
-        If Not IsNull(editData(fieldName)) Then
-            GetFieldValue = editData(fieldName)
-        Else
-            GetFieldValue = defaultValue
-        End If
-    Else
-        GetFieldValue = defaultValue
-    End If
-End Function
 %>
-<!-- ######################################################################## -->
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="300">
-    <title><% If Not editData Is Nothing Then Response.Write "Editar" Else Response.Write "Nova" %> Venda | Sistema</title>
+    <title>Nova Venda | Sistema</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -506,7 +306,6 @@ End Function
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
     <style>
-        /* ... (manter o mesmo CSS do arquivo original) ... */
         :root {
             --primary: #2c3e50;
             --secondary: #3498db;
@@ -766,18 +565,11 @@ End Function
             font-size: 0.85rem;
             font-weight: 600;
         }
-        
-        .edit-badge {
-            background: linear-gradient(135deg, var(--warning), #e67e22);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
     </style>
 </head>
 <body>
+
+<!-- verifica a mensagem e fecha a aba 07 11 2025 -->
 
 <%
     Dim strMensagem
@@ -786,16 +578,24 @@ End Function
     If strMensagem <> "" Then
 %>
 <script type="text/javascript">
+    // Exibe a mensagem de sucesso em um pop-up de confirmação
     var confirmacao = confirm("<%= strMensagem %>"); 
+
     if (confirmacao) {
+        // Tenta fechar a aba ao clicar em OK
         try {
+            // Este comando é o mais robusto, mas pode ser bloqueado
             window.open('', '_self', ''); 
             window.close();
         } catch (e) {
-            // Se o navegador bloquear o window.close()
+            // Se o navegador bloquear o window.close(), tenta uma alternativa para abas abertas por script
+            // Nota: Se a aba não foi aberta por script, a maioria dos navegadores bloqueará isso.
+            // Outra alternativa que pode funcionar:
+            // window.close(); 
         }
     }
     
+    // Limpa a URL para remover a mensagem após a exibição (opcional)
     if (window.history.replaceState) {
         var urlSemMensagem = window.location.pathname;
         window.history.replaceState({path:urlSemMensagem},'',urlSemMensagem);
@@ -805,36 +605,17 @@ End Function
     End If
 %>
 
+
+
     <div class="app-container">
         <!-- Header -->
         <div class="app-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="app-title">
-                       <i class="fas 
-                        <% 
-                        If Not editData Is Nothing Then 
-                            Response.Write "fa-edit" 
-                        Else 
-                            Response.Write "fa-plus-circle" 
-                        End If 
-                        %>"></i> 
-                        <% 
-                        If Not editData Is Nothing Then 
-                            Response.Write "Editar" 
-                        Else 
-                            Response.Write "Nova" 
-                        End If 
-                        %> Venda
+                    <i class="fas fa-plus-circle"></i> Nova Venda
                 </h1>
-                <div class="d-flex gap-2">
-                    <div class="info-badge">
-                        <i class="fas fa-user me-1"></i><%= Session("Usuario") %>
-                    </div>
-                    <% If Not editData Is Nothing Then %>
-                    <div class="edit-badge">
-                        <i class="fas fa-edit me-1"></i>Editando Venda #<%= vendaId %>
-                    </div>
-                    <% End If %>
+                <div class="info-badge">
+                    <i class="fas fa-user me-1"></i><%= Session("Usuario") %>
                 </div>
             </div>
         </div>
@@ -854,11 +635,6 @@ End Function
                 </div>
 
                 <form method="post" id="formVenda">
-                    <!-- Campo hidden para ID da venda (em caso de edição) -->
-                    <% If Not editData Is Nothing Then %>
-                    <input type="hidden" id="vendaId" name="vendaId" value="<%= vendaId %>">
-                    <% End If %>
-                    
                     <!-- Campos hidden para dia, mês e ano -->
                     <input type="hidden" id="diaVenda" name="diaVenda">
                     <input type="hidden" id="mesVenda" name="mesVenda">
@@ -869,8 +645,8 @@ End Function
                     <input type="hidden" id="descontoDiretoria" name="descontoDiretoria">
                     <input type="hidden" id="descontoGerencia" name="descontoGerencia">
                     <input type="hidden" id="descontoCorretor" name="descontoCorretor">
+                    <!-- Nome do cliente em 11 11 2025 -->
 
-                    <!-- Nome do cliente -->
                     <div class="form-section">
                         <h3 class="section-title">
                             <i class="fas fa-user-tie me-2"></i>Cliente
@@ -880,9 +656,7 @@ End Function
                                 <div class="row g-3">
                                     <div class="col-md-12">
                                         <label for="NomeCliente" class="form-label">Nome do Cliente</label>
-                                        <input type="text" class="form-control" id="NomeCliente" name="NomeCliente" 
-                                               value="<%= GetFieldValue("NomeCliente", "") %>" 
-                                               placeholder="Informe o nome completo do cliente" required>
+                                        <input type="text" class="form-control" id="NomeCliente" name="NomeCliente" placeholder="Informe o nome completo do cliente" required>
                                     </div>
                                 </div>
                             </div>
@@ -903,14 +677,8 @@ End Function
                                     If Not rsEmpreend.EOF Then
                                         rsEmpreend.MoveFirst
                                         Do While Not rsEmpreend.EOF 
-                                            selected = ""
-                                            If Not editData Is Nothing Then
-                                                If CStr(rsEmpreend("Empreend_ID")) = CStr(editData("Empreend_ID")) Then
-                                                    selected = "selected"
-                                                End If
-                                            End If
                                     %>
-                                        <option value="<%= rsEmpreend("Empreend_ID") %>" data-comissao="<%= rsEmpreend("ComissaoVenda") %>" <%= selected %>>
+                                        <option value="<%= rsEmpreend("Empreend_ID") %>" data-comissao="<%= rsEmpreend("ComissaoVenda") %>">
                                             <%= RemoverNumeros(rsEmpreend("NomeEmpreendimento")) %>
                                         </option>
                                     <%
@@ -922,31 +690,23 @@ End Function
                             </div>
                             <div class="col-md-3">
                                 <label for="unidade" class="form-label required-field">Unidade</label>
-                                <input type="text" class="form-control" id="unidade" name="unidade" 
-                                       value="<%= GetFieldValue("Unidade", "") %>" 
-                                       placeholder="Ex: 101A">
+                                <input type="text" class="form-control" id="unidade" name="unidade" placeholder="Ex: 101A">
                             </div>
                             <div class="col-md-3">
                                 <label for="m2" class="form-label required-field">Metragem (m²)</label>
-                                <input type="text" class="form-control" id="m2" name="m2" 
-                                       value="<%= FormatForDisplay(GetFieldValue("UnidadeM2", "0")) %>" 
-                                       placeholder="Ex: 75,00">
+                                <input type="text" class="form-control" id="m2" name="m2" value="0" placeholder="Ex: 75,00">
                             </div>
                         </div>
                         
                         <div class="row g-3 mt-2">
                             <div class="col-md-6">
                                 <label for="valorUnidade" class="form-label required-field">Valor da Unidade</label>
-                                <input type="text" class="form-control" id="valorUnidade" name="valorUnidade" 
-                                       value="<%= FormatForDisplay(GetFieldValue("ValorUnidade", "0")) %>" 
-                                       placeholder="R$ 0,00" required>
+                                <input type="text" class="form-control" id="valorUnidade" name="valorUnidade" placeholder="R$ 0,00" required>
                             </div>
                             <div class="col-md-3">
                                 <label for="comissaoPercentual" class="form-label required-field">Percentual de Comissão</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="comissaoPercentual" name="comissaoPercentual" 
-                                           value="<%= FormatForDisplay(GetFieldValue("ComissaoPercentual", "0")) %>" 
-                                           placeholder="0,00" required>
+                                    <input type="text" class="form-control" id="comissaoPercentual" name="comissaoPercentual" placeholder="0,00" required>
                                     <span class="input-group-text">%</span>
                                 </div>
                             </div>
@@ -972,14 +732,8 @@ End Function
                                     If Not rsDiretorias.EOF Then
                                         rsDiretorias.MoveFirst
                                         Do While Not rsDiretorias.EOF 
-                                            selected = ""
-                                            If Not editData Is Nothing Then
-                                                If CStr(rsDiretorias("DiretoriaID")) = CStr(editData("DiretoriaId")) Then
-                                                    selected = "selected"
-                                                End If
-                                            End If
                                     %>
-                                        <option value="<%= rsDiretorias("DiretoriaID") %>" <%= selected %>><%= rsDiretorias("NomeDiretoria") %></option>
+                                        <option value="<%= rsDiretorias("DiretoriaID") %>"><%= rsDiretorias("NomeDiretoria") %></option>
                                     <%
                                             rsDiretorias.MoveNext
                                         Loop
@@ -989,25 +743,8 @@ End Function
                             </div>
                             <div class="col-md-4">
                                 <label for="gerenciaId" class="form-label required-field">Gerência</label>
-                                <select class="form-select" id="gerenciaId" name="gerenciaId" required>
-                                    <option value="">Selecione uma gerência...</option>
-                                    <% 
-                                    If Not editData Is Nothing And Not rsGerencias Is Nothing Then
-                                        If Not rsGerencias.EOF Then
-                                            rsGerencias.MoveFirst
-                                            Do While Not rsGerencias.EOF 
-                                                selected = ""
-                                                If CStr(rsGerencias("GerenciaID")) = CStr(editData("GerenciaId")) Then
-                                                    selected = "selected"
-                                                End If
-                                    %>
-                                        <option value="<%= rsGerencias("GerenciaID") %>" <%= selected %>><%= rsGerencias("NomeGerencia") %></option>
-                                    <%
-                                                rsGerencias.MoveNext
-                                            Loop
-                                        End If
-                                    End If
-                                    %>
+                                <select class="form-select" id="gerenciaId" name="gerenciaId" required disabled>
+                                    <option value="">Selecione uma diretoria primeiro</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
@@ -1018,14 +755,8 @@ End Function
                                     If Not rsCorretores.EOF Then
                                         rsCorretores.MoveFirst
                                         Do While Not rsCorretores.EOF 
-                                            selected = ""
-                                            If Not editData Is Nothing Then
-                                                If CStr(rsCorretores("UserId")) = CStr(editData("CorretorId")) Then
-                                                    selected = "selected"
-                                                End If
-                                            End If
                                     %>
-                                        <option value="<%= rsCorretores("UserId") %>" <%= selected %>><%= rsCorretores("Nome") %></option>
+                                        <option value="<%= rsCorretores("UserId") %>"><%= rsCorretores("Nome") %></option>
                                     <%
                                             rsCorretores.MoveNext
                                         Loop
@@ -1047,8 +778,7 @@ End Function
                                     <div class="col-md-3">
                                         <label for="comissaoDiretoria" class="form-label">Diretoria</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="comissaoDiretoria" name="comissaoDiretoria" 
-                                                   value="<%= FormatForDisplay(GetFieldValue("ComissaoDiretoria", "5,00")) %>">
+                                            <input type="text" class="form-control" id="comissaoDiretoria" name="comissaoDiretoria" value="5,00">
                                             <span class="input-group-text">%</span>
                                         </div>
                                         <div class="comissao-value mt-2" id="valorComissaoDiretoriaText">R$ 0,00</div>
@@ -1057,8 +787,7 @@ End Function
                                     <div class="col-md-3">
                                         <label for="comissaoGerencia" class="form-label">Gerência</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="comissaoGerencia" name="comissaoGerencia" 
-                                                   value="<%= FormatForDisplay(GetFieldValue("ComissaoGerencia", "10,00")) %>">
+                                            <input type="text" class="form-control" id="comissaoGerencia" name="comissaoGerencia" value="10,00">
                                             <span class="input-group-text">%</span>
                                         </div>
                                         <div class="comissao-value mt-2" id="valorComissaoGerenciaText">R$ 0,00</div>
@@ -1067,8 +796,7 @@ End Function
                                     <div class="col-md-3">
                                         <label for="comissaoCorretor" class="form-label">Corretor</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="comissaoCorretor" name="comissaoCorretor" 
-                                                   value="<%= FormatForDisplay(GetFieldValue("ComissaoCorretor", "35,00")) %>">
+                                            <input type="text" class="form-control" id="comissaoCorretor" name="comissaoCorretor" value="35,00">
                                             <span class="input-group-text">%</span>
                                         </div>
                                         <div class="comissao-value mt-2" id="valorComissaoCorretorText">R$ 0,00</div>
@@ -1096,16 +824,13 @@ End Function
                                     <div class="col-md-4">
                                         <label for="descontoPerc" class="form-label">Percentual de Desconto</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="descontoPerc" name="descontoPerc" 
-                                                   value="<%= FormatForDisplay(GetFieldValue("DescontoPerc", "0,00")) %>">
+                                            <input type="text" class="form-control" id="descontoPerc" name="descontoPerc" value="0,00">
                                             <span class="input-group-text">%</span>
                                         </div>
                                     </div>
                                     <div class="col-md-8">
                                         <label for="descontoDescricao" class="form-label">Descrição do Desconto</label>
-                                        <input type="text" class="form-control" id="descontoDescricao" name="descontoDescricao" 
-                                               value="<%= GetFieldValue("DescontoDescricao", "") %>" 
-                                               placeholder="Ex: Desconto IRRF, Desconto ISS, etc.">
+                                        <input type="text" class="form-control" id="descontoDescricao" name="descontoDescricao" placeholder="Ex: Desconto IRRF, Desconto ISS, etc.">
                                     </div>
                                 </div>
                                 
@@ -1148,24 +873,21 @@ End Function
                                         <label for="premioDiretoria" class="form-label">Prêmio Diretoria</label>
                                         <div class="input-group">
                                             <span class="input-group-text">R$</span>
-                                            <input type="text" class="form-control" id="premioDiretoria" name="premioDiretoria" 
-                                                   value="<%= FormatForDisplay(GetFieldValue("PremioDiretoria", "0,00")) %>">
+                                            <input type="text" class="form-control" id="premioDiretoria" name="premioDiretoria" value="0,00">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="premioGerencia" class="form-label">Prêmio Gerência</label>
                                         <div class="input-group">
                                             <span class="input-group-text">R$</span>
-                                            <input type="text" class="form-control" id="premioGerencia" name="premioGerencia" 
-                                                   value="<%= FormatForDisplay(GetFieldValue("PremioGerencia", "0,00")) %>">
+                                            <input type="text" class="form-control" id="premioGerencia" name="premioGerencia" value="0,00">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="premioCorretor" class="form-label">Prêmio Corretor</label>
                                         <div class="input-group">
                                             <span class="input-group-text">R$</span>
-                                            <input type="text" class="form-control" id="premioCorretor" name="premioCorretor" 
-                                                   value="<%= FormatForDisplay(GetFieldValue("PremioCorretor", "0,00")) %>">
+                                            <input type="text" class="form-control" id="premioCorretor" name="premioCorretor" value="0,00">
                                         </div>
                                     </div>
                                 </div>
@@ -1181,42 +903,21 @@ End Function
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label for="dataVenda" class="form-label required-field">Data da Venda</label>
-                                <%
-                                Dim dataVendaValue
-                                If Not editData Is Nothing Then
-                                    If Not IsNull(editData("DataVenda")) Then
-                                        dataVendaValue = FormatDateTime(editData("DataVenda"), 2)
-                                    Else
-                                        dataVendaValue = ""
-                                    End If
-                                Else
-                                    dataVendaValue = ""
-                                End If
-                                %>
-                                <input type="date" class="form-control" id="dataVenda" name="dataVenda" 
-                                       value="<%= dataVendaValue %>" required>
+                                <input type="date" class="form-control" id="dataVenda" name="dataVenda" required>
                             </div>
                             <div class="col-md-3">
                                 <label for="trimestre" class="form-label">Trimestre</label>
                                 <select class="form-select" id="trimestre" name="trimestre">
                                     <option value="">Selecione o trimestre...</option>
-                                    <%
-                                    trimestres = Array("1", "2", "3", "4")
-                                    For Each t In trimestres
-                                        selected = ""
-                                        If Not editData Is Nothing Then
-                                            If CStr(t) = CStr(editData("Trimestre")) Then
-                                                selected = "selected"
-                                            End If
-                                        End If
-                                        Response.Write "<option value=""" & t & """ " & selected & ">" & t & "º Trimestre</option>"
-                                    Next
-                                    %>
+                                    <option value="1">1º Trimestre</option>
+                                    <option value="2">2º Trimestre</option>
+                                    <option value="3">3º Trimestre</option>
+                                    <option value="4">4º Trimestre</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label for="obs" class="form-label">Observações</label>
-                                <textarea class="form-control" id="obs" name="obs" rows="3" placeholder="Observações adicionais sobre a venda..."><%= GetFieldValue("Obs", "") %></textarea>
+                                <textarea class="form-control" id="obs" name="obs" rows="3" placeholder="Observações adicionais sobre a venda..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -1227,21 +928,7 @@ End Function
                             <i class="fas fa-times me-2"></i>Cancelar
                         </a>
                         <button type="submit" class="btn btn-success">
-                            <i class="fas 
-                            <% 
-                            If Not editData Is Nothing Then 
-                                Response.Write "fa-save" 
-                            Else 
-                                Response.Write "fa-plus-circle" 
-                            End If 
-                            %> me-2"></i>
-                            <% 
-                            If Not editData Is Nothing Then 
-                                Response.Write "Atualizar" 
-                            Else 
-                                Response.Write "Salvar" 
-                            End If 
-                            %> Venda
+                            <i class="fas fa-save me-2"></i>Salvar Venda
                         </button>
                     </div>
                 </form>
@@ -1441,11 +1128,9 @@ End Function
             // Calcula a comissão inicial
             calcularComissoes();
 
-            // Define a data atual como padrão se não estiver editando
-            <% If editData Is Nothing Then %>
-                var today = new Date().toISOString().split('T')[0];
-                $('#dataVenda').val(today).trigger('change');
-            <% End If %>
+            // Define a data atual como padrão
+            var today = new Date().toISOString().split('T')[0];
+            $('#dataVenda').val(today).trigger('change');
         });
     </script>
 </body>
@@ -1465,16 +1150,6 @@ End If
 If IsObject(rsCorretores) Then
     rsCorretores.Close
     Set rsCorretores = Nothing
-End If
-
-If IsObject(rsGerencias) Then
-    rsGerencias.Close
-    Set rsGerencias = Nothing
-End If
-
-If IsObject(editData) Then
-    editData.Close
-    Set editData = Nothing
 End If
 
 If IsObject(conn) Then
