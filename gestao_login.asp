@@ -28,16 +28,35 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
 
 '============================= EMAIL ============================================'
 if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+
+    ' Desativa a interrupção em caso de erro.
+    On Error Resume Next 
+
+    ' Tenta criar o objeto CDONTS.NewMail
     set objMail = server.createobject("CDONTS.NewMail")
+
+    ' Verifica se houve erro na linha anterior (erro na criação do objeto)
+    if Err.Number <> 0 then 
+        ' Se houve erro, registra (opcional) e sai do bloco de email.
+        ' Response.Write "Erro ao criar objeto CDONTS: " & Err.Description
+        set objMail = Nothing ' Garante que a variável seja liberada, mesmo que não criada
+        
+    else
+        ' Se não houve erro (objeto criado com sucesso), envia o email.
         objMail.From = "sendmail@gabnetweb.com.br"
         objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
-    objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
-    objMail.MailFormat = 0
-    objMail.Body = "Login SGVendas"
-    objMail.Send
-    set objMail = Nothing
+        objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+        objMail.MailFormat = 0 ' 0 = Texto Simples
+        objMail.Body = "Login SGVendas"
+        objMail.Send
+        set objMail = Nothing
+    end if 
+    
+    ' Restaura o tratamento de erro padrão (interrompe o script em caso de erro).
+    On Error GoTo 0 
+    
 end if 
-'----------- fim envio de email'      
+'----------- fim envio de email'    
 
 
 
@@ -303,6 +322,19 @@ End Sub
 
     .btn-submit:active {
         transform: translateY(0);
+    }
+</style>
+<style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.7); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.7); 
     }
 </style>
 

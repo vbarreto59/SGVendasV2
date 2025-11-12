@@ -337,6 +337,19 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
             gap: 4px;
         }
     </style>
+<style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.8); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.8); 
+    }
+</style>    
 </head>
 <body>
     <!-- Teste do Font Awesome -->
@@ -361,7 +374,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
             <th class="text-center">Diretoria</th>
             <th class="text-center">Gerência</th>
             <th class="text-center">Corretor</th>
-            <th class="text-center">Desconto Trib.</th>
+            
             <th class="text-center">Ações</th>
         </tr>
     </thead>
@@ -945,23 +958,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
             <% ' ----------------------------------------------------------------- %>
             <% ' COLUNA DESCONTO TRIBUTÁRIO %>
             <% ' ----------------------------------------------------------------- %>
-            <td class="text-center">
-                <% If dblDescontoPerc > 0 Then %>
-                    <div class="desconto-info">
-                        <strong><%= FormatNumber(dblDescontoPerc, 2) %>%</strong>
-                        <br>
-                        <small>Total: R$ <%= FormatNumber(dblDescontoBruto, 2) %></small>
-                        <% If strDescontoDescricao <> "" Then %>
-                            <br>
-                            <small title="<%= strDescontoDescricao %>">
-                                <i class="fas fa-info-circle"></i> <%= Left(strDescontoDescricao, 20) & "..." %>
-                            </small>
-                        <% End If %>
-                    </div>
-                <% Else %>
-                    <span class="text-muted">-</span>
-                <% End If %>
-            </td>
+
 
             <td class="text-center">
                 <button class="btn btn-primary btn-sm mb-1" 
@@ -982,7 +979,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
                     data-corretor-pago="<%= FormatNumber(totalPagoCorretor, 2) %>"
                 >
                     <i class="fas fa-hand-holding-usd"></i> Pagar Comiss.
-                </button>
+                </button><br>
 
                 <% If dblPremioDiretoria > 0 Or dblPremioGerencia > 0 Or dblPremioCorretor > 0 Then %>
                 <button class="btn btn-premio btn-sm mb-1" 
@@ -1011,7 +1008,7 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
                     data-bs-target="#viewPaymentsModal"
                     data-id-venda="<%= rsComissoes("ID_Venda") %>">
                     <i class="fas fa-eye"></i> Ver Pagamentos
-                </button>
+                </button><br>
             
                 <button class="btn btn-danger btn-sm" onclick="confirmDelete(<%= rsComissoes("ID_Comissoes") %>)"><i class="fas fa-trash-alt"></i> Excluir</button>
             </td>

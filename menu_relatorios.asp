@@ -116,6 +116,19 @@ Response.Charset = "utf-8"
         }
 
     </style>
+    <style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.8); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.8); 
+    }
+</style>
 </head>
 <body>
     
@@ -310,21 +323,7 @@ Response.Charset = "utf-8"
                 </a>
             </div>
 
-            <div class="col-12 col-md-6 col-lg-4">
-                <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
-                    <div class="card h-100">
-                        <div class="card-header text-center">
-                            <h5 class="mb-0"><i class="fas fa-globe-americas me-2"></i>Geo - Mapa de Vendas</h5>
-                        </div>
-                        <div class="card-body text-center d-flex flex-column">
-                            <p class="card-text">Visualização das regiões com vendas.</p>
-                            <span class="btn btn-primary btn-sm mt-auto">
-                                <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa
-                            </span>
-                        </div>
-                    </div>
-                </a>
-            </div>  
+
         </div>
     </div>
     

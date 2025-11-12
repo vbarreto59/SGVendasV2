@@ -158,6 +158,7 @@ vFator = 100
 
 ' Formata as demais variáveis para SQL
 valorComissaoGeral = valorUnidade * (comissaoPercentual / vFator)
+valorComissaoGeral = GetFormattedNumber(valorComissaoGeral)
 m2 = GetFormattedNumber(m2)
 valorUnidade = GetFormattedNumber(valorUnidade)
 
@@ -218,8 +219,8 @@ valorLiqGeral = GetFormattedNumber(valorLiqGeral)
     descontoDiretoria & ", " & descontoGerencia & ", " & descontoCorretor & ", " & _
     valorLiqDiretoria & ", " & valorLiqGerencia & ", " & valorLiqCorretor & ", " & valorLiqGeral & ")"
 
-   '' response.Write sqlVendas
-   '' Response.end 
+    'response.Write sqlVendas
+    'Response.end 
 
 ' -------------------------Tratamento de erro -11 11 25 ------------------------------------------------
 ' Inicia o tratamento de erro para capturar falhas na execução SQL
@@ -228,7 +229,6 @@ valorLiqGeral = GetFormattedNumber(valorLiqGeral)
     ' Executa a consulta de Vendas
     connSales.Execute(sqlVendas)
 
-' ============================================================================================
     ' Verifica se ocorreu um erro SQL
     If Err.Number <> 0 Then
     
@@ -265,40 +265,21 @@ valorLiqGeral = GetFormattedNumber(valorLiqGeral)
         Response.Write "Um erro ocorreu ao tentar inserir a venda. Um email foi enviado para análise do desenvolvedor."
         Response.end 
     Else
-
-        ' ============================= OBTENÇÃO DO NOVO ID =======================================
-        ' Obtém o ID da venda recém-inserida.
-        Dim vendaId 
-        Set rsLastID = connSales.Execute("SELECT MAX(ID) AS NewID FROM Vendas")
-        If Not rsLastID.EOF Then 
-            vendaId = rsLastID("NewID")
-        Else
-            vendaId = "ID Não Encontrado" 
-        End If
-        rsLastID.Close
-        Set rsLastID = Nothing
-        ' =======================================================================================
-
-
-        '============================= LOG DE SUCESSO (MODIFICADO) ===============================
+        '============================= LOG DE SUCESSO ============================================'
         If (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") Then
             Set objMail = Server.CreateObject("CDONTS.NewMail")
             objMail.From = "sendmail@gabnetweb.com.br"
-            objMail.To = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+            objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
             
-            ' ADICIONA O ID DO REGISTRO NO ASSUNTO
-            objMail.Subject = "[VENDA SUCESSO] ID: " & vendaId & " - SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+            ' Assunto original para sucesso
+            objMail.Subject = "SV-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
             
             objMail.MailFormat = 0
-            
-            ' ADICIONA O ID DO REGISTRO NO CORPO
-            objMail.Body = "Nova venda inserida com sucesso! ID do Registro: " & vendaId & vbCrLf & vbCrLf & "SQL Executado: " & sqlVendas
-            
+            objMail.Body = "Nova venda. " & sqlVendas
             objMail.Send
             Set objMail = Nothing
         End If 
         '----------- fim envio de email de sucesso'
-
     End If
     
     On Error GoTo 0 ' Desliga o tratamento de erro
@@ -337,7 +318,7 @@ valorLiqGeral = GetFormattedNumber(valorLiqGeral)
     ' Redireciona para a página de sucesso após a inserção.
     Response.Redirect "gestao_vendas_list3x.asp?mensagem=Venda cadastrada com sucesso!"
 End If
-' ============================================================================================
+
 
 
 ' -----------------------------------------------------------------------------------
@@ -663,7 +644,6 @@ End Function
             font-weight: 600;
         }
     </style>
- 
 </head>
 <body>
 

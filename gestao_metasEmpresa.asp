@@ -236,6 +236,19 @@ End If
         h2 { color: #2c3e50; margin-bottom: 15px; }
         .current-year { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
     </style>
+    <style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.8); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.8); 
+    }
+</style>
 </head>
 <body>
     <div class="container">

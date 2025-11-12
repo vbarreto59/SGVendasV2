@@ -97,6 +97,19 @@ End If
         .valor-numero { font-family: 'Courier New', monospace; text-align: right; }
         .table-responsive { overflow-x: auto; }
     </style>
+    <style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.8); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.8); 
+    }
+</style>
 </head>
 <body>
 

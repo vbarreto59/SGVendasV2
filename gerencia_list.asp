@@ -17,6 +17,19 @@
     <link rel="stylesheet" href="css/gestao_estilo.css">
     
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.8); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.8); 
+    }
+</style>    
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">

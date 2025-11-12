@@ -338,6 +338,19 @@ End If
         tr:nth-child(even) { background-color: #f9f9f9; }
         .section-title { color: #007bff; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; font-size: 1.2em; }
     </style>
+    <style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.7); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.7); 
+    }
+</style>
 </head>
 <body>
     <div class="container">

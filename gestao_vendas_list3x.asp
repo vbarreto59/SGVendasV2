@@ -1,5 +1,10 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 
+<%
+ If Session("Usuario") = "" Then
+    Response.redirect "gestao_login.asp"
+ end if   
+%>
 <% 'funcional 04 11 2025'
     If Len(StrConn) = 0 Then %>
     <!--#include file="conexao.asp"-->
@@ -537,6 +542,21 @@ End If
             color: var(--primary);
         }
     </style>
+
+
+<style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.8); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.8); 
+    }
+</style>    
 </head>
 
 <body>
@@ -621,42 +641,37 @@ End If
                 <div class="col-md-8">
                     <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtros e Ações</h5>
                 </div>
-                <div class="col-md-4 text-end">
-                    <div class="btn-group">
-                        <a href="gestao_vendas_create3.asp" class="btn btn-info btn-sm">
-                            <i class="fas fa-plus me-1"></i>Nova Venda
-                        </a>
-                        <a href="gestao_vendas_gerenc_comissoes3.asp" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fas fa-money-bill-wave me-1"></i>Pagar Individual
-                        </a>
-   
+<div class="col-md-4 text-end d-flex justify-content-end align-items-center">
+    
+    <a href="gestao_vendas_create3.asp" class="btn btn-info btn-sm me-2">
+        <i class="fas fa-plus me-1"></i>Nova
+    </a>
+    
+    <a href="gestao_vendas_gerenc_comissoes3.asp" class="btn btn-primary btn-sm me-2" target="_blank">
+        <i class="fas fa-money-bill-wave me-1"></i>Pagar
+    </a>
 
-
-
-                        <a href="gestao_vendas_list_excluidos.asp" class="btn btn-warning btn-sm" target="_blank">
-                            <i class="fas fa-trash-restore me-1"></i>Excluídos
-                        </a>
-                        <%if Session("Usuario")="BARRETO" Then%>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                                    <i class="fas fa-tools me-1"></i>Utilitários
-                                </button>
-                                <ul class="dropdown-menu">
-
-                                    <li><a class="dropdown-item" href="inserirVendasTeste2.asp" target="_blank"><i class="fas fa-plus me-1"></i>Inserir Testes</a></li>
-                                    <li><a class="dropdown-item" href="excluir_testes.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Testes</a></li>
-                                    <li><a class="dropdown-item" href="tool_excluir_tudo.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Vendas</a></li>   
-
-                                    <li><a class="dropdown-item" href="tool_visualizar_log.asp" target="_blank"><i class="fas fa-trash me-1"></i>Log Sistema</a></li>  
-                                     <li><a class="dropdown-item" href="tool_venda_criar_json.asp" target="_blank"><i class="fas fa-trash me-1"></i>Gerar Json</a></li> 
-                                     <li><a class="dropdown-item" href="gestao_vendas_inserir_comissao_todos1.asp" target="_blank"><i class="fas fa-trash me-1"></i>Inserir Todos</a></li> 
-
-                                    
-                                </ul>
-                            </div>
-                        <%end if%>
-                    </div>
-                </div>
+    <a href="gestao_vendas_list_excluidos.asp" class="btn btn-warning btn-sm me-2" target="_blank">
+        <i class="fas fa-trash-restore me-1"></i>Excluídos
+    </a>
+    
+    <%if Session("Usuario")="BARRETO" Then%>
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-tools me-1"></i>Utilitários
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="inserirVendasTeste2.asp" target="_blank"><i class="fas fa-plus me-1"></i>Inserir Testes</a></li>
+                <li><a class="dropdown-item" href="excluir_testes.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Testes</a></li>
+                <li><a class="dropdown-item" href="tool_excluir_tudo.asp" target="_blank"><i class="fas fa-trash me-1"></i>Excluir Vendas</a></li>    
+                <li><a class="dropdown-item" href="tool_visualizar_log.asp" target="_blank"><i class="fas fa-trash me-1"></i>Log Sistema</a></li>  
+                <li><a class="dropdown-item" href="tool_venda_criar_json.asp" target="_blank"><i class="fas fa-trash me-1"></i>Gerar Json</a></li>  
+                <li><a class="dropdown-item" href="gestao_vendas_inserir_comissao_todos1.asp" target="_blank"><i class="fas fa-trash me-1"></i>Inserir Todos</a></li>  
+            </ul>
+        </div>
+    <%end if%>
+    
+</div>
             </div>
         </div>
         
@@ -682,14 +697,14 @@ End If
                                     <th>Trimestre</th>
                                     
                                     <th>Empreendimento</th>
-                                    <th>Unidade</th>
+                                    
                                     <th>Diretoria</th>
                                     <th>Gerência</th>
                                     <th>Corretor</th>
                                     <th>Valor (R$)</th>
-                                    <th>Comissão</th>
-                                    <th>Desconto Trib.</th>
-                                    <th>Registro</th>
+                                    
+                                    
+                                    
                                     <th width="180">Ações</th>
                                 </tr>
                             </thead>
@@ -855,10 +870,21 @@ End If
                                         End If
                                 %>
                                 <tr class="<%= linhaClasse %>">
-                                    <td>
-                                        <%= rs("AnoVenda") & "-" & Right("0"&rs("MesVenda"),2) & "-" & Right("0"&rs("DiaVenda"),2) %>
-                                        <br><span class="fw-bold"><%= rs("ID") %></span>
-                                    </td>
+                                <td style="font-size: 12px;">
+                                    <small>
+                                        DTV: <%= rs("AnoVenda") & "-" & Right("0"&rs("MesVenda"),2) & "-" & Right("0"&rs("DiaVenda"),2) %>
+                                        <br><span class="fw-bold">ID: <%= rs("ID") %><br></span>
+                                        
+                                        <%= FormatDateTime(rs("DataRegistro"),2) %>
+                                           <% If Trim(rs("Usuario"))="" Then
+                                               vUsuario = "SILVIOBF" 
+                                            Else
+                                               vUsuario = rs("Usuario")
+                                            End if   
+                                        %>
+                                        <br>por <%= vUsuario %>
+                                    </small>
+                                </td>
                                     <td>
                                         <% If totalPagoDiretoria>0  And totalPagoGerencia > 0 And totalPagoCorretor >0Then %>
                                             <span class="badge status-pago" title="Comissões pagas">PAGA</span>
@@ -874,8 +900,10 @@ End If
                                         <strong><%= rs("Empreend_ID") %>-<%= RemoverNumeros(rs("NomeEmpreendimento")) %></strong>
                                         <br><small class="text-muted"><%= RemoverNumeros(rs("Localidade")) %></small><br>Cliente:
                                         <small class="text-muted"><strong><%= UCase(rs("NomeCliente")) %></strong></small>
+                                        <small class="text-muted"><strong><br>Unid: <%= UCase(rs("Unidade")) %></strong></small>
+                                        
                                     </td>
-                                    <td><%= rs("Unidade") %></td>
+                                    
                                     <!-- ############################ -->
                                     <% ' --------------------------------------- %>
 <% ' COLUNA DIRETORIA: Comissao + Prêmio + Desconto + Líquido %>
@@ -1011,14 +1039,12 @@ End If
                                     
                                     <td class="text-end fw-bold" data-order="<%= rs("ValorUnidade") %>">
                                         <%= FormatNumber(rs("ValorUnidade"), 2) %>
-                                    </td>
-                                    <td class="text-end">
-                                        <span class="badge badge-comissao comissao-total">
+                                         <span class="badge badge-comissao comissao-total">
                                             <%= comissaoText %>
                                         </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <% If dblDescontoPerc > 0 Then %>
+                                        <% If dblDescontoPerc > 0 Then 
+                                               %>
+
                                             <div class="desconto-info">
                                                 <strong><%= FormatNumber(dblDescontoPerc, 2) %>%</strong>
                                                 <br>
@@ -1034,12 +1060,8 @@ End If
                                             <span class="text-muted">-</span>
                                         <% End If %>
                                     </td>
-                                    <td>
-                                        <small>
-                                            <%= FormatDateTime(rs("DataRegistro"),2) %>
-                                            <br>por <%= rs("Usuario") %>
-                                        </small>
-                                    </td>
+
+
                                     <td class="text-center">
                                         <div class="action-buttons">
                                             <a href="gestao_vendas_update3.asp?id=<%= rs("id") %>" class="btn btn-warning btn-sm" title="Editar">
@@ -1078,7 +1100,7 @@ End If
                             <!-- ##################################### -->
                             <tfoot>
                                 <tr class="table-light">
-                                    <th colspan="8" class="text-end">Totais:</th>
+                                    <th colspan="6" class="text-end">Totais:</th>
                                     <th id="totalValor" class="text-end">R$ <%= FormatNumber(totalValorHtml, 2) %></th>
                                     <th id="totalComissao" class="text-end">R$ <%= FormatNumber(totalComissaoHtml, 2) %></th>
                                     <th colspan="3"></th>
@@ -1094,7 +1116,14 @@ End If
                 </div>
             </div>
         </div>
+            <small>
+    <%
+        Response.Write Session("Usuario") & " " & Date() & " " & Time()
+    %>
+
+   </small>
     </div>
+
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -1109,7 +1138,7 @@ End If
                     language: {
                         url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
                     },
-                    pageLength: 10,
+                    pageLength: 50,
                     order: [[0, "desc"]],
                     responsive: true,
                     dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'

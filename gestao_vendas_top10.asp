@@ -495,6 +495,19 @@ Set connSunny = Nothing
             background-color: #fff; /* ou a cor do seu header */
         }
     </style>
+<style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.8); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.8); 
+    }
+</style>    
 </head>
 <body>
     <!--#include file="gestao_header.inc"-->

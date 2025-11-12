@@ -330,6 +330,19 @@ End If
             margin-bottom: 20px;
         }
     </style>
+    <style>
+    body {
+        /* Define a escala de 0.8 (80%) */
+        transform: scale(0.7); 
+        
+        /* Define o ponto de origem para o canto superior esquerdo */
+        transform-origin: 0 0; 
+        
+        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
+        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
+        width: calc(100% / 0.7); 
+    }
+</style>
 </head>
 <body>
     <div class="container-fluid">
