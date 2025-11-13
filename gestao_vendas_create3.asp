@@ -207,7 +207,7 @@ valorLiqGeral = GetFormattedNumber(valorLiqGeral)
     "VALUES (" & empreend_id & ", '" & SanitizeSQL(nomeCliente) & "', '" & SanitizeSQL(nomeEmpreendimento) & "', " & _
     "'" & SanitizeSQL(unidade) & "', " & m2 & ", " & _
     "'" & SanitizeSQL(corretorNome) & "', " & corretorId & ", " & _
-    valorUnidade & ", " & comissaoPercentual & ", " & valorComissaoGeral & ", " & dataVenda & ", " & _
+    valorUnidade & ", " & comissaoPercentual & ", " & valorComissaoGeral & ", '" & dataVenda & "', " & _
     diaVenda & ", " & mesVenda & ", " & anoVenda & ", " & trimestre & ", " & _
     "'" & SanitizeSQL(obs) & "', '" & SanitizeSQL(usuario) & "', " & _
     diretoriaId & ", '" & SanitizeSQL(diretoriaNome) & "', " & gerenciaId & ", " & _

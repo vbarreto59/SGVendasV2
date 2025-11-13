@@ -63,7 +63,7 @@ conn.Open StrConn
 Set connSales = Server.CreateObject("ADODB.Connection")
 connSales.Open StrConnSales
 
-sqlComissoes = "SELECT c.ID_Comissoes, c.ID_Venda, v.Empreend_ID, v.NomeEmpreendimento, v.Unidade, v.DataVenda, v.ValorComissaoGeral, " & _
+sqlComissoes = "SELECT c.ID_Comissoes, c.ID_Venda, v.Empreend_ID, v.NomeEmpreendimento, v.Unidade, v.DataVenda, v.ValorComissaoGeral, v.AnoVenda, v.MesVenda, v.DiaVenda, " & _
                "c.UserIdDiretoria, c.NomeDiretor, v.ComissaoDIretoria, v.ValorDiretoria, v.PremioDiretoria, " & _
                "c.UserIdGerencia, c.NomeGerente, v.ComissaoGerencia, v.ValorGerencia, v.PremioGerencia, " & _
                "c.UserIdCorretor, c.NomeCorretor, v.ComissaoCorretor, v.ValorCorretor, v.PremioCorretor, v.ID, v.Diretoria, v.Gerencia," & _
@@ -669,7 +669,8 @@ On Error GoTo 0 ' Restaura o tratamento de erro padrão
                 End Select
         %>
         <tr class="<%= rowClass %>">
-            <td class="text-center"><%= Year(rsComissoes("DataVenda")) & "-" & Right("0" & Month(rsComissoes("DataVenda")),2) & "-" & Right("0" & Day(rsComissoes("DataVenda")),2) %><br><%="V"&vendaID%>-<%="C"& rsComissoes("ID_Comissoes")%>
+
+            <td class="text-center">DTV: <%= rsComissoes("AnoVenda") & "-" & Right("0"&rsComissoes("MesVenda"),2) & "-" & Right("0"&rsComissoes("DiaVenda"),2) %><br><%="V"& rsComissoes("ID")%>
             </td>
             <td 
             <%

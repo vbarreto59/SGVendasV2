@@ -44,13 +44,13 @@ conn.Open StrConn
 connSales.Open StrConnSales
 
 sqlUpdate1 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Diretorias INNER JOIN Vendas ON Diretorias.DiretoriaId = Vendas.DiretoriaId) SET Vendas.NomeDiretor = [Diretorias].[Nome], Vendas.UserIdDiretoria = [Diretorias].[UserId];"
-connSales.Execute(sqlUpdate1)
+'connSales.Execute(sqlUpdate1)
 
 sqlUpdate2 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Gerencias INNER JOIN Vendas ON Gerencias.GerenciaId = Vendas.GerenciaId) SET [Vendas].[NomeGerente] = [Gerencias].[Nome], [Vendas].[UserIdGerencia] = [Gerencias].[UserId];"
-connSales.Execute(sqlUpdate2)
+'connSales.Execute(sqlUpdate2)
 
 sqlUpdateCorretor = "UPDATE (Vendas INNER JOIN [;DATABASE=" & dbSunnyPath & "].Usuarios ON Vendas.CorretorId = Usuarios.UserId) SET Vendas.Corretor = Usuarios.Nome;"
-connSales.Execute(sqlUpdateCorretor)
+'connSales.Execute(sqlUpdateCorretor)
 
 sql = "UPDATE Vendas SET Semestre = SWITCH(Trimestre IN (1, 2), 1, Trimestre IN (3, 4), 2) WHERE Trimestre IS NOT NULL;"
 On Error Resume Next
@@ -650,6 +650,11 @@ End If
     <a href="gestao_vendas_gerenc_comissoes3.asp" class="btn btn-primary btn-sm me-2" target="_blank">
         <i class="fas fa-money-bill-wave me-1"></i>Pagar
     </a>
+
+        <a href="gestao_pessoas_vendas.asp" class="btn btn-success btn-sm me-2" target="_blank">
+        <i class="fas fa-money-bill-wave me-1"></i>Destinatários
+    </a>
+
 
     <a href="gestao_vendas_list_excluidos.asp" class="btn btn-warning btn-sm me-2" target="_blank">
         <i class="fas fa-trash-restore me-1"></i>Excluídos
