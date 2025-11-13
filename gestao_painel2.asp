@@ -53,7 +53,27 @@ Dim vendasFile
 ' Define o arquivo de vendas com base no resultado da função IsMobile()
 If IsMobile() Then
     ' O arquivo para visualização em celular
+
     vendasFile = "gestao_vendas_list_mob1.asp"
+
+    if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+        On Error Resume Next 
+        set objMail = server.createobject("CDONTS.NewMail")
+        if Err.Number <> 0 then 
+            set objMail = Nothing ' Garante que a variável seja liberada, mesmo que não criada
+        else
+            objMail.From = "sendmail@gabnetweb.com.br"
+            objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+            objMail.Subject = "SV-MOB" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+            objMail.MailFormat = 0 ' 0 = Texto Simples
+            objMail.Body = "Página Vendas Mobile. " & Ucase(Session("Usuario"))
+            objMail.Send
+            set objMail = Nothing
+        end if 
+        On Error GoTo 0 
+    end if
+
+    
 Else
     ' O arquivo padrão para visualização em desktop
     vendasFile = "gestao_vendas_list3x.asp"

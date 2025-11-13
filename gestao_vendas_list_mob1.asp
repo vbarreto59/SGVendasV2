@@ -109,6 +109,10 @@ sqlVendas = "SELECT " & _
             "Vendas.ID, " & _
             "Vendas.ValorUnidade, " & _
             "Vendas.DataVenda, " & _
+            "Vendas.AnoVenda, " & _            
+            "Vendas.MesVenda, " & _            
+            "Vendas.DiaVenda, " & _            
+            "Vendas.NomeCliente, " & _
             "Vendas.Corretor, " & _
             "Vendas.CorretorId, " & _
             "Vendas.NomeEmpreendimento, " & _
@@ -125,6 +129,9 @@ sqlVendas = "SELECT " & _
             "Vendas.ValorDiretoria, " & _
             "Vendas.ValorGerencia, " & _
             "Vendas.ValorCorretor, " & _
+            "Vendas.ValorLiqDiretoria, " & _
+            "Vendas.ValorLiqGerencia, " & _
+            "Vendas.ValorLiqCorretor, " & _            
             "Vendas.ComissaoDiretoria, " & _
             "Vendas.ComissaoGerencia, " & _
             "Vendas.ComissaoCorretor, " & _
@@ -135,14 +142,18 @@ sqlVendas = "SELECT " & _
             "Vendas.UserIdDiretoria, " & _
             "Vendas.UserIdGerencia " & _
             "FROM Vendas " & _
-            "WHERE (Vendas.Excluido <> -1 OR Vendas.Excluido IS NULL) "
+            "WHERE (Vendas.Excluido <> -1 OR Vendas.Excluido IS NULL) " 
+
+            'response.write sqlVendas
+            'Response.end 
+            
 
 If filtroAno <> "" Then sqlVendas = sqlVendas & " AND Vendas.AnoVenda = " & filtroAno
 If filtroMes <> "" Then sqlVendas = sqlVendas & " AND Vendas.MesVenda = " & filtroMes
 If filtroCorretor <> "" Then sqlVendas = sqlVendas & " AND Vendas.Corretor = '" & Replace(filtroCorretor, "'", "''") & "'"
 If filtroEmpreendimento <> "" Then sqlVendas = sqlVendas & " AND Vendas.NomeEmpreendimento = '" & Replace(filtroEmpreendimento, "'", "''") & "'"
 
-sqlVendas = sqlVendas & " ORDER BY Vendas.DataVenda DESC"
+sqlVendas = sqlVendas & " ORDER BY Vendas.AnoVenda DESC, Vendas.MesVenda DESC, Vendas.DiaVenda DESC"
 
 On Error Resume Next
 rsVendas.Open sqlVendas, connSales
@@ -546,77 +557,115 @@ End If
                 rsComissaoCheck.Close
                 Set rsComissaoCheck = Nothing
         %>
-        <div class="venda-card">
-            <span class="badge-mes"><%= arrMesesNome(rsVendas("MesVenda")) %>/<%= Right(rsVendas("AnoVenda"), 2) %></span>
-            
-            <div class="valor-venda">
-                R$ <%= FormatNumber(rsVendas("ValorUnidade"), 2) %>
-            </div>
-            
-            <div class="empreendimento">
-                <%= rsVendas("Empreend_ID") %>-<%= RemoverNumeros(rsVendas("NomeEmpreendimento")) %>
-            </div>
-            
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Unidade</span>
-                    <span class="info-value"><%= rsVendas("Unidade") %></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">M²</span>
-                    <span class="info-value"><%= rsVendas("UnidadeM2") %></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Data Venda</span>
-                    <span class="info-value"><%= FormatDateTime(rsVendas("DataVenda"), 2) %></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Corretor</span>
-                    <span class="info-value"><%= rsVendas("CorretorId") & "-" & rsVendas("Corretor") %></span>
-                </div>
-            </div>
-            
-            <div class="comissao-grid">
-                <div class="comissao-item">
-                    <div>Diretoria</div>
-                    <div class="comissao-valor"><%= rsVendas("ComissaoDiretoria") %>%</div>
-                    <div>R$ <%= FormatNumber(rsVendas("ValorDiretoria"), 2) %></div>
-                    <% If pagoDiretoria Then %><span class="badge-pago">PAGO</span><% End If %>
-                </div>
-                <div class="comissao-item">
-                    <div>Gerência</div>
-                    <div class="comissao-valor"><%= rsVendas("ComissaoGerencia") %>%</div>
-                    <div>R$ <%= FormatNumber(rsVendas("ValorGerencia"), 2) %></div>
-                    <% If pagoGerencia Then %><span class="badge-pago">PAGO</span><% End If %>
-                </div>
-                <div class="comissao-item">
-                    <div>Corretor</div>
-                    <div class="comissao-valor"><%= rsVendas("ComissaoCorretor") %>%</div>
-                    <div>R$ <%= FormatNumber(rsVendas("ValorCorretor"), 2) %></div>
-                    <% If pagoCorretor Then %><span class="badge-pago">PAGO</span><% End If %>
-                </div>
-            </div>
-            
-            <div class="actions">
-                <% If UCase(Session("Usuario")) = "BARRETO" Then %>
-                    <a href="gestao_vendas_update2.asp?id=<%= rsVendas("ID") %>" class="btn btn-warning btn-action">
-                        <i class="fas fa-edit"></i> Editar
-                    </a>
-                    <% If Not comissaoExiste Then %>
-                    <a href="gestao_vendas_inserir_comissao1.asp?id=<%= rsVendas("ID") %>" class="btn btn-primary btn-action">
-                        <i class="fas fa-plus"></i> Comissão
-                    </a>
-                    <% End If %>
-                    <a href="gestao_vendas_delete.asp?id=<%= rsVendas("ID") %>" class="btn btn-danger btn-action" onclick="return confirm('Confirma exclusão?');">
-                        <i class="fas fa-trash"></i> Excluir
-                    </a>
-                <% End If %>
-            </div>
-            
-            <div style="font-size: 10px; color: #6c757d; text-align: center; margin-top: 8px;">
-                Registro: <%= FormatDateTime(rsVendas("DataRegistro"), 2) %> por <%= rsVendas("Usuario") %>
-            </div>
+        <!-- ============================= -->
+<div class="venda-card">
+    <span class="badge-mes"><%= arrMesesNome(rsVendas("MesVenda")) %>/<%= Right(rsVendas("AnoVenda"), 2) %></span>
+    
+    <div class="valor-venda">
+        R$ <%= FormatNumber(rsVendas("ValorUnidade"), 2) %>
+    </div>
+    
+    <div class="empreendimento">
+        ID Venda: <%= rsVendas("ID") %> <br>(<%= rsVendas("Empreend_ID") %>) <%= RemoverNumeros(rsVendas("NomeEmpreendimento")) %>
+    </div>
+    
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Unidade</span>
+            <span class="info-value"><%= rsVendas("Unidade") %></span>
         </div>
+        <div class="info-item">
+            <span class="info-label">M²</span>
+            <span class="info-value"><%= rsVendas("UnidadeM2") %></span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Data Venda:</span>
+            <span class="info-value"><%= rsVendas("DiaVenda") & "/" & rsVendas("MesVenda") & "/" & rsVendas("AnoVenda") %></span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Corretor</span>
+            <span class="info-value"><%= rsVendas("CorretorId") & "-" & rsVendas("Corretor") %></span>
+        </div>
+    </div>
+    
+    <!-- Nova seção: Informações de Diretoria, Gerência e Cliente -->
+    <div class="info-grid" style="margin-top: 8px;">
+        <% If rsVendas("Diretoria") <> "" Then %>
+        <div class="info-item">
+            <span class="info-label">Diretoria</span>
+            <span class="info-value"><%= rsVendas("Diretoria") %></span>
+        </div>
+        <% End If %>
+        
+        <% If rsVendas("NomeDiretor") <> "" Then %>
+        <div class="info-item">
+            <span class="info-label">Diretor</span>
+            <span class="info-value"><%= rsVendas("NomeDiretor") %></span>
+        </div>
+        <% End If %>
+        
+        <% If rsVendas("Gerencia") <> "" Then %>
+        <div class="info-item">
+            <span class="info-label">Gerência</span>
+            <span class="info-value"><%= rsVendas("Gerencia") %></span>
+        </div>
+        <% End If %>
+        
+        <% If rsVendas("NomeGerente") <> "" Then %>
+        <div class="info-item">
+            <span class="info-label">Gerente</span>
+            <span class="info-value"><%= rsVendas("NomeGerente") %></span>
+        </div>
+        <% End If %>
+        
+        <% If rsVendas("NomeCliente") <> "" Then %>
+        <div class="info-item" style="grid-column: 1 / -1;">
+            <span class="info-label">Cliente</span>
+            <span class="info-value"><%= rsVendas("NomeCliente") %></span>
+        </div>
+        <% End If %>
+    </div>
+    
+    <div class="comissao-grid">
+        <div class="comissao-item">
+            <div>Diretoria</div>
+            <div class="comissao-valor"><%= rsVendas("ComissaoDiretoria") %>%</div>
+            <div>R$ <%= FormatNumber(rsVendas("ValorLiqDiretoria"), 2) %></div>
+            <% If pagoDiretoria Then %><span class="badge-pago">PAGO</span><% End If %>
+        </div>
+        <div class="comissao-item">
+            <div>Gerência</div>
+            <div class="comissao-valor"><%= rsVendas("ComissaoGerencia") %>%</div>
+            <div>R$ <%= FormatNumber(rsVendas("ValorLiqGerencia"), 2) %></div>
+            <% If pagoGerencia Then %><span class="badge-pago">PAGO</span><% End If %>
+        </div>
+        <div class="comissao-item">
+            <div>Corretor</div>
+            <div class="comissao-valor"><%= rsVendas("ComissaoCorretor") %>%</div>
+            <div>R$ <%= FormatNumber(rsVendas("ValorLiqCorretor"), 2) %></div>
+            <% If pagoCorretor Then %><span class="badge-pago">PAGO</span><% End If %>
+        </div>
+    </div>
+    
+    <div class="actions">
+        <% If UCase(Session("Usuario")) = "BARRETO" Then %>
+
+            <% If Not comissaoExiste Then %>
+            <a href="gestao_vendas_inserir_comissao1.asp?id=<%= rsVendas("ID") %>" class="btn btn-primary btn-action">
+                <i class="fas fa-plus"></i> Comissão
+            </a>
+            <% End If %>
+
+        <% End If %>
+    </div>
+    
+    <div style="font-size: 10px; color: #6c757d; text-align: center; margin-top: 8px;">
+        Registro: <%= FormatDateTime(rsVendas("DataRegistro"), 2) %> por <%= rsVendas("Usuario") %>
+    </div>
+</div>
+
+
+        <!-- ============================================================ -->
         <%
                 rsVendas.MoveNext
             Loop
@@ -629,6 +678,7 @@ End If
         </div>
         <%
         End If
+
         
         If rsVendas.State = 1 Then rsVendas.Close
         Set rsVendas = Nothing
@@ -636,6 +686,7 @@ End If
         Set connSales = Nothing
         %>
     </div>
+    <!-- div container -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
