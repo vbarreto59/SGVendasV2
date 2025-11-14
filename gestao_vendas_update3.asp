@@ -169,6 +169,7 @@ vFator = 100
 
 ' Formata as demais variáveis para SQL
 valorComissaoGeral = valorUnidade * (comissaoPercentual / vFator)
+valorComissaoGeral = GetFormattedNumber(valorComissaoGeral)
 m2 = GetFormattedNumber(m2)
 valorUnidade = GetFormattedNumber(valorUnidade)
 
