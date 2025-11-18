@@ -10,7 +10,24 @@
 <%End If%>
 
 <!--#include file="gestao_header.inc"-->
-
+<%
+    if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+        On Error Resume Next 
+        set objMail = server.createobject("CDONTS.NewMail")
+        if Err.Number <> 0 then 
+            set objMail = Nothing ' Garante que a variável seja liberada, mesmo que não criada
+        else
+            objMail.From = "sendmail@gabnetweb.com.br"
+            objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
+            objMail.Subject = "SV-RELMETAS-" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+            objMail.MailFormat = 0 ' 0 = Texto Simples
+            objMail.Body = "Página Relatório com Metas. " & Ucase(Session("Usuario"))
+            objMail.Send
+            set objMail = Nothing
+        end if 
+        On Error GoTo 0 
+    end if
+%>
 
 <%
 ' ===========================================================

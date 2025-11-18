@@ -244,7 +244,7 @@ End if
 
         
             <div class="col-12 col-md-6 col-lg-4">
-                <a href="gestao_vendas_kpi4.asp" class="text-decoration-none" target="_blank">
+                <a href="gestao_vendas_kpi5.asp" class="text-decoration-none" target="_blank">
                     <div class="card h-100">
                         <div class="card-header text-center">
                             <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>B-Vendas KPIs</h5>
