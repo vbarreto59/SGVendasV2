@@ -1,4 +1,4 @@
-<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+/<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
 <!--#include file="gestao_header.inc"-->
@@ -403,10 +403,12 @@ Function GetTopList(dictObj, topN)
     GetTopList = result
 End Function
 
-Dim topCorretores, topDiretorias, topGerencias
+Dim topCorretores, topDiretorias, topGerencias, topEmpreendimentos, topEmpresas
 topCorretores = GetTopList(kpiData("TopCorretores"), 10)
 topDiretorias = GetTopList(kpiData("TopDiretorias"), 10)
 topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
+topEmpreendimentos = GetTopList(kpiData("TopEmpreendimentos"), 5)
+topEmpresas = GetTopList(kpiData("TopEmpresas"), 5)
 %>
 
 <!DOCTYPE html>
@@ -472,6 +474,36 @@ topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
     .card-info {
         border-left-color: #17a2b8 !important;
         background: linear-gradient(135deg, #fff, #f0f9ff);
+    }
+    .top-list-container {
+        margin-bottom: 20px;
+    }
+    .top-list-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 12px 15px;
+        font-weight: 600;
+    }
+    .top-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .top-list-item:last-child {
+        border-bottom: none;
+    }
+    .top-list-name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .top-list-value {
+        font-weight: 600;
+        color: #28a745;
+        margin-left: 10px;
     }
 </style>
 </head>
@@ -561,7 +593,6 @@ topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
                     </select>
                 </div>
 
-                <!-- FILTRO GERÊNCIA ADICIONADO -->
                 <div class="col-md-2">
                     <label class="form-label">Gerência</label>
                     <select name="gerencia" class="form-select" onchange="this.form.submit()">
@@ -594,37 +625,7 @@ topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
                     </select>
                 </div>
 
-                <div class="col-md-2">
-                    <label class="form-label">Empreendimento</label>
-                    <select name="empreendimento" class="form-select" onchange="this.form.submit()">
-                        <option value="">Todos</option>
-                        <% If IsArray(uniqueEmpreendimentos) Then
-                            For i = 0 To UBound(uniqueEmpreendimentos)
-                                If Not IsNull(uniqueEmpreendimentos(i)) And uniqueEmpreendimentos(i) <> "" Then
-                                    Response.Write "<option value=""" & Server.HTMLEncode(uniqueEmpreendimentos(i)) & """"
-                                    If CStr(filtroEmpreendimento) = CStr(uniqueEmpreendimentos(i)) Then Response.Write " selected"
-                                    Response.Write ">" & Server.HTMLEncode(uniqueEmpreendimentos(i)) & "</option>"
-                                End If
-                            Next
-                        End If %>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">Empresa</label>
-                    <select name="empresa" class="form-select" onchange="this.form.submit()">
-                        <option value="">Todos</option>
-                        <% If IsArray(uniqueEmpresas) Then
-                            For i = 0 To UBound(uniqueEmpresas)
-                                If Not IsNull(uniqueEmpresas(i)) And uniqueEmpresas(i) <> "" Then
-                                    Response.Write "<option value=""" & Server.HTMLEncode(uniqueEmpresas(i)) & """"
-                                    If CStr(filtroEmpresa) = CStr(uniqueEmpresas(i)) Then Response.Write " selected"
-                                    Response.Write ">" & Server.HTMLEncode(uniqueEmpresas(i)) & "</option>"
-                                End If
-                            Next
-                        End If %>
-                    </select>
-                </div>
+                
 
                 <div class="col-md-2 text-end">
                     <button type="button" class="btn btn-secondary" onclick="window.location.href=window.location.pathname">Limpar</button>
@@ -765,21 +766,7 @@ topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
 
     <!-- Top listas -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card p-2">
-                <h6>Top Corretores</h6>
-                <ul class="list-group list-group-flush">
-                    <% If IsArray(topCorretores) And UBound(topCorretores) >= 0 Then
-                        For i = 0 To UBound(topCorretores)
-                            Response.Write "<li class='list-group-item d-flex justify-content-between align-items-center'>" & _
-                                Server.HTMLEncode(topCorretores(i)(0)) & "<span>R$ " & FormatNumber(topCorretores(i)(2),2) & "</span></li>"
-                        Next
-                    Else
-                        Response.Write "<li class='list-group-item'>Nenhum registro</li>"
-                    End If %>
-                </ul>
-            </div>
-        </div>
+
 
         <div class="col-md-4">
             <div class="card p-2">
@@ -810,6 +797,70 @@ topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
                         Response.Write "<li class='list-group-item'>Nenhum registro</li>"
                     End If %>
                 </ul>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-2">
+                <h6>Top 10 Corretores</h6>
+                <ul class="list-group list-group-flush">
+                    <% If IsArray(topCorretores) And UBound(topCorretores) >= 0 Then
+                        For i = 0 To UBound(topCorretores)
+                            Response.Write "<li class='list-group-item d-flex justify-content-between align-items-center'>" & _
+                                Server.HTMLEncode(topCorretores(i)(0)) & "<span>R$ " & FormatNumber(topCorretores(i)(2),2) & "</span></li>"
+                        Next
+                    Else
+                        Response.Write "<li class='list-group-item'>Nenhum registro</li>"
+                    End If %>
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- NOVAS SEÇÕES: TOP EMPRESAS E TOP EMPREENDIMENTOS -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="top-list-header">
+                    <h6 class="mb-0">Top 5 Empresas</h6>
+                </div>
+                <div class="card-body p-0">
+                    <% If IsArray(topEmpresas) And UBound(topEmpresas) >= 0 Then
+                        For i = 0 To UBound(topEmpresas) %>
+                        <div class="top-list-item">
+                            <div class="top-list-name"><%= Server.HTMLEncode(topEmpresas(i)(0)) %></div>
+                            <div class="top-list-value">R$ <%= FormatNumber(topEmpresas(i)(2),2) %></div>
+                        </div>
+                        <% Next
+                    Else %>
+                        <div class="top-list-item">
+                            <div class="top-list-name">Nenhum registro</div>
+                        </div>
+                    <% End If %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="top-list-header">
+                    <h6 class="mb-0">Top 5 Empreendimentos</h6>
+                </div>
+                <div class="card-body p-0">
+                    <% If IsArray(topEmpreendimentos) And UBound(topEmpreendimentos) >= 0 Then
+                        For i = 0 To UBound(topEmpreendimentos) %>
+                        <div class="top-list-item">
+                            <div class="top-list-name"><%= Server.HTMLEncode(topEmpreendimentos(i)(0)) %></div>
+                            <div class="top-list-value">R$ <%= FormatNumber(topEmpreendimentos(i)(2),2) %></div>
+                        </div>
+                        <% Next
+                    Else %>
+                        <div class="top-list-item">
+                            <div class="top-list-name">Nenhum registro</div>
+                        </div>
+                    <% End If %>
+                </div>
             </div>
         </div>
     </div>

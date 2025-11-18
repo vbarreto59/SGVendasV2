@@ -421,8 +421,9 @@ topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
     .kpi-card { 
         border-radius:8px; 
         color: black;
+
         padding:15px; 
-        background:#fff; 
+        background:#ABF5AB; 
         box-shadow:0 1px 4px rgba(0,0,0,0.08); 
     }
     .small-muted { font-size:0.9rem; color:#666; }
@@ -555,71 +556,6 @@ topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
                                     Response.Write "<option value=""" & Server.HTMLEncode(uniqueDiretorias(i)) & """"
                                     If CStr(filtroDiretoria) = CStr(uniqueDiretorias(i)) Then Response.Write " selected"
                                     Response.Write ">" & Server.HTMLEncode(uniqueDiretorias(i)) & "</option>"
-                                End If
-                            Next
-                        End If %>
-                    </select>
-                </div>
-
-                <!-- FILTRO GERÊNCIA ADICIONADO -->
-                <div class="col-md-2">
-                    <label class="form-label">Gerência</label>
-                    <select name="gerencia" class="form-select" onchange="this.form.submit()">
-                        <option value="">Todos</option>
-                        <% If IsArray(uniqueGerencias) Then
-                            For i = 0 To UBound(uniqueGerencias)
-                                If Not IsNull(uniqueGerencias(i)) And uniqueGerencias(i) <> "" Then
-                                    Response.Write "<option value=""" & Server.HTMLEncode(uniqueGerencias(i)) & """"
-                                    If CStr(filtroGerencia) = CStr(uniqueGerencias(i)) Then Response.Write " selected"
-                                    Response.Write ">" & Server.HTMLEncode(uniqueGerencias(i)) & "</option>"
-                                End If
-                            Next
-                        End If %>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">Corretor</label>
-                    <select name="corretor" class="form-select" onchange="this.form.submit()">
-                        <option value="">Todos</option>
-                        <% If IsArray(uniqueCorretores) Then
-                            For i = 0 To UBound(uniqueCorretores)
-                                If Not IsNull(uniqueCorretores(i)) And uniqueCorretores(i) <> "" Then
-                                    Response.Write "<option value=""" & Server.HTMLEncode(uniqueCorretores(i)) & """"
-                                    If CStr(filtroCorretor) = CStr(uniqueCorretores(i)) Then Response.Write " selected"
-                                    Response.Write ">" & Server.HTMLEncode(uniqueCorretores(i)) & "</option>"
-                                End If
-                            Next
-                        End If %>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">Empreendimento</label>
-                    <select name="empreendimento" class="form-select" onchange="this.form.submit()">
-                        <option value="">Todos</option>
-                        <% If IsArray(uniqueEmpreendimentos) Then
-                            For i = 0 To UBound(uniqueEmpreendimentos)
-                                If Not IsNull(uniqueEmpreendimentos(i)) And uniqueEmpreendimentos(i) <> "" Then
-                                    Response.Write "<option value=""" & Server.HTMLEncode(uniqueEmpreendimentos(i)) & """"
-                                    If CStr(filtroEmpreendimento) = CStr(uniqueEmpreendimentos(i)) Then Response.Write " selected"
-                                    Response.Write ">" & Server.HTMLEncode(uniqueEmpreendimentos(i)) & "</option>"
-                                End If
-                            Next
-                        End If %>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">Empresa</label>
-                    <select name="empresa" class="form-select" onchange="this.form.submit()">
-                        <option value="">Todos</option>
-                        <% If IsArray(uniqueEmpresas) Then
-                            For i = 0 To UBound(uniqueEmpresas)
-                                If Not IsNull(uniqueEmpresas(i)) And uniqueEmpresas(i) <> "" Then
-                                    Response.Write "<option value=""" & Server.HTMLEncode(uniqueEmpresas(i)) & """"
-                                    If CStr(filtroEmpresa) = CStr(uniqueEmpresas(i)) Then Response.Write " selected"
-                                    Response.Write ">" & Server.HTMLEncode(uniqueEmpresas(i)) & "</option>"
                                 End If
                             Next
                         End If %>

@@ -607,9 +607,7 @@ If autoTime = "" Then autoTime = 5
         Do Until rsDados.EOF
             mesAtual = CInt(rsDados("MesVenda"))
             If Not IsNull(rsDados("Total")) Then
-                vTotal = Replace(rsDados("Total"),",",".")
-                'dadosPorMes(mesAtual) = CStr(rsDados("Total"))
-                dadosPorMes(mesAtual) = vTotal
+                dadosPorMes(mesAtual) = CStr(rsDados("Total"))
             End If
             rsDados.MoveNext
         Loop

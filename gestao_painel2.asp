@@ -231,7 +231,7 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-funnel-dollar me-2"></i>Vendas</h5>
+                        <h5 class="mb-0"><i class="fas fa-funnel-dollar me-2"></i>A-Vendas</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Gerenciamento de Vendas</p>
@@ -242,6 +242,57 @@ End if
                 </div>
             </div>
 
+        
+            <div class="col-12 col-md-6 col-lg-4">
+                <a href="gestao_vendas_kpi4.asp" class="text-decoration-none" target="_blank">
+                    <div class="card h-100">
+                        <div class="card-header text-center">
+                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>B-Vendas KPIs</h5>
+                        </div>
+                        <div class="card-body text-center d-flex flex-column">
+                            <p class="card-text">Visualização do Valor Geral de Vendas.</p>
+                            <span class="btn btn-primary btn-sm mt-auto">
+                                <i class="fas fa-arrow-right me-1"></i> Acessar
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+ 
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-funnel-dollar me-2"></i>C-Dashboard Metas x Vendas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Acompanhamento das Metas</p>
+                        <a href="gestao_vendas_metas.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>            
+            
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>D-Dashboard Vendas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as vendas.</p>
+                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="divider-line"></div>
+            
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
@@ -292,19 +343,7 @@ End if
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-funnel-dollar me-2"></i>Dashboard Metas x Vendas</h5>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Acompanhamento das Metas</p>
-                        <a href="gestao_vendas_metas.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
-                            <i class="fas fa-arrow-right me-1"></i> Acessar
-                        </a>
-                    </div>
-                </div>
-            </div>
+
 
             <div class="col-12 col-md-6 col-lg-4">
                 <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
