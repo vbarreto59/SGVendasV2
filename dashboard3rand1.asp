@@ -2,6 +2,12 @@
 <!--#include file="conSunSales.asp"-->
 
 <%
+if Session("Usuario") = "" then
+   Response.redirect "gestao_login.asp"
+end if 
+%>
+
+<%
 ' FUNÇÃO PARA POPULAR OS SELECTS DE FILTRO
 Function GetUniqueValues(conn, fieldName, tableName)
     Dim dict, rs, sqlQuery

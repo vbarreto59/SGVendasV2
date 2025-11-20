@@ -11,6 +11,12 @@
 
 <!--#include file="gestao_header.inc"-->
 <%
+if Session("Usuario") = "" then
+   Response.redirect "gestao_login.asp"
+end if 
+%>
+
+<%
     if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
         On Error Resume Next 
         set objMail = server.createobject("CDONTS.NewMail")
