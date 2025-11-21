@@ -18,7 +18,7 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     If VerificarLogin(usuario, senha) Then
         ' Registrar login bem-sucedido
         RegistrarLog usuario, True
-        Session("usuario") = usuario
+        Session("usuario") = Trim(usuario)
         Session("Acoes") = AcoesPermitidas()
         Session("Funcao") = UserFuncao()
 

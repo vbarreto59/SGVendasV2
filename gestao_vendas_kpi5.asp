@@ -377,10 +377,19 @@ If filtroAno <> "" Then anoRef = filtroAno Else anoRef = Year(Date())
 
 Dim totalAno, mediaMensal, maiorValor, menorValor
 totalAno = 0 : maiorValor = 0 : menorValor = 0
+totalQuantidadeAno = 0 
+
+
+' =======================================
+'Dim totalAno, mediaMensal, maiorValor, menorValor
+totalAno = 0 : maiorValor = 0 : menorValor = 0
+totalQuantidadeAno = 0 
 
 If kpiData("Ano").Exists(CStr(anoRef)) Then
     totalAno = kpiData("Ano")(CStr(anoRef))("valor")
+    totalQuantidadeAno = kpiData("Ano")(CStr(anoRef))("vendas") 
 End If
+' =======================================
 
 Dim mCount
 mCount = 12
@@ -439,7 +448,7 @@ topGerencias  = GetTopList(kpiData("TopGerencias"), 10)
 topEmpreendimentos = GetTopList(kpiData("TopEmpreendimentos"), 5)
 topEmpresas = GetTopList(kpiData("TopEmpresas"), 5)
 %>
-
+<!-- ================================================ -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -735,28 +744,36 @@ topEmpresas = GetTopList(kpiData("TopEmpresas"), 5)
                     <div class="col-12">
                         <div class="alert alert-light border">
                             <div class="row text-center">
+                                
                                 <div class="col-md-3">
-                                    <small class="text-muted">Média Mensal</small>
+                                    <small class="text-muted">Unidades Vendidas (Ano)</small>
+                                    <div class="fw-bold text-dark"><%= FormatNumber(totalQuantidadeAno, 0) %></div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <small class="text-muted">Valor Total (Ano)</small>
+                                    <div class="fw-bold text-dark">R$ <%= FormatNumber(totalAno, 2) %></div>
+                                </div>
+                                
+                                                                <div class="col-md-3">
+                                    <small class="text-muted">Média Mensal (Valor)</small>
                                     <div class="fw-bold text-primary">R$ <%= FormatNumber(mediaMensal, 2) %></div>
                                 </div>
-                                <div class="col-md-3">
-                                    <small class="text-muted">Maior Mês</small>
-                                    <div class="fw-bold text-success">R$ <%= FormatNumber(maiorValor, 2) %></div>
-                                </div>
-                                <div class="col-md-3">
-                                    <small class="text-muted">Menor Mês</small>
-                                    <div class="fw-bold text-warning">R$ <%= FormatNumber(menorValor, 2) %></div>
-                                </div>
-                                <div class="col-md-3">
+
+                                                                <div class="col-md-3">
                                     <small class="text-muted">Meses com Vendas</small>
                                     <div class="fw-bold text-info">
                                         <%
+                                            ' Assumindo que mesesParaExibir é um array definido no seu código VBScript (não estava visível, mas é uma variável comum)
+                                            'Dim mesesParaExibir
+                                            If IsArray(mesesFiltrados) Then mesesParaExibir = mesesFiltrados Else mesesParaExibir = Array(1,2,3,4,5,6,7,8,9,10,11,12)
+                                            
                                         Dim mesesComVendas
                                         mesesComVendas = 0
                                         For i = 1 To 12
                                             If chartDictValor(CStr(i)) > 0 Then mesesComVendas = mesesComVendas + 1
                                         Next
-                                        Response.Write mesesComVendas & "/" & UBound(mesesParaExibir) + 1
+                                        Response.Write mesesComVendas & "/" & (UBound(mesesParaExibir) - LBound(mesesParaExibir) + 1)
                                         %>
                                     </div>
                                 </div>
@@ -764,37 +781,128 @@ topEmpresas = GetTopList(kpiData("TopEmpresas"), 5)
                         </div>
                     </div>
                 </div>
+                <!--  -->
             </div>
         </div>
     </div>
+<!--  -->
 
-    <!-- KPIs PRINCIPAIS -->
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <div class="kpi-card text-center">
-                <div class="small-muted">Total (ano: <%= Server.HTMLEncode(anoRef) %>)</div>
-                <h4>R$ <%= FormatNumber(totalAno,2) %></h4>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="kpi-card text-center">
-                <div class="small-muted">Média mensal</div>
-                <h4>R$ <%= FormatNumber(mediaMensal,2) %></h4>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="kpi-card text-center">
-                <div class="small-muted">Maior mês</div>
-                <h4>R$ <%= FormatNumber(maiorValor,2) %></h4>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="kpi-card text-center">
-                <div class="small-muted">Menor mês</div>
-                <h4>R$ <%= FormatNumber(menorValor,2) %></h4>
+<!-- TABELA RESUMO POR MÊS -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Resumo Mensal - Ano: <%= Server.HTMLEncode(anoRef) %></h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Mês</th>
+                                    <th class="text-end">VGV (R$)</th>
+                                    <th class="text-end">QTD</th>
+                                    <th class="text-end">Média VGV (R$)</th>
+                                    <th class="text-end">Acumulado VGV (R$)</th>
+                                    <th class="text-end">Acumulado QTD</th>
+                                    <th class="text-end">% do Total VGV</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <%
+                                ' Calcula acumulados
+                                Dim acumuladoVGV, acumuladoQTD
+                                acumuladoVGV = 0
+                                acumuladoQTD = 0
+                                
+                                For mesNum = 1 To 12
+                                    Dim vgvMes, qtdMes, mediaVgvMes
+                                    vgvMes = chartDictValor(CStr(mesNum))
+                                    qtdMes = chartDictQtd(CStr(mesNum))
+                                    
+                                    ' Calcula média do VGV do mês
+                                    If qtdMes > 0 Then
+                                        mediaVgvMes = vgvMes / qtdMes
+                                    Else
+                                        mediaVgvMes = 0
+                                    End If
+                                    
+                                    ' Atualiza acumulados
+                                    acumuladoVGV = acumuladoVGV + vgvMes
+                                    acumuladoQTD = acumuladoQTD + qtdMes
+                                    
+                                    ' Calcula percentual do total
+                                    Dim percentualVGV
+                                    If totalAno > 0 Then
+                                        percentualVGV = (vgvMes / totalAno) * 100
+                                    Else
+                                        percentualVGV = 0
+                                    End If
+                                %>
+                                <tr>
+                                    <td><strong><%= arrMesesNome(mesNum) %></strong></td>
+                                    <td class="text-end"><%= FormatNumber(vgvMes, 2) %></td>
+                                    <td class="text-end"><%= qtdMes %></td>
+                                    <td class="text-end"><%= FormatNumber(mediaVgvMes, 2) %></td>
+                                    <td class="text-end"><strong><%= FormatNumber(acumuladoVGV, 2) %></strong></td>
+                                    <td class="text-end"><strong><%= acumuladoQTD %></strong></td>
+                                    <td class="text-end"><%= FormatNumber(percentualVGV, 1) %>%</td>
+                                </tr>
+                                <% Next %>
+                                
+                                <!-- LINHA DE TOTAL -->
+                                <tr class="table-success">
+                                    <td><strong>TOTAL <%= Server.HTMLEncode(anoRef) %></strong></td>
+                                    <td class="text-end"><strong><%= FormatNumber(totalAno, 2) %></strong></td>
+                                    <td class="text-end"><strong><%= acumuladoQTD %></strong></td>
+                                    <td class="text-end">
+                                        <%
+                                        Dim mediaGeralVGV
+                                        If acumuladoQTD > 0 Then
+                                            mediaGeralVGV = totalAno / acumuladoQTD
+                                        Else
+                                            mediaGeralVGV = 0
+                                        End If
+                                        %>
+                                        <strong><%= FormatNumber(mediaGeralVGV, 2) %></strong>
+                                    </td>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end">-</td>
+                                    <td class="text-end"><strong>100%</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+<!--  -->
+
+    <!-- GRÁFICOS -->
+    <div class="row mb-5">
+        <!-- Gráfico 1: Valor de Vendas -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5>Valor de Vendas por Mês</h5>
+                    <canvas id="monthlySalesChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico 2: Quantidade de Unidades Vendidas -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5>Quantidade de Unidades Vendidas por Mês</h5>
+                    <canvas id="monthlyQtdChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- fim gráficos -->
+
 
     <!-- Top listas -->
     <div class="row mb-4">
@@ -897,121 +1005,9 @@ topEmpresas = GetTopList(kpiData("TopEmpresas"), 5)
         </div>
     </div>
 <!--  -->
-    <!-- TABELA RESUMO POR MÊS -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Resumo Mensal - Ano: <%= Server.HTMLEncode(anoRef) %></h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Mês</th>
-                                    <th class="text-end">VGV (R$)</th>
-                                    <th class="text-end">QTD</th>
-                                    <th class="text-end">Média VGV (R$)</th>
-                                    <th class="text-end">Acumulado VGV (R$)</th>
-                                    <th class="text-end">Acumulado QTD</th>
-                                    <th class="text-end">% do Total VGV</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <%
-                                ' Calcula acumulados
-                                Dim acumuladoVGV, acumuladoQTD
-                                acumuladoVGV = 0
-                                acumuladoQTD = 0
-                                
-                                For mesNum = 1 To 12
-                                    Dim vgvMes, qtdMes, mediaVgvMes
-                                    vgvMes = chartDictValor(CStr(mesNum))
-                                    qtdMes = chartDictQtd(CStr(mesNum))
-                                    
-                                    ' Calcula média do VGV do mês
-                                    If qtdMes > 0 Then
-                                        mediaVgvMes = vgvMes / qtdMes
-                                    Else
-                                        mediaVgvMes = 0
-                                    End If
-                                    
-                                    ' Atualiza acumulados
-                                    acumuladoVGV = acumuladoVGV + vgvMes
-                                    acumuladoQTD = acumuladoQTD + qtdMes
-                                    
-                                    ' Calcula percentual do total
-                                    Dim percentualVGV
-                                    If totalAno > 0 Then
-                                        percentualVGV = (vgvMes / totalAno) * 100
-                                    Else
-                                        percentualVGV = 0
-                                    End If
-                                %>
-                                <tr>
-                                    <td><strong><%= arrMesesNome(mesNum) %></strong></td>
-                                    <td class="text-end"><%= FormatNumber(vgvMes, 2) %></td>
-                                    <td class="text-end"><%= qtdMes %></td>
-                                    <td class="text-end"><%= FormatNumber(mediaVgvMes, 2) %></td>
-                                    <td class="text-end"><strong><%= FormatNumber(acumuladoVGV, 2) %></strong></td>
-                                    <td class="text-end"><strong><%= acumuladoQTD %></strong></td>
-                                    <td class="text-end"><%= FormatNumber(percentualVGV, 1) %>%</td>
-                                </tr>
-                                <% Next %>
-                                
-                                <!-- LINHA DE TOTAL -->
-                                <tr class="table-success">
-                                    <td><strong>TOTAL <%= Server.HTMLEncode(anoRef) %></strong></td>
-                                    <td class="text-end"><strong><%= FormatNumber(totalAno, 2) %></strong></td>
-                                    <td class="text-end"><strong><%= acumuladoQTD %></strong></td>
-                                    <td class="text-end">
-                                        <%
-                                        Dim mediaGeralVGV
-                                        If acumuladoQTD > 0 Then
-                                            mediaGeralVGV = totalAno / acumuladoQTD
-                                        Else
-                                            mediaGeralVGV = 0
-                                        End If
-                                        %>
-                                        <strong><%= FormatNumber(mediaGeralVGV, 2) %></strong>
-                                    </td>
-                                    <td class="text-end">-</td>
-                                    <td class="text-end">-</td>
-                                    <td class="text-end"><strong>100%</strong></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-<!--  -->
+    
 
 
-    <!-- GRÁFICOS -->
-    <div class="row mb-5">
-        <!-- Gráfico 1: Valor de Vendas -->
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5>Valor de Vendas por Mês</h5>
-                    <canvas id="monthlySalesChart" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráfico 2: Quantidade de Unidades Vendidas -->
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5>Quantidade de Unidades Vendidas por Mês</h5>
-                    <canvas id="monthlyQtdChart" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1199,7 +1195,7 @@ new Chart(ctx2, {
     }
 </script>
 
-
+<!--#include file="footer.inc"-->
 
 </body>
 </html>
