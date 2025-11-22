@@ -1,6 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 
-<% ' funcional cores com problemas'
+<% ' Funcionalidade de Cores Corrigida e Melhorada com Data Labels '
     If Len(StrConn) = 0 Then %>
     <!--#include file="conexao.asp"-->
 <% End If %>
@@ -17,11 +17,14 @@ end if
 %>
 
 <%
+' ===========================================================
+' LOG de acesso (mantido)
+' ===========================================================
     if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
         On Error Resume Next 
         set objMail = server.createobject("CDONTS.NewMail")
         if Err.Number <> 0 then 
-            set objMail = Nothing ' Garante que a variável seja liberada, mesmo que não criada
+            set objMail = Nothing
         else
             objMail.From = "sendmail@gabnetweb.com.br"
             objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
@@ -37,7 +40,7 @@ end if
 
 <%
 ' ===========================================================
-' Função substituta para Nz() do Access
+' Função substituta para Nz() do Access (mantida)
 ' ===========================================================
 Function Nz(valor, opcional)
     If IsNull(valor) Or IsEmpty(valor) Or valor = "" Then
@@ -51,7 +54,6 @@ Function Nz(valor, opcional)
     End If
 End Function
 %>
-
 
 
 <%
@@ -129,7 +131,7 @@ rsVendasMensais.Close
 Set rsVendasMensais = Nothing
 
 ' ===========================================================
-' Definir cores com base nas metas e vendas
+' Definir cores com base nas metas e vendas (CORRIGIDO PARA SER INTUITIVO)
 ' ===========================================================
 Set rsMetas = Server.CreateObject("ADODB.Recordset")
 sqlMetas = "SELECT Mes, Meta FROM MetaEmpresa WHERE Ano = " & anoSelecionado & " ORDER BY Mes"
@@ -142,12 +144,19 @@ If Not rsMetas.EOF Then
             metasMensais(mes) = CDbl(Nz(rsMetas("Meta"), 0))
             diferencasMensais(mes) = vendasMensais(mes) - metasMensais(mes)
             
-            If vendasMensais(mes) > metasMensais(mes) Then
-                coresMensais(mes) = "#007bff" ' Azul
-            ElseIf vendasMensais(mes) < metasMensais(mes) Then
-                coresMensais(mes) = "#dc3545" ' Vermelho
-            Else
-                coresMensais(mes) = "#007bff" ' Azul
+            ' Lógica de cores CORRIGIDA para o GRÁFICO (Verde/Vermelho/Ciano)
+            If metasMensais(mes) > 0 Then
+                If vendasMensais(mes) >= metasMensais(mes) Then
+                    coresMensais(mes) = "#242DE9" ' Verde (Meta Atingida/Superada)
+                Else
+                    coresMensais(mes) = "#dc3545" ' Vermelho (Meta Não Atingida)
+                End If
+            Else ' Sem Meta
+                If vendasMensais(mes) > 0 Then
+                    coresMensais(mes) = "#17a2b8" ' Ciano/Info (Com Vendas, Sem Meta)
+                Else
+                    coresMensais(mes) = "#6c757d" ' Cinza/Secundário (Sem Vendas e Sem Meta)
+                End If
             End If
         End If
         rsMetas.MoveNext
@@ -157,7 +166,7 @@ rsMetas.Close
 Set rsMetas = Nothing
 
 ' ===========================================================
-' AQUI entra o novo código (antes de fechar o ASP)
+' Preparar cores para o JavaScript
 ' ===========================================================
 Dim strCoresJS
 strCoresJS = ""
@@ -168,6 +177,7 @@ Next
 
 ' ==============================================================================
 ' CÁLCULOS GERAIS (Total Unidades, Últimas Vendas, Totais Anuais)
+' (restante do VBScript mantido)
 ' ==============================================================================
 
 ' Buscar quantidade total de unidades vendidas no ano
@@ -231,7 +241,7 @@ End If
 
 ' ==============================================================================
 ' CORREÇÃO CRÍTICA PARA O GRÁFICO (VBScript -> JavaScript)
-' Forçar uso de PONTO (.) como separador decimal para o Chart.js
+' Forçar uso de PONTO (.) como separador decimal para o Chart.js (mantido)
 ' ==============================================================================
 Dim strVendasJS, strMetasJS, valorVenda, valorMeta
 strVendasJS = ""
@@ -258,10 +268,11 @@ Next
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPIs e Metas | Gestão de Vendas</title>
+    <title>SGVendas - KPIs e Metas | Gestão de Vendas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root {
             --primary: #2c3e50;
@@ -393,19 +404,7 @@ Next
             border-radius: 3px;
         }
     </style>
-<style>
-    body {
-        /* Define a escala de 0.8 (80%) */
-        transform: scale(0.8); 
-        
-        /* Define o ponto de origem para o canto superior esquerdo */
-        transform-origin: 0 0; 
-        
-        /* Ajusta a largura para que o conteúdo ocupe 80% da largura original */
-        /* Isso ajuda a prevenir barras de rolagem desnecessárias. */
-        width: calc(100% / 0.8); 
-    }
-</style>    
+    
 </head>
 <body>
     <header class="app-header">
@@ -413,6 +412,7 @@ Next
             <div class="row align-items-center">
                 <div class="col-md-6">
                     <h1 class="app-title"><i class="fas fa-chart-line me-2"></i> KPIs e Metas</h1>
+                    <small><%=Session("Usuario")%></small>
                 </div>
                 <div class="col-md-6 text-end">
                     <a href="javascript:window.close()" class="btn btn-light btn-sm">
@@ -460,10 +460,10 @@ Next
                 <div class="chart-container">
                     <canvas id="graficoMetasVendas"></canvas>
                 </div>
-                <!-- Legenda do gráfico -->
+                <!-- Legenda do gráfico (usando cores agora alinhadas ao VBScript e CSS) -->
                 <div class="legenda-grafico">
                     <div class="item-legenda">
-                        <div class="cor-legenda" style="background-color: #28a745;"></div>
+                        <div class="cor-legenda" style="background-color: #4047D9;"></div>
                         <span>Meta Atingida/Superada</span>
                     </div>
                     <div class="item-legenda">
@@ -492,18 +492,18 @@ Next
                     For i = 1 To 12
                         Dim badgeClass, iconeMeta, borderClass, classeFundo, textoDiferenca
                        
-                        ' CORREÇÃO DEFINITIVA: Lógica INTUITIVA para os CARDS
+                        ' Lógica INTUITIVA para os CARDS (mantida)
                         If metasMensais(i) > 0 Then
                             If diferencasMensais(i) >= 0 Then
                                 ' Meta ATINGIDA/SUPERADA (BOM)
-                                badgeClass = "bg-success" ' Verde para badge
+                                badgeClass = "bg-success"
                                 iconeMeta = "fa-check"
                                 borderClass = "success"
                                 classeFundo = "atingiu-meta"
                                 textoDiferenca = "R$ " & FormatNumber(Abs(diferencasMensais(i)), 2)
                             Else
                                 ' Meta NÃO ATINGIDA (RUIM)
-                                badgeClass = "bg-danger" ' Vermelho para badge
+                                badgeClass = "bg-danger"
                                 iconeMeta = "fa-times"
                                 borderClass = "danger"
                                 classeFundo = "nao-atingiu-meta"
@@ -513,14 +513,14 @@ Next
                             ' SEM META
                             If vendasMensais(i) > 0 Then
                                 ' Com vendas mas sem meta
-                                badgeClass = "bg-info" ' Azul para badge
+                                badgeClass = "bg-info"
                                 iconeMeta = "fa-chart-line"
                                 borderClass = "info"
                                 classeFundo = "com-vendas"
                                 textoDiferenca = "Com Vendas"
                             Else
                                 ' Sem vendas e sem meta
-                                badgeClass = "bg-secondary" ' Cinza para badge
+                                badgeClass = "bg-secondary"
                                 iconeMeta = "fa-minus"
                                 borderClass = "secondary"
                                 classeFundo = "sem-meta"
@@ -621,29 +621,60 @@ Next
                 </div>
             </div>
         </div>
-
-        <!-- Resto do código das últimas vendas permanece igual -->
+        
+        <!-- Últimas Vendas (Manuseio de Recordset mantido) -->
+        <div class="card ultimas-vendas">
+            <h5 class="card-title"><i class="fas fa-history me-2"></i> Últimas Vendas Registradas em <%= anoSelecionado %></h5>
+            <div class="row mt-3">
+                <% If Not rsUltimasVendas.EOF Then %>
+                <% Do While Not rsUltimasVendas.EOF %>
+                <div class="col-md-4">
+                    <div class="venda-item">
+                        <span class="fw-bold"><%= rsUltimasVendas("NomeEmpreendimento") %> - Unidade <%= rsUltimasVendas("Unidade") %></span>
+                        <br>
+                        Valor: <span class="text-success fw-bold">R$ <%= FormatNumber(rsUltimasVendas("ValorUnidade"), 2) %></span>
+                        <br>
+                        Data: <%= rsUltimasVendas("DataVenda") %> | Corretor: <%= rsUltimasVendas("Corretor") %>
+                    </div>
+                </div>
+                <% rsUltimasVendas.MoveNext %>
+                <% Loop %>
+                <% Else %>
+                <div class="col-12"><p class="text-muted text-center">Nenhuma venda registrada para o ano <%= anoSelecionado %>.</p></div>
+                <% End If %>
+            </div>
+        </div>
     </div>
 
-    <script>
-    // Dados para o gráfico (agora com o formato decimal corrigido)
+
+<!-- =========================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+<script>
+    // Registra o plugin datalabels globalmente
+    Chart.register(ChartDataLabels);
+
+    // --- VARIÁVEIS DO VBSCRIPT/ASP ---
+    // (Presume-se que estas variáveis sejam injetadas pelo seu código VBScript, por exemplo,
+    // com valores como: strVendasJS = "100.50, 200.75, 150.00" e strCoresJS = "'#007bff', '#007bff', '#dc3545'")
+
     const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     
     // Utilizando as strings com ponto decimal geradas no VBScript
-    const vendas = [<%= strVendasJS %>];
+    const vendas = [<%= strVendasJS %>]; 
     const metas = [<%= strMetasJS %>];
     
-   const coresVendas = [<%= strCoresJS %>];
-
-    // Debug no console para verificar os valores injetados
-    console.log('Vendas (JS):', vendas);
-    console.log('Metas (JS):', metas);
-    console.log('Cores (JS):', coresVendas);
+    // Cores corrigidas do VBScript
+    const coresVendas = [<%= strCoresJS %>];
+    // ----------------------------------
 
     // Configuração do gráfico
     const ctx = document.getElementById('graficoMetasVendas').getContext('2d');
     const graficoMetasVendas = new Chart(ctx, {
         type: 'bar',
+
         data: {
             labels: meses,
             datasets: [
@@ -658,8 +689,8 @@ Next
                 {
                     label: 'Meta',
                     data: metas,
-                    type: 'bar',
-                    backgroundColor: 'rgba(157, 209, 169, 0.7)',
+                    type: 'bar', // Manter como 'bar' para empilhamento ou comparação
+                    backgroundColor: 'rgba(253, 126, 20, 0.7)', // Cor Laranja/Aviso
                     borderColor: 'rgba(253, 126, 20, 1)',
                     borderWidth: 1,
                     barPercentage: 0.6,
@@ -691,7 +722,7 @@ Next
             },
             plugins: {
                 legend: {
-                    position: 'top',
+                    display: true, // Mantido como false, pois a legenda está nos datalabels
                 },
                 tooltip: {
                     callbacks: {
@@ -704,6 +735,41 @@ Next
                             return label;
                         }
                     }
+                },
+                // Configuração do Data Labels com nome da série e valor em duas linhas
+                datalabels: {
+                    align: 'center', // Ajuste para melhor visualização com rotação
+                    anchor: 'center', // Ajuste para melhor visualização com rotação
+                    formatter: function(value, context) {
+                        if (value > 0) { // Só exibe se o valor for maior que zero
+                            const serieLabel = context.dataset.label; // Nome da série ("Vendas" ou "Meta")
+                            const valorFormatado = 'R$ ' + parseFloat(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                            
+                            // Retorna um array para exibir em múltiplas linhas
+                            return [valorFormatado]; 
+                        }
+                        return null; 
+                    },
+                    color: function(context) {
+                        // Define cores diferentes para cada dataset
+                        if (context.datasetIndex === 0) {
+                            // Labels das Vendas - cor branca para melhor contraste
+                            return '#ffffff';
+                        } else {
+                            // Labels da Meta - cor preta para melhor contraste com laranja
+                            return '#000000';
+                        }
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 10
+                    },
+                    // Adiciona sombra para melhor legibilidade
+                    textShadow: true,
+                    shadowBlur: 3,
+                    shadowColor: 'rgba(0, 0, 0, 0.8)',
+                    rotation: -90,  // Texto na vertical
+                    offset: 5       // Ajuste fino da posição
                 }
             }
         }
@@ -711,16 +777,22 @@ Next
 
     // Função para atualizar a página mantendo o filtro
     function atualizarPagina() {
+        // Certifique-se de que o elemento select com name="ano" exista no seu HTML
         const anoSelecionado = document.querySelector('select[name="ano"]').value;
         window.location.href = 'gestao_vendas_metas.asp?ano=' + anoSelecionado;
     }
 
     // Atualizar a página a cada 60 segundos
     setInterval(atualizarPagina, 60000);
-    </script>
+</script>
+
+<!-- =========================== -->
+
+    
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
 

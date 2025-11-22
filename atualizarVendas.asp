@@ -72,6 +72,12 @@ rsAjustaData.CommandText = "UPDATE Vendas INNER JOIN COMISSOES_A_PAGAR ON Vendas
 rsAjustaData.Execute()
 rsAjustaData.CommandType = 4 'Retorna ao padrão adCmdStoredProc (Embora seja o último comando de execução)
 
+'=============== 22 11 2025 Atualizar Goordenadas Geo-Mapa
+rsAjustaData.CommandType = 1 'adCmdText (Para executar SQL direto)
+rsAjustaData.CommandText = "UPDATE GeoMapa INNER JOIN Vendas ON GeoMapa.Localidade = Vendas.Localidade SET Vendas.Localizacao = [GeoMapa].[Localizacao];"
+rsAjustaData.Execute()
+rsAjustaData.CommandType = 4 'Retorna ao padrão adCmdStoredProc (Embora seja o último comando de execução)
+
 '================================================================'
 ' Fecha ambas as conexões
 conn.Close

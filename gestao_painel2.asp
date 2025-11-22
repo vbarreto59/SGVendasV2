@@ -292,7 +292,21 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>E-Comissões</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>E-Comissões Vendas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize os saldos das comissões.</p>
+                        <a href="venda_pag_resumo1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>             
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>F-Comissões Mensais</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Visualize as comissões.</p>
@@ -301,7 +315,46 @@ End if
                         </a>
                     </div>
                 </div>
-            </div>        
+            </div>     
+
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
+                    <div class="card h-100">
+                        <div class="card-header text-center">
+                            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>G-Geo-Mapa de Vendas</h5>
+                        </div>
+                        <div class="card-body text-center d-flex flex-column">
+                            <p class="card-text">Visualização das regiões com vendas.</p>
+                            <span class="btn btn-primary btn-sm mt-auto">
+                                <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa de Vendas
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div> 
+
+
+            <div class="divider-line"></div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+                <a href="gestao_vendas_geral.asp" class="text-decoration-none" target="_blank">
+                    <div class="card h-100">
+                        <div class="card-header text-center">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>G-Relat. Geral</h5>
+                        </div>
+                        <div class="card-body text-center d-flex flex-column">
+                            <p class="card-text">Detalhes completos sobre as vendas.</p>
+                            <span class="btn btn-primary btn-sm mt-auto">
+                                <i class="fas fa-arrow-right me-1"></i> Acessar
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>            
+
+   
+            <!-- ######## OPÇÕES BARRETO  -->
             <%If Session("Usuario") = "BARRETO" then %>
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -316,78 +369,23 @@ End if
                     </div>
                 </div>
             </div>                 
-            <%End if%>
 
-
-            <div class="divider-line"></div>
-            
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Comissões Individuais</h5>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Visualize os saldos das comissões.</p>
-                        <a href="venda_pag_resumo1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
-                            <i class="fas fa-arrow-right me-1"></i> Acessar
-                        </a>
-                    </div>
-                </div>
-            </div>
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Comissões Mensais</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>G-QTD Semanas</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Visualize os saldos das comissões.</p>
-                        <a href="gestao_vendas_comissao_saldo3.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                        <p class="card-text">Visualize as comissões.</p>
+                        <a href="vendas_semana.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
                             <i class="fas fa-arrow-right me-1"></i> Acessar
                         </a>
                     </div>
                 </div>
-            </div>
+            </div> 
 
-
-        </div>
-
-        <!-- LINHA DIVISÓRIA -->
-        <div class="divider-line"></div>
-
-        <div class="row g-4">
-            <!-- SEGUNDA LINHA: DEMAIS OPÇÕES -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Dashboard Vendas</h5>
-                    </div>
-                    <div class="card-body text-center d-flex flex-column">
-                        <p class="card-text">Visualize as vendas.</p>
-                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
-                            <i class="fas fa-arrow-right me-1"></i> Acessar
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
-                    <div class="card h-100">
-                        <div class="card-header text-center">
-                            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Geo-Mapa de Vendas</h5>
-                        </div>
-                        <div class="card-body text-center d-flex flex-column">
-                            <p class="card-text">Visualização das regiões com vendas.</p>
-                            <span class="btn btn-primary btn-sm mt-auto">
-                                <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa de Vendas
-                            </span>
-                        </div>
-                    </div>
-                </a>
-            </div>
+     
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
@@ -401,7 +399,28 @@ End if
                         </a>
                     </div>
                 </div>
-            </div>
+            </div>      
+
+            <%End if%>
+
+
+            
+            
+
+
+
+
+
+        </div>
+
+        <!-- LINHA DIVISÓRIA -->
+        
+
+        <div class="row g-4">
+            <!-- SEGUNDA LINHA: DEMAIS OPÇÕES -->
+
+
+
                     <!-- LINHA DIVISÓRIA -->
         <div class="divider-line"></div>
 
