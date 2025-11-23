@@ -140,6 +140,11 @@ On Error GoTo 0
         .welcome-section, .card-header, footer .col-md-6:first-child {
             background: linear-gradient(45deg, #800020, #A52A2A, #4B0012);
         }
+
+       card-header2 {
+            background: linear-gradient(45deg, #800020, #A52A2A, #4B0012);
+        }
+
         .welcome-section h1, .card-header h5, footer .col-md-6:first-child h5 {
             color: white;
         }
@@ -340,8 +345,8 @@ End if
             <div class="col-12 col-md-6 col-lg-4">
                 <a href="gestao_vendas_geral.asp" class="text-decoration-none" target="_blank">
                     <div class="card h-100">
-                        <div class="card-header text-center">
-                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>G-Relat. Geral</h5>
+                        <div class="card-header2 text-center">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S1-Relat. Geral</h5>
                         </div>
                         <div class="card-body text-center d-flex flex-column">
                             <p class="card-text">Detalhes completos sobre as vendas.</p>
@@ -358,8 +363,8 @@ End if
             <%If Session("Usuario") = "BARRETO" then %>
             <div class="col-md-6 col-lg-4">
                 <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>F-$ Individual</h5>
+                    <div class="card-header2 text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S2-$ Individual</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Visualize as comissões.</p>
@@ -373,8 +378,8 @@ End if
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
-                    <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>G-QTD Semanas</h5>
+                    <div class="card-header2 text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S3-QTD Semanas</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Visualize as comissões.</p>
@@ -385,11 +390,25 @@ End if
                 </div>
             </div> 
 
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header2 text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S4-QTD Mensais</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as comissões.</p>
+                        <a href="vendas_valores_mensais.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>             
+
      
 
             <div class="col-md-6 col-lg-4">
                 <div class="card">
-                    <div class="card-header text-center">
+                    <div class="card-header2 text-center">
                         <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Relatórios</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
