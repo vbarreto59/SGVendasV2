@@ -478,7 +478,7 @@ End if
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Cadastro de usuários.</p>
-                        <a href="usrv_gestao_listar.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                        <a href="usrv_gestao_listar2.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
                             <i class="fas fa-arrow-right me-1"></i> Acessar
                         </a>
                     </div>
