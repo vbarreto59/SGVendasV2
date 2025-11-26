@@ -22,6 +22,7 @@
 <!--#include file="atualizarVendas2.asp"-->
 
 <%
+Server.ScriptTimeout = 300    
 Response.Buffer = True
 Response.Expires = -1
 Response.CodePage = 65001
@@ -43,13 +44,25 @@ Set connSales = Server.CreateObject("ADODB.Connection")
 conn.Open StrConn
 connSales.Open StrConnSales
 
-sqlUpdate1 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Diretorias INNER JOIN Vendas ON Diretorias.DiretoriaId = Vendas.DiretoriaId) SET Vendas.NomeDiretor = [Diretorias].[Nome], Vendas.UserIdDiretoria = [Diretorias].[UserId];"
+'sqlUpdate1 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Diretorias INNER JOIN Vendas ON Diretorias.DiretoriaId = Vendas.DiretoriaId) SET Vendas.NomeDiretor = [Diretorias].[Nome], Vendas.UserIdDiretoria = [Diretorias].[UserId];"
 'connSales.Execute(sqlUpdate1)
 
-sqlUpdate2 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Gerencias INNER JOIN Vendas ON Gerencias.GerenciaId = Vendas.GerenciaId) SET [Vendas].[NomeGerente] = [Gerencias].[Nome], [Vendas].[UserIdGerencia] = [Gerencias].[UserId];"
+'sqlUpdate2 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Gerencias INNER JOIN Vendas ON Gerencias.GerenciaId = Vendas.GerenciaId) SET [Vendas].[NomeGerente] = [Gerencias].[Nome], [Vendas].[UserIdGerencia] = [Gerencias].[UserId];"
 'connSales.Execute(sqlUpdate2)
 
-sqlUpdateCorretor = "UPDATE (Vendas INNER JOIN [;DATABASE=" & dbSunnyPath & "].Usuarios ON Vendas.CorretorId = Usuarios.UserId) SET Vendas.Corretor = Usuarios.Nome;"
+' =========== ATUALIZADO PARA FAZER UPDATE APENAS QUANDO OS CAMPOS FOREM VAZIOS 25 11 2025 =============
+'===== Modificado em 25 11 2025'
+sqlUpdate1 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Diretorias INNER JOIN Vendas ON Diretorias.DiretoriaId = Vendas.DiretoriaId) SET Vendas.NomeDiretor = [Diretorias].[Nome], Vendas.UserIdDiretoria = [Diretorias].[UserId] WHERE Vendas.NomeDiretor IS NULL;"
+connSales.Execute(sqlUpdate1)
+
+' UPDATE Gerencias -> Vendas
+sqlUpdate2 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Gerencias INNER JOIN Vendas ON Gerencias.GerenciaId = Vendas.GerenciaId) SET [Vendas].[NomeGerente] = [Gerencias].[Nome], [Vendas].[UserIdGerencia] = [Gerencias].[UserId] WHERE Vendas.NomeGerente IS NULL;"
+connSales.Execute(sqlUpdate2)
+
+'======================================================================================================='
+
+
+'sqlUpdateCorretor = "UPDATE (Vendas INNER JOIN [;DATABASE=" & dbSunnyPath & "].Usuarios ON Vendas.CorretorId = Usuarios.UserId) SET Vendas.Corretor = Usuarios.Nome;"
 'connSales.Execute(sqlUpdateCorretor)
 
 sql = "UPDATE Vendas SET Semestre = SWITCH(Trimestre IN (1, 2), 1, Trimestre IN (3, 4), 2) WHERE Trimestre IS NOT NULL;"

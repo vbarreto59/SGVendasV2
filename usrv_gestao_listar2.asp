@@ -443,6 +443,12 @@ successGerencia = Request.QueryString("gerencia")
     </div>
     <div class="d-flex justify-content-between align-items-center header-actions">
   
+
+<!-- Novo Usuário -->
+                <a href="usrv_gestao_novo_usuario.asp" class="btn btn-primary">
+                    <i class="fas fa-user-plus mr-1"></i> Novo Usuário
+                </a>
+
   <div class="d-flex flex-column"> 
     <h4 class="mb-0"><i class="fas fa-users mr-2"></i>Lista de Usuários</h4>
     
