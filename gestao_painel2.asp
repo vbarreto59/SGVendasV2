@@ -67,7 +67,7 @@ If IsMobile() Then
             objMail.Subject = "SV-MOB" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
             objMail.MailFormat = 0 ' 0 = Texto Simples
             objMail.Body = "Página Vendas Mobile. " & Ucase(Session("Usuario"))
-            objMail.Send
+            'objMail.Send bloqueado em 27 11 2025. Poupar espaço servidor.
             set objMail = Nothing
         end if 
         On Error GoTo 0 

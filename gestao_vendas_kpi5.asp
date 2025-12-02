@@ -706,17 +706,17 @@ topEmpresas = GetTopList(kpiData("TopEmpresas"), 5)
                             badgeClass = "bg-secondary"
                             badgeText = "Sem vendas"
                         ElseIf valorMes = maiorValor And maiorValor > 0 Then
-                            classeCard = "card-highlight"
+                            classeCard = "card-highlight"  
                             badgeClass = "bg-success"
                             badgeText = "Melhor mês"
                         ElseIf valorMes >= maiorValor * 0.7 Then
-                            classeCard = "card-warning"
+                            classeCard = "card-info"  'card-warning'
                             badgeClass = "bg-warning"
-                            badgeText = "Alto desempenho"
+                            badgeText = ""
                         Else
                             classeCard = "card-info"
                             badgeClass = "bg-info"
-                            badgeText = "Em andamento"
+                            badgeText = ""   'Em andamento'
                         End If
                     %>
                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
