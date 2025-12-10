@@ -2,6 +2,7 @@
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
 <!--#include file="gestao_header.inc"-->
+<!--#include file="usr_acoes_v4GVendas.inc"-->
 
 <%
 if Session("Usuario") = "" then

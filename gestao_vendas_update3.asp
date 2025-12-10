@@ -169,7 +169,12 @@ vFator = 100
 
 ' Formata as demais variáveis para SQL
 valorComissaoGeral = valorUnidade * (comissaoPercentual / vFator)
+
 valorComissaoGeral = GetFormattedNumber(valorComissaoGeral)
+'Response.Write valorComissaoGeral'
+'Response.end 
+
+
 m2 = GetFormattedNumber(m2)
 valorUnidade = GetFormattedNumber(valorUnidade)
 
@@ -1180,23 +1185,32 @@ End Function
                             <i class="fas fa-info-circle me-2"></i>Informações Adicionais
                         </h3>
                         <div class="row g-3">
-                            <div class="col-md-3">
-                                <label for="dataVenda" class="form-label required-field">Data da Venda</label>
-                                <%
-                                Dim dataVendaValue
-                                If Not editData Is Nothing Then
-                                    If Not IsNull(editData("DataVenda")) Then
-                                        dataVendaValue = FormatDateTime(editData("DataVenda"), 2)
-                                    Else
-                                        dataVendaValue = ""
-                                    End If
-                                Else
-                                    dataVendaValue = ""
-                                End If
-                                %>
-                                <input type="date" class="form-control" id="dataVenda" name="dataVenda" 
-                                       value="<%= dataVendaValue %>" required>
-                            </div>
+<div class="col-md-3">
+    <label for="dataVenda" class="form-label required-field">Data da Venda</label>
+    <%
+    Dim dataVendaValue, dia, mes, ano
+    
+    If Not editData Is Nothing And Not IsNull(editData("AnoVenda")) Then
+        
+        ' 1. Captura os valores (certifique-se de que não são nulos)
+        dia = editData("diaVenda")
+        mes = editData("MesVenda")
+        ano = editData("AnoVenda")
+        
+        ' 2. Garante dois dígitos: Concatena "0" e pega os 2 dígitos mais à direita.
+        '    Ex: "0" & 8 = "08" (pega "08"); "0" & 12 = "012" (pega "12")
+        dia = Right("0" & dia, 2)
+        mes = Right("0" & mes, 2)
+        
+        ' 3. Constrói o formato ISO YYYY-MM-DD exigido pelo input type="date"
+        dataVendaValue = ano & "-" & mes & "-" & dia
+    Else
+        dataVendaValue = ""
+    End If
+    %>
+    <input type="date" class="form-control" id="dataVenda" name="dataVenda" 
+            value="<%= dataVendaValue %>" required>
+</div>
                             <div class="col-md-3">
                                 <label for="trimestre" class="form-label">Trimestre</label>
                                 <select class="form-select" id="trimestre" name="trimestre">

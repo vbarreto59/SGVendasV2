@@ -5,6 +5,7 @@
 <%if Trim(StrConnSales)="" then%>
      <!--#include file="conSunSales.asp"-->
 <%end if%>  
+<!--#include file="usr_acoes_v4GVendas.inc"-->
 
 <%
 ' Configuração para evitar cache
@@ -56,7 +57,7 @@ conn.Open StrConnSales
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Vendas</title>
+    <title>Relatório Geral de Vendas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
         body { background-color: #f8f9fa; }
@@ -485,7 +486,7 @@ conn.Open StrConnSales
                     <div class="card-body">
                         <h2 class="card-title">Vendas por Empreendimento</h2>
                         <%
-                        sql = "SELECT NomeEmpreendimento, COUNT(*) as Unidades, SUM(ValorUnidade) as VGV " & _
+                        sql = "SELECT NomeEmpreendimento, COUNT(*) as Unidades, SUM(Vendas.ValorUnidade) as VGV " & _
                               "FROM Vendas" & whereClause & " GROUP BY NomeEmpreendimento ORDER BY SUM(Vendas.ValorUnidade) DESC"
                         rs.Open sql, conn
                         
@@ -542,10 +543,72 @@ conn.Open StrConnSales
                     </div>
                 </div>
 
-<!-- corretores sem vendas -->
-
-
-<!-- xxxxxxxxxxx -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">Vendas por Corretor</h2>
+                        <%
+                        ' SQL para agrupar por Corretor
+                        sql = "SELECT Corretor, COUNT(*) as Unidades, SUM(ValorUnidade) as VGV " & _
+                              "FROM Vendas" & whereClause & " GROUP BY Corretor ORDER BY SUM(Vendas.ValorUnidade) DESC"
+                        rs.Open sql, conn
+                        
+                        If Not rs.EOF Then
+                            Dim totalUnidadesCorretor, totalVGVCorretor
+                            totalUnidadesCorretor = 0
+                            totalVGVCorretor = 0
+                            %>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Corretor</th>
+                                            <th class="text-center">Unidades</th>
+                                            <th class="text-right">VGV</th>
+                                            <th class="text-right">% do Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <%
+                                        Do While Not rs.EOF
+                                            If totalVGV <> 0 Then
+                                                percentual = (rs("VGV") / totalVGV) * 100
+                                            Else
+                                                percentual = 0
+                                            End If
+                                            
+                                            totalUnidadesCorretor = totalUnidadesCorretor + rs("Unidades")
+                                            totalVGVCorretor = totalVGVCorretor + rs("VGV")
+                                            %>
+                                            <tr>
+                                                <td><%=rs("Corretor")%></td>
+                                                <td class="text-center"><%=FormatNumber(rs("Unidades"), 0)%></td>
+                                                <td class="text-right">R$ <%=FormatNumber(rs("VGV"), 2)%></td>
+                                                <td class="text-right"><%=FormatNumber(percentual, 2)%>%</td>
+                                            </tr>
+                                            <%
+                                            rs.MoveNext
+                                        Loop
+                                        %>
+                                        <tr class="total">
+                                            <td><strong>TOTAL</strong></td>
+                                            <td class="text-center"><strong><%=FormatNumber(totalUnidadesCorretor, 0)%></strong></td>
+                                            <td class="text-right"><strong>R$ <%=FormatNumber(totalVGVCorretor, 2)%></strong></td>
+                                            <td class="text-right"><strong>100%</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <%
+                        Else
+                            %>
+                            <p class="card-text">Nenhuma venda encontrada para os filtros selecionados.</p>
+                            <%
+                        End If
+                        rs.Close
+                        %>
+                    </div>
+                </div>
+                
                 <%
             Else
                 %>

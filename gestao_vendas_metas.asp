@@ -9,6 +9,8 @@
     <!--#include file="conSunSales.asp"-->
 <%End If%>
 
+<!--#include file="usr_acoes_v4GVendas.inc"-->
+
 <!--#include file="gestao_header.inc"-->
 <%
 if Session("Usuario") = "" then
@@ -16,11 +18,13 @@ if Session("Usuario") = "" then
 end if 
 %>
 
+<!--#include file="usr_acoes_v4GVendas.inc"-->
+
 <%
 ' ===========================================================
 ' LOG de acesso (mantido)
 ' ===========================================================
-    if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+    if Not BloqueioEmail() AND (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
         On Error Resume Next 
         set objMail = server.createobject("CDONTS.NewMail")
         if Err.Number <> 0 then 

@@ -1,3 +1,10 @@
+<!-- ###################################### -->
+<!-- SISTEMA: SGVENDAS                      -->
+<!-- AUTOR: VALTER BARRETO                    -->
+<!-- Data: 04/12/2025               -->
+<!-- CODIGO_ARQUIVO: WVLHTQCGWG          -->
+<!-- OBS:                                     -->
+<!-- ###################################### -->
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <%if Trim(StrConn)="" then%>
      <!--#include file="conexao.asp"-->
@@ -10,7 +17,6 @@
 <!--#include file="atualizarVendas2.asp"-->
 <!--#include file="atualizarVendasTemp.asp"-->
 <!--#include file="manutencao_config.asp"-->
-
 <%
 if Session("Usuario") = "" then
    Response.redirect "gestao_login.asp"
@@ -18,6 +24,24 @@ end if
 Dim mostrarAlertaManutencao
 mostrarAlertaManutencao = EstaEmManutencao()
 %>
+
+<!-- badge vgv últimos dois anos  -->
+<%
+if Session("Usuario") = "" then
+   Response.redirect "gestao_login.asp"
+end if   
+'Dim mostrarAlertaManutencao
+mostrarAlertaManutencao = EstaEmManutencao()
+%>
+
+<!-- =============================================== -->
+<!-- PAINEL BOLSA DE VALORES - VGV (NOVO CÓDIGO)    -->
+<!-- =============================================== -->
+<% Server.Execute("vgv_bolsa_valores.asp") %>
+<!-- =============================================== -->
+<!--  -->
+
+
 
 <%
 ' =========================================================================
@@ -56,7 +80,7 @@ If IsMobile() Then
 
     vendasFile = "gestao_vendas_list_mob1.asp"
 
-    if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
+    if Not BloqueioEmail() AND (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVariables("remote_addr") <> "::1") then
         On Error Resume Next 
         set objMail = server.createobject("CDONTS.NewMail")
         if Err.Number <> 0 then 
@@ -67,7 +91,7 @@ If IsMobile() Then
             objMail.Subject = "SV-MOB" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
             objMail.MailFormat = 0 ' 0 = Texto Simples
             objMail.Body = "Página Vendas Mobile. " & Ucase(Session("Usuario"))
-            'objMail.Send bloqueado em 27 11 2025. Poupar espaço servidor.
+            objMail.Send
             set objMail = Nothing
         end if 
         On Error GoTo 0 
@@ -85,6 +109,7 @@ End If
 Response.Buffer = True
 Response.Expires = -1
 'On Error Resume Next ' 
+
 ' --- CRIAÇÃO DOS OBJETOS ADO DE CONEXÃO ---
 Set conn = Server.CreateObject("ADODB.Connection")
 Set connSales = Server.CreateObject("ADODB.Connection")
@@ -92,13 +117,19 @@ conn.Open StrConn
 connSales.Open StrConnSales
 
 ' Primeiro UPDATE: Associar Vendas.DiretoriaId com Diretorias.DiretoriaId e atualizar campos
-sqlUpdate1 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Diretorias INNER JOIN Vendas ON Diretorias.DiretoriaId = Vendas.DiretoriaId) SET Vendas.NomeDiretor = [Diretorias].[Nome], Vendas.UserIdDiretoria = [Diretorias].[UserId];"
-'removido em 10 11 2025 para mudar a forma de associar a diretoria com uma pessoa do cadastro de usuário'
+'sqlUpdate1 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Diretorias INNER JOIN Vendas ON Diretorias.DiretoriaId = Vendas.DiretoriaId) SET Vendas.NomeDiretor = [Diretorias].[Nome], Vendas.UserIdDiretoria = [Diretorias].[UserId];"
+
+
+'===== Modificado em 25 11 2025'
+sqlUpdate1 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Diretorias INNER JOIN Vendas ON Diretorias.DiretoriaId = Vendas.DiretoriaId) SET Vendas.NomeDiretor = [Diretorias].[Nome], Vendas.UserIdDiretoria = [Diretorias].[UserId] WHERE Vendas.NomeDiretor IS NULL;"
 'connSales.Execute(sqlUpdate1)
 
 ' UPDATE Gerencias -> Vendas
-sqlUpdate2 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Gerencias INNER JOIN Vendas ON Gerencias.GerenciaId = Vendas.GerenciaId) SET [Vendas].[NomeGerente] = [Gerencias].[Nome], [Vendas].[UserIdGerencia] = [Gerencias].[UserId];"
+sqlUpdate2 = "UPDATE ([;DATABASE=" & dbSunnyPath & "].Gerencias INNER JOIN Vendas ON Gerencias.GerenciaId = Vendas.GerenciaId) SET [Vendas].[NomeGerente] = [Gerencias].[Nome], [Vendas].[UserIdGerencia] = [Gerencias].[UserId] WHERE Vendas.NomeGerente IS NULL;"
 'connSales.Execute(sqlUpdate2)
+
+
+
 
 'Atualizar Nome do Corretor-----------------------------'
 sqlUpdateCorretor = "UPDATE (Vendas INNER JOIN [;DATABASE=" & dbSunnyPath & "].Usuarios ON Vendas.CorretorId = Usuarios.UserId) " & _
@@ -204,7 +235,7 @@ End if
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-sun me-2"></i>SGVendas - <%=Session("Usuario")%>
+                <i class="fas fa-sun me-2"></i>SGVendas - <%=Session("Usuario") & " "%>  <%=Session("EnviaEmail")%>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -287,17 +318,64 @@ End if
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Visualize as vendas.</p>
-                        <a href="dashboard3rand1.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                        <a href="dashboard3rand7x.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
                             <i class="fas fa-arrow-right me-1"></i> Acessar
                         </a>
                     </div>
                 </div>
             </div>
 
+
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>E-Comissões Vendas</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>E-Comparativo de Metas</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as vendas.</p>
+                        <a href="dashb_comp_metas3.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>            
+
+            <div class="col-12 col-md-6 col-lg-4 mt-4">
+                <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
+                    <div class="card h-100">
+                        <div class="card-header text-center">
+                            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>F-Geo-Mapa de Vendas</h5>
+                        </div>
+                        <div class="card-body text-center d-flex flex-column">
+                            <p class="card-text">Visualização das regiões com vendas.</p>
+                            <span class="btn btn-primary btn-sm mt-auto">
+                                <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa de Vendas
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>            
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>G-Relat. Geral</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as comissões.</p>
+                        <a href="gestao_vendas_geral.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>  
+
+            <div class="divider-line"></div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>H-Comissões Vendas</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Visualize os saldos das comissões.</p>
@@ -311,7 +389,7 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>F-Comissões Mensais</h5>
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>I-Comissões Mensais</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Visualize as comissões.</p>
@@ -323,41 +401,24 @@ End if
             </div>     
 
 
-            <div class="col-12 col-md-6 col-lg-4">
-                <a href="gestao_geomapa_vendas.asp" class="text-decoration-none" target="_blank">
-                    <div class="card h-100">
-                        <div class="card-header text-center">
-                            <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>G-Geo-Mapa de Vendas</h5>
-                        </div>
-                        <div class="card-body text-center d-flex flex-column">
-                            <p class="card-text">Visualização das regiões com vendas.</p>
-                            <span class="btn btn-primary btn-sm mt-auto">
-                                <i class="fas fa-arrow-right me-1"></i> Visualizar Mapa de Vendas
-                            </span>
-                        </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>J-KPI Comissões</h5>
                     </div>
-                </a>
-            </div> 
-
-
-            <div class="divider-line"></div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <a href="gestao_vendas_geral.asp" class="text-decoration-none" target="_blank">
-                    <div class="card h-100">
-                        <div class="card-header2 text-center">
-                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S1-Relat. Geral</h5>
-                        </div>
-                        <div class="card-body text-center d-flex flex-column">
-                            <p class="card-text">Detalhes completos sobre as vendas.</p>
-                            <span class="btn btn-primary btn-sm mt-auto">
-                                <i class="fas fa-arrow-right me-1"></i> Acessar
-                            </span>
-                        </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualize as comissões.</p>
+                        <a href="gestao_vendas_kpi5comissao.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
                     </div>
-                </a>
-            </div>            
+                </div>
+            </div>              
 
+              
+
+         
+           <div class="divider-line"></div>
    
             <!-- ######## OPÇÕES BARRETO  -->
             <%If Session("Usuario") = "BARRETO" then %>
@@ -409,7 +470,7 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header2 text-center">
-                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Relatórios</h5>
+                        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>S5-Relatórios</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Relatórios gerenciais e consolidados.</p>
@@ -419,6 +480,82 @@ End if
                     </div>
                 </div>
             </div>      
+
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header2 text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S6-BLoquear Emails</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Bloqueia o Envio de Emails.</p>
+                        <a href="bloqueiaEmail.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>             
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header2 text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S7-Corretores Sem Venda</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Corretores sem Vendas.</p>
+                        <a href="gestao_corretores_sem_vendas2.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>  
+
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header2 text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S8-Visualizar Log</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualizar Log.</p>
+                        <a href="tool_visualizar_log.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>     
+
+
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header2 text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S9-Saldo das Comissões</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualizar Saldo das Comissões</p>
+                        <a href="gestao_vendas_comissao_saldo3.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>      
+
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header2 text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S10-2 Vendas Anuais</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Visualizar Saldo das Comissões</p>
+                        <a href="gestao_vendas_metas_2anos.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div> 
+
 
             <%End if%>
 
@@ -515,25 +652,35 @@ End if
                         </a>
                     </div>
                 </div>
-            </div>        
+
+            </div>    
+
+<div class="divider-line"></div>  
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Vendas para Diretorias</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Permitir Diretor ver Relatório de Vendas.</p>
+                        <a href="manut_vendas_diretorias.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+           
+            <!--#include file="footer.inc"-->    
         <%end if%>            
 
 
     </div>
 
 
-    <footer class="text-center mt-auto">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <p><small>Valter Barreto</p>
-                    <p>&copy; 2025 Todos os direitos reservados</p></small>
-                    <div class="social-icons">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

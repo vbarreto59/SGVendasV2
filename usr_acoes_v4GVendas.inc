@@ -132,3 +132,41 @@ Function UsuarioAdmin()
   UsuarioAdmin = podeEditar
 End Function
 %>
+
+<%
+' =================================================================================
+' FUNÇÃO PARA VERIFICAR BLOQUEIO DE EMAIL
+' Retorna True se o arquivo 'NoEmail.txt' existir (bloqueado), False caso contrário.
+' =================================================================================
+Function BloqueioEmail()
+    Dim objFSO, strCaminhoArquivo, blnBloqueado
+    
+    blnBloqueado = False
+    
+    ' Caminho absoluto para o arquivo de bloqueio
+    strCaminhoArquivo = Server.MapPath("NoEmail.txt") 
+    
+    ' Checa a existência do arquivo NoEmail.txt usando FileSystemObject
+    On Error Resume Next ' Inicia tratamento de erro para FSO
+    Set objFSO = Server.CreateObject("Scripting.FileSystemObject")
+    
+    If Err.Number = 0 Then
+        If objFSO.FileExists(strCaminhoArquivo) Then
+            blnBloqueado = True ' Arquivo de bloqueio encontrado
+            Call InserirLog ("Sistema", "EMAIL", "Envio de e-mail bloqueado: NoEmail.txt encontrado.")
+        End If
+        Set objFSO = Nothing
+    End If
+    Err.Clear
+    On Error GoTo 0 ' Restaura tratamento de erro
+    
+    If blnBloqueado then
+       Session("EnviaEmail") = "NoEmail"
+    Else
+       Session("EnviaEmail") = "**"
+    End If   
+    'response.write blnBloqueado
+    'response.end 
+    BloqueioEmail = blnBloqueado
+End Function
+%>
