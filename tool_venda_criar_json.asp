@@ -1,3 +1,10 @@
+<!-- ###################################### -->
+<!-- SISTEMA: SGVENDAS                      -->
+<!-- AUTOR: VALTER BARRETO                    -->
+<!-- Data: 04/12/2025               -->
+<!-- CODIGO_ARQUIVO: NWXIKRYJVK          -->
+<!-- OBS:                                     -->
+<!-- ###################################### -->
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <% 
 Response.CodePage = 65001
@@ -7,6 +14,74 @@ Response.Charset = "UTF-8"
 <!--#include file="registra_log.asp"-->
 
 <%
+' 21 11 2025'
+Function RemoverAcentos(strTexto)
+    ' Converte o texto para minúsculas para facilitar o processamento
+    'strTexto = LCase(strTexto)
+
+    ' Tabela de substituições: Acentuados -> Não Acentuados
+
+    ' Caracteres 'a'
+    strTexto = Replace(strTexto, "á", "a")
+    strTexto = Replace(strTexto, "à", "a")
+    strTexto = Replace(strTexto, "ã", "a")
+    strTexto = Replace(strTexto, "â", "a")
+
+    ' Caracteres 'e'
+    strTexto = Replace(strTexto, "é", "e")
+    strTexto = Replace(strTexto, "ê", "e")
+
+    ' Caracteres 'i'
+    strTexto = Replace(strTexto, "í", "i")
+
+    ' Caracteres 'o'
+    strTexto = Replace(strTexto, "ó", "o")
+    strTexto = Replace(strTexto, "ô", "o")
+    strTexto = Replace(strTexto, "õ", "o")
+
+    ' Caracteres 'u'
+    strTexto = Replace(strTexto, "ú", "u")
+
+    ' Caractere 'c'
+    strTexto = Replace(strTexto, "ç", "c")
+
+    ' Agora, lida com a versão MAIÚSCULA dos caracteres que não foram convertidos pelo LCase
+    ' (Isso pode ser necessário dependendo da codificação do seu arquivo .asp e da entrada)
+
+    ' Caracteres 'A'
+    strTexto = Replace(strTexto, "Á", "A")
+    strTexto = Replace(strTexto, "À", "A")
+    strTexto = Replace(strTexto, "Ã", "A")
+    strTexto = Replace(strTexto, "Â", "A")
+
+    ' Caracteres 'E'
+    strTexto = Replace(strTexto, "É", "E")
+    strTexto = Replace(strTexto, "Ê", "E")
+
+    ' Caracteres 'I'
+    strTexto = Replace(strTexto, "Í", "I")
+
+    ' Caracteres 'O'
+    strTexto = Replace(strTexto, "Ó", "O")
+    strTexto = Replace(strTexto, "Ô", "O")
+    strTexto = Replace(strTexto, "Õ", "O")
+
+    ' Caracteres 'U'
+    strTexto = Replace(strTexto, "Ú", "U")
+
+    ' Caractere 'C'
+    strTexto = Replace(strTexto, "Ç", "C")
+    
+    ' Retorna a string final sem acentuação
+    RemoverAcentos = strTexto
+End Function
+
+Function FormatarValorDecimal(strValor)
+    strValor = Replace(strValor, ".", "")
+    strValor = Replace(strValor, ",", ".")
+    FormatarValorDecimal = strValor
+End Function
+
 ' Função para criar diretório se não existir
 Function CriarDiretorio(caminho)
     Dim fso
@@ -31,6 +106,7 @@ Function SanitizeJSON(str)
     str = Replace(str, """", "\""")
     str = Replace(str, vbCrLf, "\n")
     str = Replace(str, vbTab, "\t")
+    str = RemoverAcentos(str)
     SanitizeJSON = str
 End Function
 
@@ -51,7 +127,7 @@ End Function
 
 ' Função para gerar JSON de uma venda
 Function GerarJSONVenda(rs)
-    Dim json
+    Dim json, dataComposta
     json = "{"
     
     ' Dados básicos da venda
@@ -68,36 +144,47 @@ Function GerarJSONVenda(rs)
     json = json & """valor"": " & rs("ValorUnidade")
     json = json & "},"
     
-    ' Data da venda
-    json = json & """data_venda"": """ & FormatDateForJSON(rs("DataVenda")) & ""","
-    json = json & """trimestre"": " & rs("Trimestre") & ","
-    json = json & """ano"": " & rs("AnoVenda") & ","
+    ' ------------------------------------------------------------------
+    ' ALTERAÇÃO AQUI: Data composta por Ano, Mes e Dia
+    ' ------------------------------------------------------------------
+    ' Formata para YYYY-MM-DD garantindo zeros à esquerda no mês e dia
+    dataComposta = rs("AnoVenda") & "-" & _
+                   Right("0" & rs("MesVenda"), 2) & "-" & _
+                   Right("0" & rs("DiaVenda"), 2)
+
+    json = json & """data_venda"": """ & dataComposta & ""","
+    ' ------------------------------------------------------------------
+
+    json = json & """trimestre_venda"": " & rs("Trimestre") & ","
+    json = json & """Semestre_venda"": " & rs("Semestre") & ","
+    json = json & """ano_venda"": " & rs("AnoVenda") & ","
+    json = json & """mes_venda"": " & rs("MesVenda") & ","
     
     ' Informações de comissão
     json = json & """comissao"": {"
-    json = json & """percentual"": " & rs("ComissaoPercentual") & ","
-    json = json & """valor_total"": " & rs("ValorComissaoGeral") & ","
+    json = json & """percentual"": " & FormatarValorDecimal(rs("ComissaoPercentual")) & ","
+    json = json & """valor_total"": " & FormatarValorDecimal(rs("ValorComissaoGeral")) & ","
     json = json & """distribuicao"": {"
     json = json & """diretoria"": {"
-    json = json & """percentual"": " & rs("ComissaoDiretoria") & ","
-    json = json & """valor"": " & rs("ValorDiretoria")
+    json = json & """percentual"": " & FormatarValorDecimal(rs("ComissaoDiretoria")) & ","
+    json = json & """valor"": " & FormatarValorDecimal(rs("ValorDiretoria"))
     json = json & "},"
     json = json & """gerencia"": {"
-    json = json & """percentual"": " & rs("ComissaoGerencia") & ","
-    json = json & """valor"": " & rs("ValorGerencia")
+    json = json & """percentual"": " & FormatarValorDecimal(rs("ComissaoGerencia")) & ","
+    json = json & """valor"": " & FormatarValorDecimal(rs("ValorGerencia"))
     json = json & "},"
     json = json & """corretor"": {"
-    json = json & """percentual"": " & rs("ComissaoCorretor") & ","
-    json = json & """valor"": " & rs("ValorCorretor")
+    json = json & """percentual"": " & FormatarValorDecimal(rs("ComissaoCorretor")) & ","
+    json = json & """valor"": " & FormatarValorDecimal(rs("ValorCorretor"))
     json = json & "}"
     json = json & "}"
     json = json & "},"
     
     ' Premiações
     json = json & """premiacao"": {"
-    json = json & """diretoria"": " & rs("PremioDiretoria") & ","
-    json = json & """gerencia"": " & rs("PremioGerencia") & ","
-    json = json & """corretor"": " & rs("PremioCorretor")
+    json = json & """diretoria"": " & FormatarValorDecimal(rs("PremioDiretoria")) & ","
+    json = json & """gerencia"": " & FormatarValorDecimal(rs("PremioGerencia")) & ","
+    json = json & """corretor"": " & FormatarValorDecimal(rs("PremioCorretor"))
     json = json & "},"
     
     ' Equipe de vendas
@@ -119,13 +206,13 @@ Function GerarJSONVenda(rs)
     ' Informações adicionais
     json = json & """observacoes"": """ & SanitizeJSON(rs("Obs")) & ""","
     json = json & """usuario_registro"": """ & SanitizeJSON(rs("Usuario")) & ""","
-    json = json & """data_registro"": """ & FormatDateForJSON(Now()) & """"
+    json = json & """venda_excluida"": """ & SanitizeJSON(rs("Excluido")) & ""","
+    json = json & """data_registro"": """ & FormatDateForJSON(rs("AnoVenda") & "-" & rs("MesVenda") & "-" & rs("DiaVenda")) & """"
     
     json = json & "}"
     
     GerarJSONVenda = json
 End Function
-
 ' Função principal para gerar todos os JSONs
 Function GerarJSONsVendas()
     On Error Resume Next
@@ -156,7 +243,7 @@ Function GerarJSONsVendas()
     
     ' Consultar todas as vendas
     Set rs = Server.CreateObject("ADODB.Recordset")
-    rs.Open "SELECT * FROM Vendas ORDER BY ID", conn, 1, 1
+    rs.Open "SELECT * FROM Vendas WHERE Excluido = 0 ORDER BY ID", conn, 1, 1
     
     If Err.Number <> 0 Then
         GerarJSONsVendas = "Erro ao consultar vendas: " & Err.Description

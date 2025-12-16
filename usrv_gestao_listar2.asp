@@ -1,3 +1,10 @@
+<!-- ###################################### -->
+<!-- SISTEMA: SGVENDAS                      -->
+<!-- AUTOR: VALTER BARRETO                    -->
+<!-- Data: 04/12/2025               -->
+<!-- CODIGO_ARQUIVO: IFWQVSWHFD          -->
+<!-- OBS:                                     -->
+<!-- ###################################### -->
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conexao.asp" -->
 
@@ -130,7 +137,8 @@ End If
 
 ' --- [ NOVAS CONSULTAS PARA CARDS DE RESUMO ] ---
 
-Dim totalAtivos, totalVazio, totalPorDiretoria, totalPorGerencia
+Dim totalAtivos, totalInativos, totalSemDiretoria, totalSemGerencia
+Dim totalAtivosSemDiretoria, totalAtivosSemGerencia
 
 ' 1. Total de Usuários ATIVOS (IdEmp = 2)
 Set rsTotalAtivos = Server.CreateObject("ADODB.Recordset")
@@ -139,16 +147,43 @@ totalAtivos = SafeValue(rsTotalAtivos("Total"), 0)
 If rsTotalAtivos.State = 1 Then rsTotalAtivos.Close
 Set rsTotalAtivos = Nothing
 
-' 2. Total de Usuários ATIVOS sem Diretoria e/ou Gerência (Vazios)
-Set rsTotalVazio = Server.CreateObject("ADODB.Recordset")
-' Considera NULL ou 0 como vazio
-rsTotalVazio.Open "SELECT COUNT(UserID) as Total FROM Usuarios WHERE IdEmp = 2 AND Ativo = -1 AND (DiretoriaID IS NULL OR DiretoriaID = 0 OR GerenciaID IS NULL OR GerenciaID = 0)", StrConn
-totalVazio = SafeValue(rsTotalVazio("Total"), 0)
-If rsTotalVazio.State = 1 Then rsTotalVazio.Close
-Set rsTotalVazio = Nothing
+' 2. Total de Usuários INATIVOS (IdEmp = 2)
+Set rsTotalInativos = Server.CreateObject("ADODB.Recordset")
+rsTotalInativos.Open "SELECT COUNT(UserID) as Total FROM Usuarios WHERE IdEmp = 2 AND Ativo = 0", StrConn
+totalInativos = SafeValue(rsTotalInativos("Total"), 0)
+If rsTotalInativos.State = 1 Then rsTotalInativos.Close
+Set rsTotalInativos = Nothing
 
+' 3. Total de Usuários SEM DIRETORIA (ativos e inativos)
+Set rsTotalSemDiretoria = Server.CreateObject("ADODB.Recordset")
+rsTotalSemDiretoria.Open "SELECT COUNT(UserID) as Total FROM Usuarios WHERE IdEmp = 2 AND (DiretoriaID IS NULL OR DiretoriaID = 0)", StrConn
+totalSemDiretoria = SafeValue(rsTotalSemDiretoria("Total"), 0)
+If rsTotalSemDiretoria.State = 1 Then rsTotalSemDiretoria.Close
+Set rsTotalSemDiretoria = Nothing
 
-' 3. Contagem de Ativos por DIRETORIA
+' 4. Total de Usuários SEM GERÊNCIA (ativos e inativos)
+Set rsTotalSemGerencia = Server.CreateObject("ADODB.Recordset")
+rsTotalSemGerencia.Open "SELECT COUNT(UserID) as Total FROM Usuarios WHERE IdEmp = 2 AND (GerenciaID IS NULL OR GerenciaID = 0)", StrConn
+totalSemGerencia = SafeValue(rsTotalSemGerencia("Total"), 0)
+If rsTotalSemGerencia.State = 1 Then rsTotalSemGerencia.Close
+Set rsTotalSemGerencia = Nothing
+
+' 5. Total de Usuários ATIVOS SEM DIRETORIA
+Set rsAtivosSemDiretoria = Server.CreateObject("ADODB.Recordset")
+rsAtivosSemDiretoria.Open "SELECT COUNT(UserID) as Total FROM Usuarios WHERE IdEmp = 2 AND Ativo = -1 AND (DiretoriaID IS NULL OR DiretoriaID = 0)", StrConn
+totalAtivosSemDiretoria = SafeValue(rsAtivosSemDiretoria("Total"), 0)
+If rsAtivosSemDiretoria.State = 1 Then rsAtivosSemDiretoria.Close
+Set rsAtivosSemDiretoria = Nothing
+
+' 6. Total de Usuários ATIVOS SEM GERÊNCIA
+Set rsAtivosSemGerencia = Server.CreateObject("ADODB.Recordset")
+rsAtivosSemGerencia.Open "SELECT COUNT(UserID) as Total FROM Usuarios WHERE IdEmp = 2 AND Ativo = -1 AND (GerenciaID IS NULL OR GerenciaID = 0)", StrConn
+totalAtivosSemGerencia = SafeValue(rsAtivosSemGerencia("Total"), 0)
+If rsAtivosSemGerencia.State = 1 Then rsAtivosSemGerencia.Close
+Set rsAtivosSemGerencia = Nothing
+
+' 7. Contagem de Ativos por DIRETORIA
+Dim totalPorDiretoria
 Set rsContDiretoria = Server.CreateObject("ADODB.Recordset")
 rsContDiretoria.Open "SELECT d.NomeDiretoria, COUNT(u.UserID) as Total FROM Usuarios u INNER JOIN Diretorias d ON u.DiretoriaID = d.DiretoriaID WHERE u.IdEmp = 2 AND u.Ativo = -1 GROUP BY d.NomeDiretoria ORDER BY COUNT(u.UserID) DESC", StrConn
 totalPorDiretoria = ""
@@ -160,8 +195,8 @@ If totalPorDiretoria = "" Then totalPorDiretoria = "<span class='text-muted smal
 If rsContDiretoria.State = 1 Then rsContDiretoria.Close
 Set rsContDiretoria = Nothing
 
-
-' 4. Contagem de Ativos por GERÊNCIA
+' 8. Contagem de Ativos por GERÊNCIA
+Dim totalPorGerencia
 Set rsContGerencia = Server.CreateObject("ADODB.Recordset")
 rsContGerencia.Open "SELECT g.NomeGerencia, COUNT(u.UserID) as Total FROM Usuarios u INNER JOIN Gerencias g ON u.GerenciaID = g.GerenciaID WHERE u.IdEmp = 2 AND u.Ativo = -1 GROUP BY g.NomeGerencia ORDER BY COUNT(u.UserID) DESC", StrConn
 totalPorGerencia = ""
@@ -361,6 +396,55 @@ successGerencia = Request.QueryString("gerencia")
     .card-body p.small strong {
         font-size: 1.1em;
     }
+    .card-resumo {
+        border-radius: 10px;
+        transition: all 0.3s;
+        height: 100%;
+    }
+    .card-resumo:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .card-title i {
+        margin-right: 8px;
+    }
+    .stat-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+    .badge-warning-light {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .badge-danger-light {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .badge-info-light {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+    .badge-success-light {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .small-text {
+        font-size: 0.75rem;
+        margin-bottom: 0;
+    }
+    .progress-thin {
+        height: 5px;
+        margin-top: 5px;
+    }
+    .card-footer-stats {
+        background-color: rgba(0,0,0,0.03);
+        border-top: 1px solid rgba(0,0,0,0.125);
+        padding: 5px 15px;
+        font-size: 0.7rem;
+    }
   </style>
 <style>
     body {
@@ -407,60 +491,138 @@ successGerencia = Request.QueryString("gerencia")
       %>
     </div>
 
+    <!-- SEÇÃO DE RESUMO ESTENDIDO -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-user-check"></i> Usuários Ativos</h5>
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card card-resumo text-white bg-success">
+                <div class="card-body position-relative">
+                    <span class="badge stat-badge badge-light"><i class="fas fa-users"></i> Total</span>
+                    <h5 class="card-title"><i class="fas fa-user-check"></i> Ativos</h5>
                     <p class="card-text h3"><%= totalAtivos %></p>
+                    <div class="progress progress-thin bg-white">
+                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="card-footer-stats text-white">
+                    <span class="small-text"><i class="fas fa-exclamation-circle"></i> Faltam Diretoria: <%= totalAtivosSemDiretoria %></span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-exclamation-triangle"></i> Ativos Vazios (D/G)</h5>
-                    <p class="card-text h3"><%= totalVazio %></p>
+        
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card card-resumo text-white bg-secondary">
+                <div class="card-body position-relative">
+                    <span class="badge stat-badge badge-light"><i class="fas fa-user-slash"></i> Total</span>
+                    <h5 class="card-title"><i class="fas fa-user-times"></i> Inativos</h5>
+                    <p class="card-text h3"><%= totalInativos %></p>
+                    <div class="progress progress-thin bg-white">
+                        <div class="progress-bar bg-secondary" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="card-footer-stats text-white">
+                    <span class="small-text"><i class="fas fa-percentage"></i> <%= FormatPercent(totalInativos/(totalAtivos+totalInativos), 1) %> do total</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-dark bg-light">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-building"></i> Contagem por Diretoria</h5>
-                    <p class="card-text small mb-0"><%= totalPorDiretoria %></p>
+        
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card card-resumo bg-warning-light text-dark">
+                <div class="card-body position-relative">
+                    <span class="badge stat-badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Crítico</span>
+                    <h5 class="card-title"><i class="fas fa-building"></i> Sem Diretoria</h5>
+                    <p class="card-text h3"><%= totalSemDiretoria %></p>
+                    <div class="progress progress-thin bg-white">
+                        <div class="progress-bar bg-warning" style="width: <%= (totalSemDiretoria/(totalAtivos+totalInativos))*100 %>%"></div>
+                    </div>
+                </div>
+                <div class="card-footer-stats text-dark">
+                    <span class="small-text"><i class="fas fa-user-check"></i> Ativos: <%= totalAtivosSemDiretoria %></span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-dark bg-light">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-sitemap"></i> Contagem por Gerência</h5>
-                    <p class="card-text small mb-0"><%= totalPorGerencia %></p>
+        
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card card-resumo bg-danger-light text-dark">
+                <div class="card-body position-relative">
+                    <span class="badge stat-badge badge-danger"><i class="fas fa-exclamation-circle"></i> Crítico</span>
+                    <h5 class="card-title"><i class="fas fa-sitemap"></i> Sem Gerência</h5>
+                    <p class="card-text h3"><%= totalSemGerencia %></p>
+                    <div class="progress progress-thin bg-white">
+                        <div class="progress-bar bg-danger" style="width: <%= (totalSemGerencia/(totalAtivos+totalInativos))*100 %>%"></div>
+                    </div>
+                </div>
+                <div class="card-footer-stats text-dark">
+                    <span class="small-text"><i class="fas fa-user-check"></i> Ativos: <%= totalAtivosSemGerencia %></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card card-resumo bg-info-light text-dark">
+                <div class="card-body position-relative">
+                    <span class="badge stat-badge badge-info"><i class="fas fa-chart-pie"></i> Distribuição</span>
+                    <h5 class="card-title"><i class="fas fa-building"></i> Por Diretoria</h5>
+                    <p class="card-text small mb-0"><%= Replace(totalPorDiretoria, "<br>", " | ") %></p>
+                </div>
+                <div class="card-footer-stats text-dark">
+                    <span class="small-text"><i class="fas fa-list-ol"></i> <%= Len(Replace(totalPorDiretoria, "<strong>", "")) - Len(Replace(totalPorDiretoria, ":", "")) %> diretorias</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-2 col-6 mb-3">
+            <div class="card card-resumo bg-success-light text-dark">
+                <div class="card-body position-relative">
+                    <span class="badge stat-badge badge-success"><i class="fas fa-chart-bar"></i> Distribuição</span>
+                    <h5 class="card-title"><i class="fas fa-sitemap"></i> Por Gerência</h5>
+                    <p class="card-text small mb-0"><%= Replace(totalPorGerencia, "<br>", " | ") %></p>
+                </div>
+                <div class="card-footer-stats text-dark">
+                    <span class="small-text"><i class="fas fa-list-ol"></i> <%= Len(Replace(totalPorGerencia, "<strong>", "")) - Len(Replace(totalPorGerencia, ":", "")) %> gerências</span>
                 </div>
             </div>
         </div>
     </div>
-    <div class="d-flex justify-content-between align-items-center header-actions">
-  
-
-<!-- Novo Usuário -->
-                <a href="usrv_gestao_novo_usuario.asp" class="btn btn-primary">
-                    <i class="fas fa-user-plus mr-1"></i> Novo Usuário
-                </a>
-
-  <div class="d-flex flex-column"> 
-    <h4 class="mb-0"><i class="fas fa-users mr-2"></i>Lista de Usuários</h4>
     
-    <small class="mb-0 text-danger"><i class="fas fa-users mr-2"></i>Atualizar um usuário por vez</small>
-  </div>
-  
-  <div>
-    <a href="#" class="btn btn-info" onclick="window.close(); return false;">
-      <i class="fas fa-times mr-1"></i> Fechar
-    </a>
-  </div>
-</div>
+    <!-- RESUMO RÁPIDO -->
+    <div class="alert alert-info mb-3">
+        <div class="row">
+            <div class="col-md-3">
+                <strong><i class="fas fa-users mr-2"></i>Total de Usuários:</strong> 
+                <span class="badge badge-primary"><%= totalAtivos + totalInativos %></span>
+            </div>
+            <div class="col-md-3">
+                <strong><i class="fas fa-percentage mr-2"></i>Ativos/Total:</strong> 
+                <span class="badge badge-success"><%= totalAtivos %> (<%= FormatPercent(totalAtivos/(totalAtivos+totalInativos), 1) %>)</span>
+            </div>
+            <div class="col-md-3">
+                <strong><i class="fas fa-exclamation-triangle mr-2"></i>Sem D/G:</strong> 
+                <span class="badge badge-warning"><%= totalSemDiretoria %> / <%= totalSemGerencia %></span>
+            </div>
+            <div class="col-md-3">
+                <strong><i class="fas fa-clock mr-2"></i>Atualizado:</strong> 
+                <span class="badge badge-secondary"><%= Time() %></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center header-actions">
+        <!-- Novo Usuário -->
+        <a href="usrv_gestao_novo_usuario.asp" class="btn btn-primary">
+            <i class="fas fa-user-plus mr-1"></i> Novo Usuário
+        </a>
+
+        <div class="d-flex flex-column"> 
+            <h4 class="mb-0"><i class="fas fa-users mr-2"></i>Lista de Usuários - Gestão Completa</h4>
+            <small class="mb-0 text-danger"><i class="fas fa-exclamation-triangle mr-1"></i>Atualizar um usuário por vez</small>
+        </div>
+        
+        <div>
+            <a href="#" class="btn btn-info" onclick="window.close(); return false;">
+                <i class="fas fa-times mr-1"></i> Fechar
+            </a>
+        </div>
+    </div>
     
     <div class="table-responsive">
       <table id="tabelaUsuarios" class="table table-striped table-bordered table-hover" style="width:100%">
@@ -653,7 +815,10 @@ successGerencia = Request.QueryString("gerencia")
     </div>
     
     <footer class="text-center text-muted small mb-3">
-      Sunny System &copy; <%= Year(Now()) %>
+      <i class="fas fa-chart-line mr-1"></i> Sunny System &copy; <%= Year(Now()) %> | 
+      <i class="fas fa-users mr-1"></i> Total: <strong><%= totalAtivos + totalInativos %></strong> | 
+      <i class="fas fa-user-check mr-1"></i> Ativos: <strong><%= totalAtivos %></strong> | 
+      <i class="fas fa-exclamation-triangle mr-1"></i> Sem D/G: <strong><%= totalSemDiretoria %> / <%= totalSemGerencia %></strong>
     </footer>
   </div>
 
