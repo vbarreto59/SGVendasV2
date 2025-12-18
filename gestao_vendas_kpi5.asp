@@ -1,3 +1,10 @@
+<!-- ###################################### -->
+<!-- SISTEMA: SGVENDAS                      -->
+<!-- AUTOR: VALTER BARRETO                    -->
+<!-- Data: 04/12/2025               -->
+<!-- CODIGO_ARQUIVO: BBKVHDODGV          -->
+<!-- OBS:                                     -->
+<!-- ###################################### -->
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="conexao.asp"-->
 <!--#include file="conSunSales.asp"-->
@@ -926,19 +933,41 @@ topEmpresas = GetTopList(kpiData("TopEmpresas"), 5)
         </div>
 
         <div class="col-md-4">
-            <div class="card p-2">
-                <h6>Top Gerências</h6>
-                <ul class="list-group list-group-flush">
-                    <% If IsArray(topGerencias) And UBound(topGerencias) >= 0 Then
-                        For i = 0 To UBound(topGerencias)
-                            Response.Write "<li class='list-group-item d-flex justify-content-between align-items-center'>" & _
-                                Server.HTMLEncode(topGerencias(i)(0)) & "<span>R$ " & FormatNumber(topGerencias(i)(2),2) & "</span></li>"
-                        Next
-                    Else
-                        Response.Write "<li class='list-group-item'>Nenhum registro</li>"
-                    End If %>
-                </ul>
-            </div>
+<div class="card p-2">
+    <h6>Top Gerências</h6>
+    <ul class="list-group list-group-flush">
+        <% 
+        If IsArray(topGerencias) And UBound(topGerencias) >= 0 Then
+            ' Criamos um dicionário para agrupar e somar os valores
+            Set dictSoma = Server.CreateObject("Scripting.Dictionary")
+            
+            For i = 0 To UBound(topGerencias)
+                nomeGerencia = UCase(Trim(topGerencias(i)(0)))
+                valorGerencia = CDbl(topGerencias(i)(2))
+                
+                If dictSoma.Exists(nomeGerencia) Then
+                    ' Se já existe, soma o valor atual ao que já estava lá
+                    dictSoma(nomeGerencia) = dictSoma(nomeGerencia) + valorGerencia
+                Else
+                    ' Se não existe, adiciona ao dicionário
+                    dictSoma.Add nomeGerencia, valorGerencia
+                End If
+            Next
+
+            ' Agora percorremos o dicionário para exibir os resultados
+            arrKeys = dictSoma.Keys
+            For Each chave In arrKeys
+                Response.Write "<li class='list-group-item d-flex justify-content-between align-items-center'>" & _
+                    Server.HTMLEncode(chave) & " <span>R$ " & FormatNumber(dictSoma(chave), 2) & "</span></li>"
+            Next
+            
+            Set dictSoma = Nothing ' Limpar objeto da memória
+        Else
+            Response.Write "<li class='list-group-item'>Nenhum registro</li>"
+        End If 
+        %>
+    </ul>
+</div>
         </div>
 
         <div class="col-md-4">
@@ -948,7 +977,7 @@ topEmpresas = GetTopList(kpiData("TopEmpresas"), 5)
                     <% If IsArray(topCorretores) And UBound(topCorretores) >= 0 Then
                         For i = 0 To UBound(topCorretores)
                             Response.Write "<li class='list-group-item d-flex justify-content-between align-items-center'>" & _
-                                Server.HTMLEncode(topCorretores(i)(0)) & "<span>R$ " & FormatNumber(topCorretores(i)(2),2) & "</span></li>"
+                                Server.HTMLEncode(UCase(topCorretores(i)(0))) & "<span>R$ " & FormatNumber(topCorretores(i)(2),2) & "</span></li>"
                         Next
                     Else
                         Response.Write "<li class='list-group-item'>Nenhum registro</li>"

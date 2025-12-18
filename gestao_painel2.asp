@@ -576,6 +576,20 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card card-barreto">
                     <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S1-Ficha Corretor</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Informações dos Corretores.</p>
+                        <a href="ficha_corretor5.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-barreto">
+                    <div class="card-header text-center">
                         <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S2-$ Individual</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
@@ -585,7 +599,7 @@ End if
                         </a>
                     </div>
                 </div>
-            </div>
+            </div>            
 
             <div class="col-md-6 col-lg-4">
                 <div class="card card-barreto">

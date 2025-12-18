@@ -787,7 +787,9 @@ Next
     }
 
     // Atualizar a página a cada 60 segundos
-    setInterval(atualizarPagina, 60000);
+    //setInterval(atualizarPagina, 60000);
+    // 16 12 25 - 10 min
+    setInterval(atualizarPagina, 600000);
 </script>
 
 <!-- =========================== -->
