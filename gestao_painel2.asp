@@ -552,7 +552,7 @@ End if
             <div class="col-md-6 col-lg-4">
                 <div class="card">
                     <div class="card-header text-center">
-                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>N-Metas</h5>
+                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>N-Metas 2025 Geral</h5>
                     </div>
                     <div class="card-body text-center d-flex flex-column">
                         <p class="card-text">Cadastro de Metas da Tocca.</p>
@@ -562,6 +562,21 @@ End if
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>O-Metas 2026 Gerências</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Define as Metas Por Gerência</p>
+                        <a href="meta_gerenciamento.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
 
@@ -599,7 +614,22 @@ End if
                         </a>
                     </div>
                 </div>
-            </div>            
+            </div>  
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-barreto">
+                    <div class="card-header text-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>S2-$ Individual Mensal</h5>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column">
+                        <p class="card-text">Média mensal de ganhos.</p>
+                        <a href="gestao_ganhos_individ_mensal3.asp" class="btn btn-primary btn-sm mt-auto" target="_blank">
+                            <i class="fas fa-arrow-right me-1"></i> Acessar
+                        </a>
+                    </div>
+                </div>
+            </div> 
+
 
             <div class="col-md-6 col-lg-4">
                 <div class="card card-barreto">

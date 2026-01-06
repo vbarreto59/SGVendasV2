@@ -1,3 +1,10 @@
+<!-- ###################################### -->
+<!-- SISTEMA: SGVENDAS                      -->
+<!-- AUTOR: VALTER BARRETO                    -->
+<!-- Data: 04/12/2025               -->
+<!-- CODIGO_ARQUIVO: SATSOFAMQP          -->
+<!-- OBS:                                     -->
+<!-- ###################################### -->
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 
 <%
@@ -20,7 +27,7 @@
 <!--#include file="usr_acoes_v4GVendas.inc"-->
 <!--#include file="atualizarVendas.asp"-->
 <!--#include file="atualizarVendas2.asp"-->
-
+<!--#include file="registra_log.asp"-->
 <%
 Server.ScriptTimeout = 300    
 Response.Buffer = True
@@ -33,6 +40,10 @@ Response.Charset = "utf-8"
 'Modificação para separar banco de dados em 08 08 2025'
 dbSunnyPath = Split(StrConn, "Data Source=")(1)
 dbSunnyPath = Left(dbSunnyPath, InStr(dbSunnyPath, ";") - 1)
+%>
+<%
+usuario = Session("Usuario")    
+Call InserirLog ("Sistema SV", "Pág. Vendas", "Acessos à página de Vendas: " & usuario) 
 %>
 
 <%

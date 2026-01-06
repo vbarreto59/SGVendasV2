@@ -495,9 +495,7 @@ End Function
                                     <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-search me-1"></i>Filtrar
                                     </button>
-                                    <a href="meta_historico2.asp" class="btn btn-outline-secondary" target="_blank">
-                                        <i class="bi bi-clock-history me-1"></i>Histórico
-                                    </a>
+
                                 </div>
                             </div>
                         </form>

@@ -1,3 +1,10 @@
+<!-- ###################################### -->
+<!-- SISTEMA: SGVENDAS                      -->
+<!-- AUTOR: VALTER BARRETO                    -->
+<!-- Data: 04/12/2025               -->
+<!-- CODIGO_ARQUIVO: REDCCVQXDF          -->
+<!-- OBS:                                     -->
+<!-- ###################################### -->
 <%@ Language=VBScript CodePage=65001 %>
 <% Response.CodePage = 65001 %>
 <% Response.Charset = "UTF-8" %>
@@ -124,6 +131,7 @@ End If
             <table id="tabelaLogs" class="table table-striped table-hover" style="width:100%">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Data/Hora</th>
                         <th>Usuário</th>
                         <th>Tabela</th>
@@ -137,13 +145,14 @@ End If
                     Set conn = Server.CreateObject("ADODB.Connection")
                     conn.Open StrConnSales
                     
-                    sql = "SELECT * FROM log_operations ORDER BY DataHora DESC"
+                    sql = "SELECT * FROM log_operations ORDER BY id DESC"
                     
                     Set rs = Server.CreateObject("ADODB.Recordset")
                     rs.CursorLocation = 3 ' adUseClient
                     rs.Open sql, conn, 0, 1 ' adOpenForwardOnly, adLockReadOnly
                     
                     Do While Not rs.EOF
+                        id = rs("id")
                         dataHora = rs("DataHora")
                         usuario = rs("Usuario")
                         tabela = rs("TabelaAfetada")
@@ -158,6 +167,7 @@ End If
                         End If
                     %>
                     <tr>
+                        <td><%=id%></td>
                         <td><%=dataFormatada%></td>
                         <td><span class="badge bg-primary"><%=Server.HTMLEncode(usuario)%></span></td>
                         <td><%=Server.HTMLEncode(tabela)%></td>
