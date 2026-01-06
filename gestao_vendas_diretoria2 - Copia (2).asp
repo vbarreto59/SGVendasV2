@@ -138,20 +138,18 @@ rsAnos.Close
 Set rsAnos = Nothing
 ' --- FIM DA BUSCA DE ANOS ---
 
-' --- BUSCAR CORRETORES DISPONÍVEIS NO BANCO DE DADOS ORDENADOS POR VGV ---
-Dim sqlCorretores, corretoresDisponiveis(), corretoresVGV()
+' --- BUSCAR CORRETORES DISPONÍVEIS NO BANCO DE DADOS ---
+Dim sqlCorretores, corretoresDisponiveis()
 ReDim corretoresDisponiveis(0)
-ReDim corretoresVGV(0)
 Dim corretoresCount
 corretoresCount = 0
 
-' Buscar corretores com VGV total, ordenados por VGV descendente
-sqlCorretores = "SELECT Corretor, SUM(ValorUnidade) as TotalVGV " & _
-                "FROM Vendas WHERE Vendas.Excluido = 0"
+' Buscar corretores distintos da tabela Vendas
+sqlCorretores = "SELECT DISTINCT Corretor FROM Vendas WHERE Vendas.Excluido = 0"
 If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
     sqlCorretores = sqlCorretores & " AND Vendas.DiretoriaId = " & CLng(diretoriaID)
 End If
-sqlCorretores = sqlCorretores & " GROUP BY Corretor ORDER BY SUM(ValorUnidade) DESC"
+sqlCorretores = sqlCorretores & " ORDER BY Corretor"
 
 Set rsCorretores = Server.CreateObject("ADODB.Recordset")
 rsCorretores.Open sqlCorretores, conn
@@ -159,9 +157,7 @@ rsCorretores.Open sqlCorretores, conn
 Do While Not rsCorretores.EOF
     If Not IsNull(rsCorretores("Corretor")) And Trim(rsCorretores("Corretor")) <> "" Then
         ReDim Preserve corretoresDisponiveis(corretoresCount)
-        ReDim Preserve corretoresVGV(corretoresCount)
-        corretoresDisponiveis(corretoresCount) = UCase(Trim(rsCorretores("Corretor")))
-        corretoresVGV(corretoresCount) = rsCorretores("TotalVGV")
+        corretoresDisponiveis(corretoresCount) = Trim(rsCorretores("Corretor"))
         corretoresCount = corretoresCount + 1
     End If
     rsCorretores.MoveNext
@@ -329,60 +325,6 @@ End If
             padding: 2px 6px;
             margin-left: 5px;
         }
-        
-        /* Estilo para corretor filtrado */
-        .corretor-filtrado {
-            background-color: #fff3cd !important;
-            border-left: 4px solid #ffc107 !important;
-        }
-        .lista-corretores {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .corretor-item {
-            transition: all 0.3s ease;
-        }
-        .corretor-item:hover {
-            background-color: #f8f9fa;
-        }
-        
-        /* Novos estilos para cards de mês */
-        .card-mes-completo {
-            border: 1px solid #dee2e6;
-            transition: all 0.3s ease;
-        }
-        .card-mes-completo:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .unidades-mes {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-        .valor-mes {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        .card-mes-sem-dados {
-            opacity: 0.6;
-        }
-        
-        /* Estilo para ranking de corretores */
-        .ranking-badge {
-            font-size: 0.8rem;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        .ranking-1 { background-color: #ffd700; color: #000; }
-        .ranking-2 { background-color: #c0c0c0; color: #000; }
-        .ranking-3 { background-color: #cd7f32; color: #000; }
-        .ranking-outros { background-color: #6c757d; color: #fff; }
     </style>
 
 <style>
@@ -493,14 +435,7 @@ End If
                                 If corretoresDisponiveis(i) = corretor Then
                                     Response.Write " selected"
                                 End If
-                                ' Adicionar VGV como informação adicional no option
-                                Dim vgvFormatado
-                                If corretoresVGV(i) > 0 Then
-                                    vgvFormatado = " (R$ " & FormatNumber(corretoresVGV(i), 0) & ")"
-                                Else
-                                    vgvFormatado = " (R$ 0)"
-                                End If
-                                Response.Write ">" & corretoresDisponiveis(i) & vgvFormatado & "</option>"
+                                Response.Write ">" & corretoresDisponiveis(i) & "</option>"
                             Next
                             
                             If corretoresCount = 0 Then
@@ -575,7 +510,7 @@ End If
                     <% end if %>
                     <% if corretor <> "" then %>
                     <div class="col-auto">
-                        <span class="badge bg-dark p-2"><i class="fas fa-user me-1"></i> Corretor: <%=UCase(corretor)%></span>
+                        <span class="badge bg-dark p-2"><i class="fas fa-user me-1"></i> Corretor: <%=corretor%></span>
                     </div>
                     <% end if %>
                 </div>
@@ -602,8 +537,8 @@ End If
                 End If
                 rs.Close
 
-                ' 3. Dados para os cards de VGV por mês - **MODIFICADO: AGORA SEMPRE BUSCAR DADOS PARA OS CARDS**
-                Dim mesesVGV(12), mesesUnidades(12), mesesLabels(12), arrMesesNome(12)
+                ' 3. Dados para o gráfico e cards de VGV por mês - **MODIFICADO PARA APLICAR TODOS OS FILTROS**
+                Dim mesesVGV(12), mesesLabels(12), arrMesesNome(12)
                 Dim mesesParaExibir(12)
                 
                 ' Inicializar array de nomes dos meses
@@ -611,7 +546,6 @@ End If
                     arrMesesNome(i) = MonthName(i, False)
                     mesesLabels(i) = Left(arrMesesNome(i), 3)
                     mesesVGV(i) = 0
-                    mesesUnidades(i) = 0
                     mesesParaExibir(i) = True ' Inicialmente todos os meses serão exibidos
                 Next
                 
@@ -661,26 +595,30 @@ End If
                 End If
                 
                 ' Variável para controlar se podemos mostrar o gráfico
-                ' MODIFICAÇÃO: Não mostrar gráfico se filtro de mês ou corretor estiver ativo
+                ' MODIFICAÇÃO: Não mostrar gráfico se filtro de mês estiver ativo
                 Dim podeMostrarGrafico
                 podeMostrarGrafico = (ano <> "" And IsNumeric(ano) And mes = "" And corretor = "")
                 
-                ' **SEMPRE BUSCAR DADOS PARA OS CARDOS DOS MESES (VGV E UNIDADES)**
-                ' Buscar dados de VGV e unidades por mês
-                sql = "SELECT MesVenda, COUNT(*) as Unidades, SUM(ValorUnidade) as VGVMes FROM Vendas" & whereClause & " GROUP BY MesVenda ORDER BY MesVenda"
-                rs.Open sql, conn
+                ' **MODIFICADO: usar a mesma cláusula WHERE para o gráfico que usa para os totais**
+                Dim whereClauseGrafico
+                whereClauseGrafico = whereClause ' Usar os mesmos filtros!
                 
-                Do While Not rs.EOF
-                    If Not IsNull(rs("MesVenda")) Then
-                        mesNum = CInt(rs("MesVenda"))
-                        If mesNum >= 1 And mesNum <= 12 Then
-                            mesesVGV(mesNum) = rs("VGVMes")
-                            mesesUnidades(mesNum) = rs("Unidades")
+                ' Se podemos mostrar o gráfico, executar a consulta
+                If podeMostrarGrafico Then
+                    sql = "SELECT MesVenda, SUM(ValorUnidade) as VGVMes FROM Vendas" & whereClauseGrafico & " GROUP BY MesVenda ORDER BY MesVenda"
+                    rs.Open sql, conn
+                    
+                    Do While Not rs.EOF
+                        If Not IsNull(rs("MesVenda")) Then
+                            mesNum = CInt(rs("MesVenda"))
+                            If mesNum >= 1 And mesNum <= 12 Then
+                                mesesVGV(mesNum) = rs("VGVMes")
+                            End If
                         End If
-                    End If
-                    rs.MoveNext
-                Loop
-                rs.Close
+                        rs.MoveNext
+                    Loop
+                    rs.Close
+                End If
                 
                 ' **CALCULAR TÍTULO DINÂMICO BASEADO NOS FILTROS**
                 Dim tituloPeriodo
@@ -696,7 +634,7 @@ End If
                 
                 ' Adicionar corretor ao título se filtrado
                 If corretor <> "" Then
-                    tituloPeriodo = tituloPeriodo & " - Corretor: " & UCase(corretor)
+                    tituloPeriodo = tituloPeriodo & " - Corretor: " & corretor
                 End If
                 %>
                 
@@ -710,16 +648,15 @@ End If
                         <% If mes <> "" And IsNumeric(mes) Then %>
                             <span class="badge bg-info ms-2"><%=arrMesesNome(CInt(mes))%> selecionado</span>
                         <% End If %>
-                        <% If corretor <> "" Then %>
-                            <span class="badge bg-dark ms-2"><i class="fas fa-user me-1"></i> Corretor: <%=UCase(corretor)%></span>
-                        <% End If %>
+
                     </h5>
                 </div>
                 
-                <!-- 12 CARDS DE VGV POR MÊS - **SEMPRE MOSTRAR, MESMO COM FILTRO DE CORRETOR** -->
+                <!-- 12 CARDS DE VGV POR MÊS - **APENAS MESES RELEVANTES AO FILTRO** -->
+                <% If corretor = "" Then ' Só mostrar cards de mês se não tiver filtro de corretor %>
                 <div class="row mb-4 g-3">
                     <%
-                    Dim valorMesFormatado, unidadesMesFormatado, bgClass, isMesFiltrado, mesesExibidos, cardClass
+                    Dim valorMesFormatado, bgClass, isMesFiltrado, mesesExibidos
                     mesesExibidos = 0
                     
                     For i = 1 To 12
@@ -739,10 +676,8 @@ End If
                             If mesesVGV(i) > 0 Then
                                 If isMesFiltrado Then
                                     bgClass = "card-mes-filtrado"
-                                    cardClass = "card-mes-completo"
                                 Else
                                     bgClass = "card-mes-com-dados"
-                                    cardClass = "card-mes-completo"
                                 End If
                                 
                                 ' Formatar valor para exibição
@@ -753,32 +688,24 @@ End If
                                 Else
                                     valorMesFormatado = "R$ " & FormatNumber(mesesVGV(i), 0)
                                 End If
-                                
-                                ' Formatar unidades
-                                unidadesMesFormatado = FormatNumber(mesesUnidades(i), 0) & " unid."
                             Else
                                 bgClass = "card-mes-vazio"
-                                cardClass = "card-mes-completo card-mes-sem-dados"
                                 valorMesFormatado = "R$ 0"
-                                unidadesMesFormatado = "0 unid."
                             End If
                     %>
                     <div class="col-6 col-md-3 col-lg-2">
-                        <div class="card h-100 shadow-sm <%=cardClass%> <%=bgClass%>">
+                        <div class="card h-100 shadow-sm <%=bgClass%>">
                             <div class="card-body text-center p-3">
                                 <h6 class="mb-2 fw-bold">
                                     <%=UCase(mesesLabels(i))%>
                                 </h6>
-                                <div class="valor-mes mb-2">
+                                <div class="fs-5 fw-bold">
                                     <%=valorMesFormatado%>
-                                </div>
-                                <div class="unidades-mes">
-                                    <%=unidadesMesFormatado%>
                                 </div>
                                 <% If isMesFiltrado Then %>
                                     <small class="badge bg-danger text-white mt-2">FILTRADO</small>
                                 <% ElseIf mesesVGV(i) = 0 Then %>
-                                    <small class="text-muted mt-2">Sem vendas</small>
+                                    <small class="text-muted mt-2">Sem dados</small>
                                 <% End If %>
                             </div>
                         </div>
@@ -799,6 +726,7 @@ End If
                     End If
                     %>
                 </div>
+                <% End If ' Fim do IF corretor = "" %>
                 
                 <%
                 ' Exibir totais gerais
@@ -880,7 +808,7 @@ End If
                                             <tbody>
                                                 <%
                                                 Do While Not rs.EOF
-                                                    vgvDiretoria = (rs("VGV"))
+                                                    vgvDiretoria = ConverterParaJS(rs("VGV"))
                                                     If totalVGV <> 0 Then
                                                         percentual = (vgvDiretoria / totalVGV) * 100
                                                     Else
@@ -950,7 +878,7 @@ End If
                                             <tbody>
                                                 <%
                                                 Do While Not rs.EOF
-                                                    vgvGerencia = (rs("VGV"))
+                                                    vgvGerencia = ConverterParaJS(rs("VGV"))
                                                     If totalVGV <> 0 Then
                                                         percentual = (vgvGerencia / totalVGV) * 100
                                                     Else
@@ -1103,155 +1031,6 @@ End If
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- LISTA COMPLETA DE CORRETORES ORDENADA POR VGV -->
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-header text-white" style="background: #f39c12;">
-                                <i class="fas fa-users me-2"></i> 
-                                <% If corretor <> "" Then %>
-                                    Corretor Selecionado
-                                <% Else %>
-                                    Lista de Corretores (Ordenados por VGV)
-                                <% End If %>
-                                <span class="float-end badge bg-light text-dark">
-                                    <% If corretor <> "" Then %>
-                                        1 corretor
-                                    <% Else %>
-                                        <%=corretoresCount%> corretores
-                                    <% End If %>
-                                </span>
-                            </div>
-                            <div class="card-body">
-                                <%
-                                ' Verificar se há corretores
-                                If corretoresCount > 0 Then
-                                    ' Os corretores já estão ordenados por VGV descendente no array
-                                    %>
-                                    <div class="list-group list-group-flush">
-                                        <%
-                                        Dim corretoresExibidos, rankingClass
-                                        corretoresExibidos = 0
-                                        
-                                        For i = 0 To corretoresCount - 1
-                                            ' *** MODIFICAÇÃO: Se houver filtro de corretor, mostrar apenas o corretor filtrado ***
-                                            If corretor = "" Or corretoresDisponiveis(i) = corretor Then
-                                                corretoresExibidos = corretoresExibidos + 1
-                                                
-                                                ' Determinar classe de ranking
-                                                If i = 0 Then
-                                                    rankingClass = "ranking-1"
-                                                ElseIf i = 1 Then
-                                                    rankingClass = "ranking-2"
-                                                ElseIf i = 2 Then
-                                                    rankingClass = "ranking-3"
-                                                Else
-                                                    rankingClass = "ranking-outros"
-                                                End If
-                                                
-                                                ' Usar VGV já armazenado no array
-                                                unidadesCorretor = 0
-                                                vgvCorretor = corretoresVGV(i)
-                                                
-                                                ' Se precisar buscar unidades, podemos fazer uma consulta adicional
-                                                ' Mas para simplificar, vamos usar o VGV que já temos
-                                                
-                                                ' Determinar classe do item
-                                                Dim listItemClass
-                                                listItemClass = "list-group-item corretor-item"
-                                                If corretoresDisponiveis(i) = corretor Then
-                                                    listItemClass = listItemClass & " corretor-filtrado"
-                                                End If
-                                                %>
-                                                <a href="javascript:void(0)" onclick="document.getElementById('corretor').value='<%=corretoresDisponiveis(i)%>'; document.forms[0].submit();" class="<%=listItemClass%> text-decoration-none">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div class="d-flex align-items-center">
-                                                            <% If corretor = "" Then %>
-                                                            <span class="ranking-badge <%=rankingClass%>"><%=i+1%></span>
-                                                            <% End If %>
-                                                            <div>
-                                                                <strong><%=corretoresDisponiveis(i)%></strong>
-                                                                <% If corretoresDisponiveis(i) = corretor Then %>
-                                                                    <span class="badge bg-warning text-dark ms-2">Filtrado</span>
-                                                                <% End If %>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-end">
-                                                            <div>
-                                                                <span class="ms-2"><strong>R$ <%=FormatNumber(vgvCorretor, 0)%></strong></span>
-                                                            </div>
-                                                            <% If totalVGV <> 0 And vgvCorretor > 0 Then %>
-                                                                <small class="text-muted"><%=FormatNumber((vgvCorretor/totalVGV)*100, 1)%>% do total</small>
-                                                            <% End If %>
-                                                        </div>
-                                                    </div>
-                                                </a>
-                                                <%
-                                            End If
-                                        Next
-                                        
-                                        ' Se não houver corretores para exibir (filtro muito específico)
-                                        If corretoresExibidos = 0 Then
-                                            %>
-                                            <div class="list-group-item text-center text-muted py-4">
-                                                Nenhum corretor corresponde aos filtros aplicados.
-                                            </div>
-                                            <%
-                                        End If
-                                        %>
-                                    </div>
-                                    
-                                    <!-- RESUMO DE CORRETORES -->
-                                    <div class="mt-3">
-                                        <div class="alert alert-light">
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <strong>Total de Corretores:</strong> 
-                                                    <% If corretor <> "" Then %>
-                                                        <span class="badge bg-warning text-dark">1 filtrado</span> de <%=corretoresCount%>
-                                                    <% Else %>
-                                                        <%=corretoresCount%>
-                                                    <% End If %>
-                                                </div>
-                                                <% If corretor = "" Then %>
-                                                <div class="col-12 mt-1">
-                                                    <strong>Média VGV/Corretor:</strong> 
-                                                    <% If corretoresCount > 0 Then %>
-                                                        R$ <%=FormatNumber(totalVGV/corretoresCount, 0)%>
-                                                    <% Else %>
-                                                        R$ 0
-                                                    <% End If %>
-                                                </div>
-                                                <% End If %>
-                                            </div>
-                                        </div>
-                                        
-                                        <% If corretor <> "" Then %>
-                                        <div class="d-grid gap-2">
-                                            <a href="javascript:void(0)" onclick="document.getElementById('corretor').value=''; document.forms[0].submit();" class="btn btn-sm btn-outline-warning">
-                                                <i class="fas fa-times me-1"></i> Remover Filtro de Corretor
-                                            </a>
-                                        </div>
-                                        <% ElseIf corretoresCount > 1 Then %>
-                                        <div class="d-grid gap-2">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="mostrarTodosCorretores()">
-                                                <i class="fas fa-list me-1"></i> Ver todos os corretores
-                                            </button>
-                                        </div>
-                                        <% End If %>
-                                    </div>
-                                    <%
-                                Else
-                                    %>
-                                    <div class="text-center text-muted py-4">
-                                        Nenhum corretor encontrado
-                                    </div>
-                                    <%
-                                End If
-                                %>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 
                 <%
@@ -1278,7 +1057,6 @@ End If
                 </div>
                 <%
             End If
-            
             conn.Close
             Set rs = Nothing
             Set conn = Nothing
@@ -1529,15 +1307,9 @@ End If
             }
         });
     });
-    
-    // Função para mostrar todos os corretores
-    function mostrarTodosCorretores() {
-        // Esta função pode ser expandida para mostrar uma modal com todos os corretores
-        alert('Para ver todos os corretores, remova o filtro de corretor selecionando "Todos os corretores" no campo de filtro.');
-    }
-    </script>
     <%
     End If
     %>
+</script>
 </body>
 </html>

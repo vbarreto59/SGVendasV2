@@ -23,7 +23,7 @@ if (request.ServerVariables("remote_addr") <> "127.0.0.1") AND (request.ServerVa
     else
         objMail.From = "sendmail@gabnetweb.com.br"
         objMail.To   = "sendmail@gabnetweb.com.br, valterpb@hotmail.com"
-        objMail.Subject = "SV-DIRETOR" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
+        objMail.Subject = "SV-DIR-VENDAS" & Ucase(Session("Usuario")) & " - " & request.serverVariables("REMOTE_ADDR") & " - " & Date & " - " & Time
         objMail.MailFormat = 0 ' 0 = Texto Simples
         objMail.Body = "Página Vendas Diretoria. " & Ucase(Session("Usuario"))
         objMail.Send
@@ -59,7 +59,7 @@ Set conn = Server.CreateObject("ADODB.Connection")
 Set rs = Server.CreateObject("ADODB.Recordset")
 
 ' Parâmetros do filtro
-Dim ano, mes, trimestre, semestre, diretoriaID, corretor, whereClause, isFiltered
+Dim ano, mes, trimestre, semestre, diretoriaID, corretor, gerencia, whereClause, isFiltered
 isFiltered = False
 
 ' *** MODIFICAÇÃO AQUI: Verificar se já existe filtro via POST, senão definir ano atual automaticamente ***
@@ -67,7 +67,8 @@ ano = Request.Form("ano")
 mes = Request.Form("mes")
 trimestre = Request.Form("trimestre")
 semestre = Request.Form("semestre")
-corretor = Request.Form("corretor") ' NOVO FILTRO: CORRETOR
+corretor = Request.Form("corretor") ' FILTRO: CORRETOR
+gerencia = Request.Form("gerencia") ' NOVO FILTRO: GERÊNCIA
 
 ' **NOVA LÓGICA: Se ano não foi enviado via POST, definir automaticamente como ano atual**
 Dim anoAtual, anoSelecionadoAutomaticamente
@@ -138,6 +139,34 @@ rsAnos.Close
 Set rsAnos = Nothing
 ' --- FIM DA BUSCA DE ANOS ---
 
+' --- BUSCAR GERENCIAS DISPONÍVEIS NO BANCO DE DADOS ---
+Dim sqlGerencias, gerenciasDisponiveis()
+ReDim gerenciasDisponiveis(0)
+Dim gerenciasCount
+gerenciasCount = 0
+
+' Buscar gerências distintas da tabela Vendas
+sqlGerencias = "SELECT DISTINCT Gerencia FROM Vendas WHERE Vendas.Excluido = 0 AND Gerencia IS NOT NULL AND TRIM(Gerencia) <> ''"
+If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
+    sqlGerencias = sqlGerencias & " AND Vendas.DiretoriaId = " & CLng(diretoriaID)
+End If
+sqlGerencias = sqlGerencias & " ORDER BY Gerencia"
+
+Set rsGerencias = Server.CreateObject("ADODB.Recordset")
+rsGerencias.Open sqlGerencias, conn
+
+Do While Not rsGerencias.EOF
+    If Not IsNull(rsGerencias("Gerencia")) And Trim(rsGerencias("Gerencia")) <> "" Then
+        ReDim Preserve gerenciasDisponiveis(gerenciasCount)
+        gerenciasDisponiveis(gerenciasCount) = Trim(rsGerencias("Gerencia"))
+        gerenciasCount = gerenciasCount + 1
+    End If
+    rsGerencias.MoveNext
+Loop
+rsGerencias.Close
+Set rsGerencias = Nothing
+' --- FIM DA BUSCA DE GERENCIAS ---
+
 ' --- BUSCAR CORRETORES DISPONÍVEIS NO BANCO DE DADOS ORDENADOS POR VGV ---
 Dim sqlCorretores, corretoresDisponiveis(), corretoresVGV()
 ReDim corretoresDisponiveis(0)
@@ -146,11 +175,45 @@ Dim corretoresCount
 corretoresCount = 0
 
 ' Buscar corretores com VGV total, ordenados por VGV descendente
+' APLICANDO OS MESMOS FILTROS DO RELATÓRIO
 sqlCorretores = "SELECT Corretor, SUM(ValorUnidade) as TotalVGV " & _
                 "FROM Vendas WHERE Vendas.Excluido = 0"
+
+' Aplicar filtro de Diretoria
 If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
     sqlCorretores = sqlCorretores & " AND Vendas.DiretoriaId = " & CLng(diretoriaID)
 End If
+
+' Aplicar filtro de Ano (se definido automaticamente ou via POST)
+If anoParaUsar <> "" And IsNumeric(anoParaUsar) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.AnoVenda = " & anoParaUsar
+End If
+
+' Aplicar filtro de Mês (se houver)
+If mes <> "" And IsNumeric(mes) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.MesVenda = " & mes
+End If
+
+' Aplicar filtro de Trimestre (se houver)
+If trimestre <> "" And IsNumeric(trimestre) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.Trimestre = " & trimestre
+End If
+
+' Aplicar filtro de Semestre (se houver)
+If semestre <> "" And IsNumeric(semestre) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.Semestre = " & semestre
+End If
+
+' Aplicar filtro de Gerência (se houver) - IMPORTANTE: CORREÇÃO AQUI
+If gerencia <> "" Then
+    sqlCorretores = sqlCorretores & " AND Vendas.Gerencia = '" & Replace(gerencia, "'", "''") & "'"
+End If
+
+' Aplicar filtro de Corretor (se houver) - para quando já está filtrado
+If corretor <> "" Then
+    sqlCorretores = sqlCorretores & " AND Vendas.Corretor = '" & Replace(corretor, "'", "''") & "'"
+End If
+
 sqlCorretores = sqlCorretores & " GROUP BY Corretor ORDER BY SUM(ValorUnidade) DESC"
 
 Set rsCorretores = Server.CreateObject("ADODB.Recordset")
@@ -221,9 +284,15 @@ If semestre <> "" And IsNumeric(semestre) Then
     isFiltered = True
 End If
 
-' *** NOVO FILTRO: Corretor ***
+' *** FILTRO: Corretor ***
 If corretor <> "" Then
     whereClause = whereClause & " AND Vendas.Corretor = '" & Replace(corretor, "'", "''") & "'"
+    isFiltered = True
+End If
+
+' *** NOVO FILTRO: Gerência ***
+If gerencia <> "" Then
+    whereClause = whereClause & " AND Vendas.Gerencia = '" & Replace(gerencia, "'", "''") & "'"
     isFiltered = True
 End If
 %>
@@ -335,6 +404,11 @@ End If
             background-color: #fff3cd !important;
             border-left: 4px solid #ffc107 !important;
         }
+        /* Estilo para gerência filtrada */
+        .gerencia-filtrada {
+            background-color: #d4edda !important;
+            border-left: 4px solid #28a745 !important;
+        }
         .lista-corretores {
             max-height: 400px;
             overflow-y: auto;
@@ -383,6 +457,17 @@ End If
         .ranking-2 { background-color: #c0c0c0; color: #000; }
         .ranking-3 { background-color: #cd7f32; color: #000; }
         .ranking-outros { background-color: #6c757d; color: #fff; }
+        
+        /* Estilo para filtros em colunas responsivas */
+        @media (max-width: 768px) {
+            .filtro-row {
+                flex-direction: column;
+            }
+            .filtro-col {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
     </style>
 
 <style>
@@ -482,44 +567,102 @@ End If
                         </select>
                     </div>
                     
-                    <!-- NOVO FILTRO: CORRETOR -->
+                    <!-- FILTRO: GERÊNCIA -->
                     <div class="col-md-4">
-                        <label for="corretor" class="form-label fw-bold">Corretor:</label>
-                        <select class="form-select" id="corretor" name="corretor">
-                            <option value="">Todos os corretores</option>
+                        <label for="gerencia" class="form-label fw-bold">Gerência:</label>
+                        <select class="form-select" id="gerencia" name="gerencia">
+                            <option value="">Todas as gerências</option>
                             <%
-                            For i = 0 To corretoresCount - 1
-                                Response.Write "<option value=""" & corretoresDisponiveis(i) & """"
-                                If corretoresDisponiveis(i) = corretor Then
+                            For i = 0 To gerenciasCount - 1
+                                Response.Write "<option value=""" & gerenciasDisponiveis(i) & """"
+                                If gerenciasDisponiveis(i) = gerencia Then
                                     Response.Write " selected"
                                 End If
-                                ' Adicionar VGV como informação adicional no option
-                                Dim vgvFormatado
-                                If corretoresVGV(i) > 0 Then
-                                    vgvFormatado = " (R$ " & FormatNumber(corretoresVGV(i), 0) & ")"
-                                Else
-                                    vgvFormatado = " (R$ 0)"
-                                End If
-                                Response.Write ">" & corretoresDisponiveis(i) & vgvFormatado & "</option>"
+                                Response.Write ">" & gerenciasDisponiveis(i) & "</option>"
                             Next
                             
-                            If corretoresCount = 0 Then
-                                Response.Write "<option value="""">Nenhum corretor disponível</option>"
+                            If gerenciasCount = 0 Then
+                                Response.Write "<option value="""">Nenhuma gerência disponível</option>"
                             End If
                             %>
                         </select>
-                        <% If corretoresCount = 0 Then %>
-                        <small class="text-warning">Nenhum corretor encontrado</small>
+                        <% If gerenciasCount = 0 Then %>
+                        <small class="text-warning">Nenhuma gerência encontrada</small>
                         <% End If %>
                     </div>
                     
-                    <div class="col-md-8"></div>
+                    <!-- FILTRO: CORRETOR -->
+                    <div class="col-md-4">
+                        <label for="corretor" class="form-label fw-bold">Corretor:</label>
+<select class="form-select" id="corretor" name="corretor">
+    <option value="">Todos os corretores</option>
+    <%
+    If corretoresCount > 0 Then
+        ' 1. Criar um array de índices (0, 1, 2, ...)
+        Dim indices()
+        ReDim indices(corretoresCount - 1)
+        For i = 0 To corretoresCount - 1
+            indices(i) = i
+        Next
+
+        ' 2. Ordenar apenas os índices baseando-se nos valores de corretoresDisponiveis
+        Dim tempIdx
+        For i = 0 To corretoresCount - 2
+            For j = i + 1 To corretoresCount - 1
+                ' Comparamos os nomes nos arrays originais usando os índices
+                If UCase(corretoresDisponiveis(indices(i))) > UCase(corretoresDisponiveis(indices(j))) Then
+                    ' Troca apenas a posição no array de índices
+                    tempIdx = indices(i)
+                    indices(i) = indices(j)
+                    indices(j) = tempIdx
+                End If
+            Next
+        Next
+
+        ' 3. Gerar o HTML seguindo a ordem do array de índices
+        For k = 0 To corretoresCount - 1
+            Dim idx
+            idx = indices(k) ' Pega o índice ordenado
+            
+            Response.Write "<option value=""" & corretoresDisponiveis(idx) & """"
+            
+            If corretoresDisponiveis(idx) = corretor Then
+                Response.Write " selected"
+            End If
+            
+            Dim vgvFormatado
+            If corretoresVGV(idx) > 0 Then
+                vgvFormatado = " (R$ " & FormatNumber(corretoresVGV(idx), 0) & ")"
+            Else
+                vgvFormatado = " (R$ 0)"
+            End If
+            
+            Response.Write ">" & corretoresDisponiveis(idx) & vgvFormatado & "</option>"
+        Next
+    End If
+
+    If corretoresCount = 0 Then
+        Response.Write "<option value="""">Nenhum corretor disponível</option>"
+    End If
+    %>
+</select>
+                        <% If corretoresCount = 0 Then %>
+                        <small class="text-warning">Nenhum corretor encontrado</small>
+                        <% End If %>
+                        <% If gerencia <> "" Then %>
+                        <small class="text-info">
+                            <i class="fas fa-info-circle me-1"></i>Mostrando apenas corretores da gerência: <strong><%=gerencia%></strong>
+                        </small>
+                        <% End If %>
+                    </div>
+                    
+                    <div class="col-md-4"></div>
                     
                     <div class="col-12 d-flex gap-3 mt-2">
                         <button type="submit" class="btn btn-primary btn-filter">
                             <i class="fas fa-search me-2"></i>Aplicar Filtros
                         </button>
-                        <a href="gestao_vendas_diretoria2.asp" class="btn btn-secondary btn-filter">
+                        <a href="gestao_vendas_diretoria3.asp" class="btn btn-secondary btn-filter">
                             <i class="fas fa-times me-2"></i>Limpar Filtro
                         </a>
                     </div>
@@ -571,6 +714,11 @@ End If
                         <span class="badge bg-danger p-2"><i class="fas fa-chart-line me-1"></i> 
                         <%Select Case semestre%><%Case 1%>1º Sem<%Case 2%>2º Sem<%End Select%>
                         </span>
+                    </div>
+                    <% end if %>
+                    <% if gerencia <> "" then %>
+                    <div class="col-auto">
+                        <span class="badge bg-success p-2"><i class="fas fa-user-tie me-1"></i> Gerência: <%=gerencia%></span>
                     </div>
                     <% end if %>
                     <% if corretor <> "" then %>
@@ -661,9 +809,9 @@ End If
                 End If
                 
                 ' Variável para controlar se podemos mostrar o gráfico
-                ' MODIFICAÇÃO: Não mostrar gráfico se filtro de mês ou corretor estiver ativo
+                ' MODIFICAÇÃO: Não mostrar gráfico se filtro de mês, gerência ou corretor estiver ativo
                 Dim podeMostrarGrafico
-                podeMostrarGrafico = (ano <> "" And IsNumeric(ano) And mes = "" And corretor = "")
+                podeMostrarGrafico = (ano <> "" And IsNumeric(ano) And mes = "" And gerencia = "" And corretor = "")
                 
                 ' **SEMPRE BUSCAR DADOS PARA OS CARDOS DOS MESES (VGV E UNIDADES)**
                 ' Buscar dados de VGV e unidades por mês
@@ -694,6 +842,11 @@ End If
                     tituloPeriodo = ano
                 End If
                 
+                ' Adicionar gerência ao título se filtrada
+                If gerencia <> "" Then
+                    tituloPeriodo = tituloPeriodo & " - Gerência: " & gerencia
+                End If
+                
                 ' Adicionar corretor ao título se filtrado
                 If corretor <> "" Then
                     tituloPeriodo = tituloPeriodo & " - Corretor: " & UCase(corretor)
@@ -710,13 +863,16 @@ End If
                         <% If mes <> "" And IsNumeric(mes) Then %>
                             <span class="badge bg-info ms-2"><%=arrMesesNome(CInt(mes))%> selecionado</span>
                         <% End If %>
+                        <% If gerencia <> "" Then %>
+                            <span class="badge bg-success ms-2"><i class="fas fa-user-tie me-1"></i> Gerência: <%=gerencia%></span>
+                        <% End If %>
                         <% If corretor <> "" Then %>
                             <span class="badge bg-dark ms-2"><i class="fas fa-user me-1"></i> Corretor: <%=UCase(corretor)%></span>
                         <% End If %>
                     </h5>
                 </div>
                 
-                <!-- 12 CARDS DE VGV POR MÊS - **SEMPRE MOSTRAR, MESMO COM FILTRO DE CORRETOR** -->
+                <!-- 12 CARDS DE VGV POR MÊS - **SEMPRE MOSTRAR, MESMO COM FILTRO DE GERÊNCIA OU CORRETOR** -->
                 <div class="row mb-4 g-3">
                     <%
                     Dim valorMesFormatado, unidadesMesFormatado, bgClass, isMesFiltrado, mesesExibidos, cardClass
@@ -818,7 +974,7 @@ End If
                     </div>
                 </div>
                 
-                <!-- GRÁFICO DE VGV POR MÊS - **NÃO EXIBIR QUANDO MÊS OU CORRETOR ESTIVER FILTRADO** -->
+                <!-- GRÁFICO DE VGV POR MÊS - **NÃO EXIBIR QUANDO MÊS, GERÊNCIA OU CORRETOR ESTIVER FILTRADO** -->
                 <% If podeMostrarGrafico Then %>
                 <div class="card mb-4">
                     <div class="card-header text-white" style="background: #9b59b6;">
@@ -839,9 +995,9 @@ End If
                         </div>
                     </div>
                 </div>
-                <% ElseIf mes <> "" Or corretor <> "" Then %>
+                <% ElseIf mes <> "" Or gerencia <> "" Or corretor <> "" Then %>
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>Gráfico não exibido quando filtro de <strong>mês</strong> ou <strong>corretor</strong> está ativo.
+                    <i class="fas fa-info-circle me-2"></i>Gráfico não exibido quando filtro de <strong>mês</strong>, <strong>gerência</strong> ou <strong>corretor</strong> está ativo.
                 </div>
                 <% Else %>
                 <div class="alert alert-warning">
@@ -921,11 +1077,14 @@ End If
                         </div>
                     </div>
                     
-                    <!-- VENDAS POR GERÊNCIA -->
+                    <!-- VENDAS POR GERÊNCIA - MODIFICADO PARA DESTACAR GERÊNCIA FILTRADA -->
                     <div class="col-md-6">
                         <div class="card h-100">
                             <div class="card-header text-white" style="background: #3498db;">
                                 <i class="fas fa-user-tie me-2"></i>Vendas por Gerência
+                                <% If gerencia <> "" Then %>
+                                <span class="float-end badge bg-success">Filtrada: <%=gerencia%></span>
+                                <% End If %>
                             </div>
                             <div class="card-body">
                                 <%
@@ -959,9 +1118,21 @@ End If
                                                     
                                                     totalUnidadesGerencia = totalUnidadesGerencia + rs("Unidades")
                                                     totalVGVGerencia = totalVGVGerencia + vgvGerencia
+                                                    
+                                                    ' Verificar se é a gerência filtrada
+                                                    Dim linhaClass
+                                                    linhaClass = ""
+                                                    If gerencia <> "" And rs("Gerencia") = gerencia Then
+                                                        linhaClass = "gerencia-filtrada"
+                                                    End If
                                                     %>
-                                                    <tr>
-                                                        <td><%=rs("Gerencia")%></td>
+                                                    <tr class="<%=linhaClass%>">
+                                                        <td>
+                                                            <%=rs("Gerencia")%>
+                                                            <% If gerencia <> "" And rs("Gerencia") = gerencia Then %>
+                                                            <span class="badge bg-success ms-2">FILTRADA</span>
+                                                            <% End If %>
+                                                        </td>
                                                         <td class="text-center"><%=FormatNumber(rs("Unidades"), 0)%></td>
                                                         <td class="text-end">R$ <%=FormatNumber(vgvGerencia, 0)%></td>
                                                         <td class="text-end"><span class="badge bg-success badge-percent"><%=FormatNumber(percentual, 1)%>%</span></td>
@@ -1114,6 +1285,9 @@ End If
                                 <% Else %>
                                     Lista de Corretores (Ordenados por VGV)
                                 <% End If %>
+                                <% If gerencia <> "" And corretor = "" Then %>
+                                <span class="float-end badge bg-success">Filtrado por gerência: <%=gerencia%></span>
+                                <% Else %>
                                 <span class="float-end badge bg-light text-dark">
                                     <% If corretor <> "" Then %>
                                         1 corretor
@@ -1121,6 +1295,7 @@ End If
                                         <%=corretoresCount%> corretores
                                     <% End If %>
                                 </span>
+                                <% End If %>
                             </div>
                             <div class="card-body">
                                 <%
@@ -1211,6 +1386,9 @@ End If
                                                         <span class="badge bg-warning text-dark">1 filtrado</span> de <%=corretoresCount%>
                                                     <% Else %>
                                                         <%=corretoresCount%>
+                                                        <% If gerencia <> "" Then %>
+                                                            <span class="badge bg-success ms-2">da gerência: <%=gerencia%></span>
+                                                        <% End If %>
                                                     <% End If %>
                                                 </div>
                                                 <% If corretor = "" Then %>
@@ -1245,6 +1423,9 @@ End If
                                     %>
                                     <div class="text-center text-muted py-4">
                                         Nenhum corretor encontrado
+                                        <% If gerencia <> "" Then %>
+                                        <br><small>para a gerência: <strong><%=gerencia%></strong></small>
+                                        <% End If %>
                                     </div>
                                     <%
                                 End If
