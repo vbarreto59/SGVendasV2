@@ -1184,7 +1184,7 @@ End If
                                         cont = 0
                                         Do While Not rs.EOF
                                             cont = cont + 1
-                                            vgvEmpreendimento = (rs("VGV"))
+                                            vgvEmpreendimento = ConverterParaJS(rs("VGV"))
                                             If totalVGV <> 0 Then
                                                 percentual = (vgvEmpreendimento / totalVGV) * 100
                                             Else
@@ -1239,7 +1239,7 @@ End If
                                         cont = 0
                                         Do While Not rs.EOF
                                             cont = cont + 1 
-                                            vgvEmpresa = (rs("VGV"))
+                                            vgvEmpresa = ConverterParaJS(rs("VGV"))
                                             If totalVGV <> 0 Then
                                                 percentual = (vgvEmpresa / totalVGV) * 100
                                             Else

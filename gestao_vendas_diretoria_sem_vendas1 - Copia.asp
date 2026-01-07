@@ -1,3 +1,10 @@
+<!-- ###################################### -->
+<!-- SISTEMA: SGVENDAS                      -->
+<!-- AUTOR: VALTER BARRETO                    -->
+<!-- Data: 04/12/2025               -->
+<!-- CODIGO_ARQUIVO: CORRETORES_INATIVOS    -->
+<!-- OBS: Relatório de Corretores  -->
+<!-- ###################################### -->
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <%if Trim(StrConn)="" then%>
      <!--#include file="conexao.asp"-->
@@ -33,7 +40,6 @@ Response.AddHeader "Cache-Control", "no-store, must-revalidate"
 
 ' **NOVA LÓGICA DE FILTRO DE DIRETORIA**
 diretoriaID = Session("Dir_DiretoriaID")
-'diretoriaID = 1
 
 paginaRedirecionamento1 = "http://www.gabnetweb.com.br/SunnyImob/login_v66a.asp"
 paginaRedirecionamento2 = "http://localhost/SunnyImob/login_v66a.asp"
@@ -49,13 +55,9 @@ if diretoriaID = "" then
   '' Response.end 
 end if   
 
-' Conexão com o banco de dados de VENDAS
-Set connSales = Server.CreateObject("ADODB.Connection")
-connSales.Open StrConnSales
-
-' Conexão com o banco de dados de USUÁRIOS
-Set connUsuarios = Server.CreateObject("ADODB.Connection")
-connUsuarios.Open StrConn
+' Conexão com o banco de dados
+Set conn = Server.CreateObject("ADODB.Connection")
+conn.Open StrConnSales
 
 ' Calcular data atual para comparação
 Dim anoAtual, mesAtual
@@ -69,7 +71,7 @@ Dim mesesSemVenderArr(), statusArr(), statusClassArr(), gerenciaAtualArr()
 Dim count, i, j, temp, mesesSemVender, statusTexto, statusClass, rowClass
 Dim totalCorretores, corretoresAtivos, corretoresInativos
 Dim mediaMeses, vgvFormatado, nomeMesUltimaVenda, mesesAtras, widthPercent, barColor
-Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
+Dim ultimoAno, ultimoMes, corretorNome
 %>
 
 <!DOCTYPE html>
@@ -81,7 +83,6 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Estilos permanecem os mesmos */
         body { 
             background: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -248,11 +249,11 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
         <div class="header-section">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h1 class="mb-2"><i class="fas fa-users me-2"></i>Relatório de Corretores Ativos</h1>
+                    <h1 class="mb-2"><i class="fas fa-users me-2"></i>Relatório de Corretores</h1>
                     <p class="mb-0">Diretoria: <strong><%=Session("Dir_Nome")%></strong></p>
                     <p class="mb-0 mt-2">
                         <small>
-                            <i class="fas fa-info-circle me-1"></i>Lista de corretores ativos com histórico de vendas
+                            <i class="fas fa-info-circle me-1"></i>Lista completa de corretores com gerência atual e histórico de vendas
                         </small>
                     </p>
                 </div>
@@ -280,211 +281,164 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
         
         count = 0
         
-        ' Obter lista de usuários ativos primeiro
-        Dim usuariosAtivosDict
-        Set usuariosAtivosDict = Server.CreateObject("Scripting.Dictionary")
-        
-        Dim sqlUsuariosAtivos, rsUsuariosAtivos
-        sqlUsuariosAtivos = "SELECT UserId, Nome FROM Usuarios WHERE Ativo = True"
-        Set rsUsuariosAtivos = Server.CreateObject("ADODB.Recordset")
-        rsUsuariosAtivos.Open sqlUsuariosAtivos, connUsuarios
-        
-        Do While Not rsUsuariosAtivos.EOF
-            Dim userId
-            userId = rsUsuariosAtivos("UserId")
-            If Not IsNull(userId) Then
-                usuariosAtivosDict.Add CStr(userId), rsUsuariosAtivos("Nome")
-            End If
-            rsUsuariosAtivos.MoveNext
-        Loop
-        rsUsuariosAtivos.Close
-        Set rsUsuariosAtivos = Nothing
-        
-        ' Obter lista de todas as gerências únicas para filtros (apenas para corretores ativos)
+        ' Obter lista de todas as gerências únicas para filtros
         Dim gerenciasUnicas()
         ReDim gerenciasUnicas(0)
         Dim gerenciaCount
         gerenciaCount = 0
         
-        ' Criar string com IDs de usuários ativos para usar na consulta SQL
-        Dim idsUsuariosAtivos
-        idsUsuariosAtivos = ""
-        Dim userIds
-        userIds = usuariosAtivosDict.Keys
-        For Each userId In userIds
-            If idsUsuariosAtivos <> "" Then idsUsuariosAtivos = idsUsuariosAtivos & ","
-            idsUsuariosAtivos = idsUsuariosAtivos & userId
-        Next
+        sqlGerencias = "SELECT DISTINCT Gerencia FROM Vendas "
+        sqlGerencias = sqlGerencias & " WHERE Excluido = 0"
         
-        If idsUsuariosAtivos <> "" Then
-            sqlGerencias = "SELECT DISTINCT v.Gerencia FROM Vendas v "
-            sqlGerencias = sqlGerencias & " WHERE v.Excluido = 0 "
-            sqlGerencias = sqlGerencias & " AND v.CorretorId IN (" & idsUsuariosAtivos & ")"
-            
-            If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
-                sqlGerencias = sqlGerencias & " AND v.DiretoriaId = " & CLng(diretoriaID)
-            End If
-            
-            sqlGerencias = sqlGerencias & " AND v.Gerencia IS NOT NULL AND TRIM(v.Gerencia) <> ''"
-            sqlGerencias = sqlGerencias & " ORDER BY v.Gerencia"
-            
-            Set rsGerencias = Server.CreateObject("ADODB.Recordset")
-            rsGerencias.Open sqlGerencias, connSales
-            
-            Do While Not rsGerencias.EOF
-                If Not IsNull(rsGerencias("Gerencia")) Then
-                    ReDim Preserve gerenciasUnicas(gerenciaCount)
-                    gerenciasUnicas(gerenciaCount) = Trim(rsGerencias("Gerencia"))
-                    gerenciaCount = gerenciaCount + 1
-                End If
-                rsGerencias.MoveNext
-            Loop
-            rsGerencias.Close
-            Set rsGerencias = Nothing
+        If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
+            sqlGerencias = sqlGerencias & " AND DiretoriaId = " & CLng(diretoriaID)
         End If
         
-        ' PRIMEIRA CONSULTA: Obter lista de todos os corretores únicos que estão ativos
-        If idsUsuariosAtivos <> "" Then
-            sql = "SELECT DISTINCT v.Corretor, v.CorretorId FROM Vendas v "
-            sql = sql & " WHERE v.Excluido = 0 "
-            sql = sql & " AND v.CorretorId IN (" & idsUsuariosAtivos & ")"
-            
-            If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
-                sql = sql & " AND v.DiretoriaId = " & CLng(diretoriaID)
+        sqlGerencias = sqlGerencias & " AND Gerencia IS NOT NULL AND TRIM(Gerencia) <> ''"
+        sqlGerencias = sqlGerencias & " ORDER BY Gerencia"
+        
+        Set rsGerencias = Server.CreateObject("ADODB.Recordset")
+        rsGerencias.Open sqlGerencias, conn
+        
+        Do While Not rsGerencias.EOF
+            If Not IsNull(rsGerencias("Gerencia")) Then
+                ReDim Preserve gerenciasUnicas(gerenciaCount)
+                gerenciasUnicas(gerenciaCount) = Trim(rsGerencias("Gerencia"))
+                gerenciaCount = gerenciaCount + 1
             End If
-            
-            sql = sql & " AND v.Corretor IS NOT NULL AND TRIM(v.Corretor) <> ''"
-            sql = sql & " ORDER BY v.Corretor"
-            
-            Set rs = Server.CreateObject("ADODB.Recordset")
-            rs.Open sql, connSales
-            
-            Do While Not rs.EOF
-                corretorNome = Trim(rs("Corretor"))
-                If Not IsNull(rs("CorretorId")) Then
-                    corretorId = CStr(rs("CorretorId"))
-                Else
-                    corretorId = ""
+            rsGerencias.MoveNext
+        Loop
+        rsGerencias.Close
+        Set rsGerencias = Nothing
+        
+        ' PRIMEIRA CONSULTA: Obter lista de todos os corretores únicos
+        sql = "SELECT DISTINCT Corretor FROM Vendas "
+        sql = sql & " WHERE Excluido = 0"
+        
+        If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
+            sql = sql & " AND DiretoriaId = " & CLng(diretoriaID)
+        End If
+        
+        sql = sql & " AND Corretor IS NOT NULL AND TRIM(Corretor) <> ''"
+        sql = sql & " ORDER BY Corretor"
+        
+        Set rs = Server.CreateObject("ADODB.Recordset")
+        rs.Open sql, conn
+        
+        Do While Not rs.EOF
+            corretorNome = Trim(rs("Corretor"))
+            If corretorNome <> "" Then
+                
+                ' CONSULTA 2: Obter dados de vendas do corretor
+                sqlSub = "SELECT MAX(AnoVenda) as UltimoAno, MAX(MesVenda) as UltimoMes, "
+                sqlSub = sqlSub & " COUNT(*) as TotalVendas, SUM(ValorUnidade) as TotalVGV "
+                sqlSub = sqlSub & " FROM Vendas "
+                sqlSub = sqlSub & " WHERE Excluido = 0 AND Corretor = '" & Replace(corretorNome, "'", "''") & "'"
+                
+                If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
+                    sqlSub = sqlSub & " AND DiretoriaId = " & CLng(diretoriaID)
                 End If
                 
-                ' Verificar se o usuário está na lista de ativos
-                usuarioAtivo = usuariosAtivosDict.Exists(corretorId)
+                Set rsSub = Server.CreateObject("ADODB.Recordset")
+                rsSub.Open sqlSub, conn
                 
-                If corretorNome <> "" And usuarioAtivo Then
+                If Not rsSub.EOF Then
+                    ' Calcular meses sem vender
+                    If Not IsNull(rsSub("UltimoAno")) And Not IsNull(rsSub("UltimoMes")) Then
+                        ultimoAno = CInt(rsSub("UltimoAno"))
+                        ultimoMes = CInt(rsSub("UltimoMes"))
+                        mesesSemVender = ((anoAtual - ultimoAno) * 12) + (mesAtual - ultimoMes)
+                    Else
+                        ultimoAno = 0
+                        ultimoMes = 0
+                        mesesSemVender = 999 ' Valor alto para corretores sem vendas
+                    End If
                     
-                    ' CONSULTA 2: Obter dados de vendas do corretor
-                    sqlSub = "SELECT MAX(v.AnoVenda) as UltimoAno, MAX(v.MesVenda) as UltimoMes, "
-                    sqlSub = sqlSub & " COUNT(*) as TotalVendas, SUM(v.ValorUnidade) as TotalVGV "
-                    sqlSub = sqlSub & " FROM Vendas v "
-                    sqlSub = sqlSub & " WHERE v.Excluido = 0 AND v.Corretor = '" & Replace(corretorNome, "'", "''") & "'"
-                    sqlSub = sqlSub & " AND v.CorretorId IN (" & idsUsuariosAtivos & ")"
+                    ' CONSULTA 3: Obter a última gerência do corretor
+                    sqlGerencia = "SELECT TOP 1 Gerencia FROM Vendas "
+                    sqlGerencia = sqlGerencia & " WHERE Excluido = 0 AND Corretor = '" & Replace(corretorNome, "'", "''") & "'"
                     
                     If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
-                        sqlSub = sqlSub & " AND v.DiretoriaId = " & CLng(diretoriaID)
+                        sqlGerencia = sqlGerencia & " AND DiretoriaId = " & CLng(diretoriaID)
                     End If
                     
-                    Set rsSub = Server.CreateObject("ADODB.Recordset")
-                    rsSub.Open sqlSub, connSales
+                    sqlGerencia = sqlGerencia & " ORDER BY AnoVenda DESC, MesVenda DESC"
                     
-                    If Not rsSub.EOF Then
-                        ' Calcular meses sem vender
-                        If Not IsNull(rsSub("UltimoAno")) And Not IsNull(rsSub("UltimoMes")) Then
-                            ultimoAno = CInt(rsSub("UltimoAno"))
-                            ultimoMes = CInt(rsSub("UltimoMes"))
-                            mesesSemVender = ((anoAtual - ultimoAno) * 12) + (mesAtual - ultimoMes)
-                        Else
-                            ultimoAno = 0
-                            ultimoMes = 0
-                            mesesSemVender = 999 ' Valor alto para corretores sem vendas
+                    Set rsGerencia = Server.CreateObject("ADODB.Recordset")
+                    rsGerencia.Open sqlGerencia, conn
+                    
+                    Dim gerenciaAtual
+                    gerenciaAtual = ""
+                    If Not rsGerencia.EOF Then
+                        If Not IsNull(rsGerencia("Gerencia")) Then
+                            gerenciaAtual = Trim(rsGerencia("Gerencia"))
                         End If
-                        
-                        ' CONSULTA 3: Obter a última gerência do corretor
-                        sqlGerencia = "SELECT TOP 1 v.Gerencia FROM Vendas v "
-                        sqlGerencia = sqlGerencia & " WHERE v.Excluido = 0 AND v.Corretor = '" & Replace(corretorNome, "'", "''") & "'"
-                        sqlGerencia = sqlGerencia & " AND v.CorretorId IN (" & idsUsuariosAtivos & ")"
-                        
-                        If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
-                            sqlGerencia = sqlGerencia & " AND v.DiretoriaId = " & CLng(diretoriaID)
-                        End If
-                        
-                        sqlGerencia = sqlGerencia & " ORDER BY v.AnoVenda DESC, v.MesVenda DESC"
-                        
-                        Set rsGerencia = Server.CreateObject("ADODB.Recordset")
-                        rsGerencia.Open sqlGerencia, connSales
-                        
-                        Dim gerenciaAtual
-                        gerenciaAtual = ""
-                        If Not rsGerencia.EOF Then
-                            If Not IsNull(rsGerencia("Gerencia")) Then
-                                gerenciaAtual = Trim(rsGerencia("Gerencia"))
-                            End If
-                        End If
-                        rsGerencia.Close
-                        Set rsGerencia = Nothing
-                        
-                        ' Determinar status
-                        If mesesSemVender >= 12 Then
-                            statusTexto = "Muito Inativo"
-                            statusClass = "badge-vermelho"
-                            rowClass = "corretor-muito-inativo"
-                        ElseIf mesesSemVender >= 6 Then
-                            statusTexto = "Inativo"
-                            statusClass = "badge-laranja"
-                            rowClass = "corretor-inativo"
-                        ElseIf mesesSemVender >= 3 Then
-                            statusTexto = "Atenção"
-                            statusClass = "badge-amarelo"
-                            rowClass = ""
-                        ElseIf mesesSemVender <= 2 And mesesSemVender >= 0 Then
-                            statusTexto = "Ativo"
-                            statusClass = "badge-verde"
-                            rowClass = ""
-                        Else
-                            statusTexto = "Sem Vendas"
-                            statusClass = "badge-secondary"
-                            rowClass = ""
-                        End If
-                        
-                        ' Armazenar dados nos arrays
-                        ReDim Preserve corretores(count)
-                        ReDim Preserve ultimoAnoArr(count)
-                        ReDim Preserve ultimoMesArr(count)
-                        ReDim Preserve totalVendasArr(count)
-                        ReDim Preserve totalVGVArr(count)
-                        ReDim Preserve mesesSemVenderArr(count)
-                        ReDim Preserve statusArr(count)
-                        ReDim Preserve statusClassArr(count)
-                        ReDim Preserve gerenciaAtualArr(count)
-                        
-                        corretores(count) = UCase(corretorNome)
-                        ultimoAnoArr(count) = ultimoAno
-                        ultimoMesArr(count) = ultimoMes
-                        totalVendasArr(count) = rsSub("TotalVendas")
-                        
-                        If Not IsNull(rsSub("TotalVGV")) Then
-                            totalVGVArr(count) = rsSub("TotalVGV")
-                        Else
-                            totalVGVArr(count) = 0
-                        End If
-                        
-                        mesesSemVenderArr(count) = mesesSemVender
-                        statusArr(count) = statusTexto
-                        statusClassArr(count) = statusClass
-                        gerenciaAtualArr(count) = gerenciaAtual
-                        
-                        count = count + 1
+                    End If
+                    rsGerencia.Close
+                    Set rsGerencia = Nothing
+                    
+                    ' Determinar status
+                    If mesesSemVender >= 12 Then
+                        statusTexto = "Muito Inativo"
+                        statusClass = "badge-vermelho"
+                        rowClass = "corretor-muito-inativo"
+                    ElseIf mesesSemVender >= 6 Then
+                        statusTexto = "Inativo"
+                        statusClass = "badge-laranja"
+                        rowClass = "corretor-inativo"
+                    ElseIf mesesSemVender >= 3 Then
+                        statusTexto = "Atenção"
+                        statusClass = "badge-amarelo"
+                        rowClass = ""
+                    ElseIf mesesSemVender <= 2 And mesesSemVender >= 0 Then
+                        statusTexto = "Ativo"
+                        statusClass = "badge-verde"
+                        rowClass = ""
+                    Else
+                        statusTexto = "Sem Vendas"
+                        statusClass = "badge-secondary"
+                        rowClass = ""
                     End If
                     
-                    rsSub.Close
-                    Set rsSub = Nothing
+                    ' Armazenar dados nos arrays
+                    ReDim Preserve corretores(count)
+                    ReDim Preserve ultimoAnoArr(count)
+                    ReDim Preserve ultimoMesArr(count)
+                    ReDim Preserve totalVendasArr(count)
+                    ReDim Preserve totalVGVArr(count)
+                    ReDim Preserve mesesSemVenderArr(count)
+                    ReDim Preserve statusArr(count)
+                    ReDim Preserve statusClassArr(count)
+                    ReDim Preserve gerenciaAtualArr(count)
+                    
+                    corretores(count) = UCase(corretorNome)
+                    ultimoAnoArr(count) = ultimoAno
+                    ultimoMesArr(count) = ultimoMes
+                    totalVendasArr(count) = rsSub("TotalVendas")
+                    
+                    If Not IsNull(rsSub("TotalVGV")) Then
+                        totalVGVArr(count) = rsSub("TotalVGV")
+                    Else
+                        totalVGVArr(count) = 0
+                    End If
+                    
+                    mesesSemVenderArr(count) = mesesSemVender
+                    statusArr(count) = statusTexto
+                    statusClassArr(count) = statusClass
+                    gerenciaAtualArr(count) = gerenciaAtual
+                    
+                    count = count + 1
                 End If
                 
-                rs.MoveNext
-            Loop
+                rsSub.Close
+                Set rsSub = Nothing
+            End If
             
-            rs.Close
-            Set rs = Nothing
-        End If
+            rs.MoveNext
+        Loop
+        
+        rs.Close
+        Set rs = Nothing
         
         ' Ordenar pelo número de meses sem vender (decrescente)
         If count > 1 Then
@@ -560,25 +514,22 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
                 End Select
             Next
         End If
-        
-        ' Limpar dicionário da memória
-        Set usuariosAtivosDict = Nothing
         %>
         
         <!-- MÉTRICAS -->
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="metric-card" style="background: #3498db;">
-                    <div class="metric-label"><i class="fas fa-users me-2"></i> Ativos</div>
+                    <div class="metric-label"><i class="fas fa-users me-2"></i> Total de Corretores</div>
                     <div class="metric-value"><%=totalCorretores%></div>
-                    <small>Corretores</small>
+                    <small>Corretores na diretoria</small>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="metric-card" style="background: #2ecc71;">
-                    <div class="metric-label"><i class="fas fa-check-circle me-2"></i> Vendendo</div>
+                    <div class="metric-label"><i class="fas fa-check-circle me-2"></i> Ativos</div>
                     <div class="metric-value"><%=corretoresAtivos%></div>
-                    <small>0-2 meses sem vender</small>
+                    <small>Realizando Vendas</small>
                 </div>
             </div>
             <div class="col-md-3">
@@ -607,7 +558,7 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
                             <i class="fas fa-eye me-1"></i>Todos (<%=totalCorretores%>)
                         </button>
                         <button class="btn btn-sm btn-outline-success" onclick="filtrarTabela('Ativo')">
-                            <i class="fas fa-check me-1"></i>Vendendo (<%=corretoresAtivos%>)
+                            <i class="fas fa-check me-1"></i>Ativos (<%=corretoresAtivos%>)
                         </button>
 
                         <button class="btn btn-sm btn-outline-danger" onclick="filtrarTabela('Inativo')">
@@ -711,12 +662,9 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
         <div class="card">
             <div class="card-header text-white d-flex justify-content-between align-items-center" style="background: #f39c12;">
                 <div>
-                    <i class="fas fa-table me-2"></i>Lista de Corretores Ativos
+                    <i class="fas fa-table me-2"></i>Lista de Corretores
                     <span class="badge bg-light text-dark ms-2" id="contador">Mostrando <%=totalCorretores%> corretores</span>
                     <span class="badge bg-info text-white ms-2" id="filtroAtivo" style="display: none;"></span>
-                    <span class="badge bg-success text-white ms-2">
-                        <i class="fas fa-check-circle me-1"></i>Apenas Usuários Ativos no SunnyImob
-                    </span>
                 </div>
                 <div class="d-flex align-items-center">
                     <input type="text" id="searchInput" class="form-control form-control-sm me-2" placeholder="Buscar corretor..." style="width: 200px;">
@@ -917,11 +865,6 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
                                     <small class="text-muted">Nenhuma venda</small>
                                 </div>
                             </div>
-                            <div class="mt-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>Este relatório mostra apenas corretores com <strong>Usuarios.Ativo = True</strong>
-                                </small>
-                            </div>
                         </div>
                         <div class="col-md-4 text-end">
                             <button class="btn btn-sm btn-outline-secondary" onclick="imprimirRelatorio()">
@@ -1019,8 +962,8 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
         <% Else %>
         <div class="alert alert-warning text-center">
             <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
-            <h5>Nenhum corretor ativo encontrado</h5>
-            <p class="mb-0">Não há corretores com Usuarios.Ativo = True na diretoria.</p>
+            <h5>Nenhum corretor encontrado</h5>
+            <p class="mb-0">Não há corretores registrados na diretoria.</p>
         </div>
         <% End If %>
         
@@ -1031,26 +974,30 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
             </div>
             <div class="card-body">
                 <div class="row">
-
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-database me-2"></i>Fonte de Dados</h6>
+                        <ul class="text-muted">
+                            <li><strong>Gerência atual:</strong> Última gerência registrada nas vendas do corretor</li>
+                            <li><strong>Última venda:</strong> Data da venda mais recente do corretor</li>
+                            <li><strong>Meses sem vender:</strong> Calculado com base no mês/ano atual</li>
+                            <li><strong>Total VGV:</strong> Soma de todas as vendas (ValorUnidade)</li>
+                        </ul>
+                    </div>
                     <div class="col-md-6">
                         <h6><i class="fas fa-calendar-alt me-2"></i>Período</h6>
                         <ul class="text-muted">
                             <li><strong>Data atual:</strong> <%=MonthName(mesAtual, True)%> de <%=anoAtual%></li>
                             <li><strong>Atualização:</strong> Dados em tempo real</li>
                             <li><strong>Diretoria:</strong> <%=Session("Dir_Nome")%></li>
-                            <li><strong>Total de registros:</strong> <%=totalCorretores%> corretores ativos</li>
+                            <li><strong>Total de registros:</strong> <%=totalCorretores%> corretores</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
         <%
-        ' Fechar conexões
-        connSales.Close
-        Set connSales = Nothing
-        
-        connUsuarios.Close
-        Set connUsuarios = Nothing
+        conn.Close
+        Set conn = Nothing
         %>
         </div>
     </div>
@@ -1059,7 +1006,6 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-    // Funções JavaScript permanecem as mesmas
     // Variáveis globais para controle dos filtros
     let filtroStatusAtivo = '';
     let filtroGerenciaAtiva = '';
@@ -1241,7 +1187,7 @@ Dim ultimoAno, ultimoMes, corretorNome, corretorId, usuarioAtivo
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'Corretores_Ativos_' + new Date().toISOString().slice(0,10) + '.xls';
+        a.download = 'Corretores_' + new Date().toISOString().slice(0,10) + '.xls';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
