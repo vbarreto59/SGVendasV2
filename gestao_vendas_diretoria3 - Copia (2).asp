@@ -83,7 +83,6 @@ End If
 
 ' **NOVA LÓGICA DE FILTRO DE DIRETORIA**
 diretoriaID = Session("Dir_DiretoriaID")
-'diretoriaid = 1
 
 paginaRedirecionamento1 = "http://www.gabnetweb.com.br/SunnyImob/login_v66a.asp"
 paginaRedirecionamento2 = "http://localhost/SunnyImob/login_v66a.asp"
@@ -168,6 +167,72 @@ rsGerencias.Close
 Set rsGerencias = Nothing
 ' --- FIM DA BUSCA DE GERENCIAS ---
 
+' --- BUSCAR CORRETORES DISPONÍVEIS NO BANCO DE DADOS ORDENADOS POR VGV ---
+Dim sqlCorretores, corretoresDisponiveis(), corretoresVGV()
+ReDim corretoresDisponiveis(0)
+ReDim corretoresVGV(0)
+Dim corretoresCount
+corretoresCount = 0
+
+' Buscar corretores com VGV total, ordenados por VGV descendente
+' APLICANDO OS MESMOS FILTROS DO RELATÓRIO
+sqlCorretores = "SELECT Corretor, SUM(ValorUnidade) as TotalVGV " & _
+                "FROM Vendas WHERE Vendas.Excluido = 0"
+
+' Aplicar filtro de Diretoria
+If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.DiretoriaId = " & CLng(diretoriaID)
+End If
+
+' Aplicar filtro de Ano (se definido automaticamente ou via POST)
+If anoParaUsar <> "" And IsNumeric(anoParaUsar) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.AnoVenda = " & anoParaUsar
+End If
+
+' Aplicar filtro de Mês (se houver)
+If mes <> "" And IsNumeric(mes) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.MesVenda = " & mes
+End If
+
+' Aplicar filtro de Trimestre (se houver)
+If trimestre <> "" And IsNumeric(trimestre) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.Trimestre = " & trimestre
+End If
+
+' Aplicar filtro de Semestre (se houver)
+If semestre <> "" And IsNumeric(semestre) Then
+    sqlCorretores = sqlCorretores & " AND Vendas.Semestre = " & semestre
+End If
+
+' Aplicar filtro de Gerência (se houver) - IMPORTANTE: CORREÇÃO AQUI
+If gerencia <> "" Then
+    sqlCorretores = sqlCorretores & " AND Vendas.Gerencia = '" & Replace(gerencia, "'", "''") & "'"
+End If
+
+' Aplicar filtro de Corretor (se houver) - para quando já está filtrado
+If corretor <> "" Then
+    sqlCorretores = sqlCorretores & " AND Vendas.Corretor = '" & Replace(corretor, "'", "''") & "'"
+End If
+
+sqlCorretores = sqlCorretores & " GROUP BY Corretor ORDER BY SUM(ValorUnidade) DESC"
+
+Set rsCorretores = Server.CreateObject("ADODB.Recordset")
+rsCorretores.Open sqlCorretores, conn
+
+Do While Not rsCorretores.EOF
+    If Not IsNull(rsCorretores("Corretor")) And Trim(rsCorretores("Corretor")) <> "" Then
+        ReDim Preserve corretoresDisponiveis(corretoresCount)
+        ReDim Preserve corretoresVGV(corretoresCount)
+        corretoresDisponiveis(corretoresCount) = UCase(Trim(rsCorretores("Corretor")))
+        corretoresVGV(corretoresCount) = rsCorretores("TotalVGV")
+        corretoresCount = corretoresCount + 1
+    End If
+    rsCorretores.MoveNext
+Loop
+rsCorretores.Close
+Set rsCorretores = Nothing
+' --- FIM DA BUSCA DE CORRETORES ---
+
 ' *** MODIFICAÇÃO AQUI: Determinar o ano a ser usado automaticamente ***
 Dim anoParaUsar, anoExisteNoBanco
 anoParaUsar = ano
@@ -230,75 +295,6 @@ If gerencia <> "" Then
     whereClause = whereClause & " AND Vendas.Gerencia = '" & Replace(gerencia, "'", "''") & "'"
     isFiltered = True
 End If
-
-' --- BUSCAR CORRETORES DISPONÍVEIS NO BANCO DE DADOS ORDENADOS POR VGV ---
-Dim sqlCorretores, corretoresDisponiveis(), corretoresVGV()
-ReDim corretoresDisponiveis(0)
-ReDim corretoresVGV(0)
-Dim corretoresCount
-corretoresCount = 0
-
-' Buscar corretores com VGV total, ordenados por VGV descendente
-' *** CORREÇÃO: APLICAR TODOS OS FILTROS, INCLUINDO O ANO CORRETO ***
-sqlCorretores = "SELECT Corretor, SUM(ValorUnidade) as TotalVGV " & _
-                "FROM Vendas WHERE Vendas.Excluido = 0"
-
-' Aplicar filtro de Diretoria
-If Not IsNull(diretoriaID) And Trim(CStr(diretoriaID)) <> "" And IsNumeric(diretoriaID) Then
-    sqlCorretores = sqlCorretores & " AND Vendas.DiretoriaId = " & CLng(diretoriaID)
-End If
-
-' *** CORREÇÃO CRÍTICA: USAR anoParaUsar (agora já definido) ***
-If anoParaUsar <> "" And IsNumeric(anoParaUsar) Then
-    sqlCorretores = sqlCorretores & " AND Vendas.AnoVenda = " & anoParaUsar
-ElseIf ano <> "" And IsNumeric(ano) Then
-    ' Fallback: usar ano se anoParaUsar não estiver definido
-    sqlCorretores = sqlCorretores & " AND Vendas.AnoVenda = " & ano
-End If
-
-' Aplicar filtro de Mês (se houver)
-If mes <> "" And IsNumeric(mes) Then
-    sqlCorretores = sqlCorretores & " AND Vendas.MesVenda = " & mes
-End If
-
-' Aplicar filtro de Trimestre (se houver)
-If trimestre <> "" And IsNumeric(trimestre) Then
-    sqlCorretores = sqlCorretores & " AND Vendas.Trimestre = " & trimestre
-End If
-
-' Aplicar filtro de Semestre (se houver)
-If semestre <> "" And IsNumeric(semestre) Then
-    sqlCorretores = sqlCorretores & " AND Vendas.Semestre = " & semestre
-End If
-
-' Aplicar filtro de Gerência (se houver)
-If gerencia <> "" Then
-    sqlCorretores = sqlCorretores & " AND Vendas.Gerencia = '" & Replace(gerencia, "'", "''") & "'"
-End If
-
-' Aplicar filtro de Corretor (se houver) - para quando já está filtrado
-If corretor <> "" Then
-    sqlCorretores = sqlCorretores & " AND Vendas.Corretor = '" & Replace(corretor, "'", "''") & "'"
-End If
-
-sqlCorretores = sqlCorretores & " GROUP BY Corretor ORDER BY SUM(ValorUnidade) DESC"
-
-Set rsCorretores = Server.CreateObject("ADODB.Recordset")
-rsCorretores.Open sqlCorretores, conn
-
-Do While Not rsCorretores.EOF
-    If Not IsNull(rsCorretores("Corretor")) And Trim(rsCorretores("Corretor")) <> "" Then
-        ReDim Preserve corretoresDisponiveis(corretoresCount)
-        ReDim Preserve corretoresVGV(corretoresCount)
-        corretoresDisponiveis(corretoresCount) = UCase(Trim(rsCorretores("Corretor")))
-        corretoresVGV(corretoresCount) = rsCorretores("TotalVGV")
-        corretoresCount = corretoresCount + 1
-    End If
-    rsCorretores.MoveNext
-Loop
-rsCorretores.Close
-Set rsCorretores = Nothing
-' --- FIM DA BUSCA DE CORRETORES ---
 %>
 
 <!DOCTYPE html>
@@ -970,10 +966,6 @@ Set rsCorretores = Nothing
                             <div class="metric-value"><%=FormatNumber(totalUnidades, 0)%></div>
                         </div>
                     </div>
-                    <% if IsNull(totalVGV)  then
-                          totalVGV = 0
-                       end if   
-                     %>
                     <div class="col-md-6">
                         <div class="metric-card" style="background: #2ecc71;">
                             <div class="metric-label"><i class="fas fa-money-bill-wave me-2"></i> Total VGV</div>
